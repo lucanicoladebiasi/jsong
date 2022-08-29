@@ -1,14 +1,15 @@
 package org.jsong
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.intellij.lang.annotations.Language
 
-object JSongTestDocs {
+object JSON {
 
     val mapper = ObjectMapper()
 
     @Language("JSON")
-    val address = JSong.of(
+    val address: JsonNode = mapper.readTree(
         """
         {
           "FirstName": "Fred",
@@ -58,5 +59,5 @@ object JSongTestDocs {
           }
         }
         """.trimIndent()
-    ).evaluate()
+    )
 }

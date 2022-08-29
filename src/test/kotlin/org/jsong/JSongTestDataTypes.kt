@@ -15,7 +15,7 @@ class JSonataTestDataTypes {
      */
     @Test
     fun `Literal - array`() {
-        val expected = TestDocs.mapper.createArrayNode().add("value1").add("value2")
+        val expected = JSON.mapper.createArrayNode().add("value1").add("value2")
         val actual = JSong.of("[\"value1\", \"value2\"]").evaluate()
         assertEquals(expected, actual)
     }
@@ -63,7 +63,7 @@ class JSonataTestDataTypes {
      */
     @Test
     fun `Literal - object`() {
-        val expected = TestDocs.mapper.createObjectNode()
+        val expected = JSON.mapper.createObjectNode()
             .set<ObjectNode>("key1", TextNode("value1"))
             .set<ObjectNode>("key2", TextNode("value2"))
         val actual = JSong.of("{\"key1\": \"value1\", \"key2\": \"value2\"}").evaluate()

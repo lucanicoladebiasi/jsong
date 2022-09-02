@@ -15,6 +15,7 @@ exp
     | nihil
     | number
     | text
+    //
     | filter
     | map
     | path
@@ -25,15 +26,13 @@ array
     | '[' ']'
     ;
 
-//
-
 bool
     : TRUE
     | FALSE
     ;
 
 filter
-    : '|' exp '|'
+    : '|' exp '|'?
     ;
 
 nihil
@@ -57,6 +56,10 @@ path
     : PATH
     ;
 
+scope:
+    '(' exp (';'? exp)* ')'
+    ;
+
 text
     : STRING
     ;
@@ -78,7 +81,5 @@ fragment ESC: '\\' (["\\/bfnrt] | UNICODE);
 fragment UNICODE: 'u' HEX HEX HEX HEX;
 fragment HEX: [0-9a-fA-F];
 fragment SAFECODEPOINT: ~ ["\\\u0000-\u001F];
-
-
 
 WS: [ \t\n\r]+ -> skip;

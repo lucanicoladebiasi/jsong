@@ -45,6 +45,18 @@ class Processor internal constructor(
         }
     }
 
+    private fun isNumericArray(node: JsonNode?): Boolean {
+        when (node) {
+            is ArrayNode -> {
+                for (i in 0 until node.size()) {
+                    if (!node[i].isNumber) return false
+                }
+                return true
+            }
+            else -> return false
+        }
+    }
+
     private fun offset(node: ArrayNode, index: Int): Int {
         return when {
             index < 0 -> node.size() + index
@@ -64,16 +76,15 @@ class Processor internal constructor(
         }
     }
 
-    private fun select(path: JsonNode?, node: JsonNode?): ArrayNode {
-        val exp = mapper.createArrayNode()
+    private fun select(path: JsonNode?, node: JsonNode?): JsonNode? {
         val key = path?.asText()
-        if (!key.isNullOrEmpty()) when (node) {
-            is ArrayNode -> node.forEach { element ->
-                exp.add(select(path, element))
+        return when (key.isNullOrEmpty()) {
+            true -> null
+            else -> when (node) {
+                is ObjectNode -> node[key]
+                else -> null
             }
-            is ObjectNode -> node[key]?.let { exp.add(it) }
         }
-        return exp
     }
 
     override fun visitArray(ctx: JSongParser.ArrayContext): JsonNode? {
@@ -96,18 +107,28 @@ class Processor internal constructor(
 
     override fun visitFilter(ctx: JSongParser.FilterContext): JsonNode? {
         val exp = mapper.createArrayNode()
-        val lhs = array(pop())
-        lhs.forEach { element ->
-            array(element).forEachIndexed { index, node ->
-                push(node)
-                visit(ctx.exp())
-                when (val rhs = pop()) {
-                    is DecimalNode -> if (offset(lhs, rhs.asInt()) == index) exp.add(node)
-                    else -> if (functions.boolean(rhs).booleanValue()) exp.add(node)
+        array(pop()).forEach { node ->
+            push(node)
+            visit(ctx.exp())
+            val rhs = pop()
+            when {
+                isNumericArray(rhs) -> {
+                    val lhs = array(pop())
+                    rhs?.forEach { index ->
+                        lhs[offset(lhs, index.asInt())]?.let { exp.add(it) }
+                    }
+                }
+                rhs?.isNumber == true -> {
+                    val lhs = array(pop())
+                    lhs[offset(lhs, rhs.asInt())]?.let { exp.add(it) }
+                }
+                else -> {
+                    val lhs = pop()
+                    if (functions.boolean(rhs).booleanValue()) exp.add(lhs)
                 }
             }
         }
-        return push(exp)
+        return exp
     }
 
     override fun visitJsong(ctx: JSongParser.JsongContext): JsonNode? {
@@ -119,8 +140,7 @@ class Processor internal constructor(
 
     override fun visitMap(ctx: JSongParser.MapContext): JsonNode? {
         val exp = mapper.createArrayNode()
-        val lhs = array(flatten(pop()))
-        lhs.forEach { node ->
+        array(pop()).forEach { node ->
             push(node)
             visit(ctx.exp())
             pop()?.let { exp.add(it) }
@@ -154,8 +174,16 @@ class Processor internal constructor(
         return exp
     }
 
+    override fun visitScope(ctx: JSongParser.ScopeContext): JsonNode? {
+        ctx.exp().forEach { ctx_exp ->
+            visit(ctx_exp)
+        }
+        val exp = array(flatten(stack.pop()))
+        return push(exp)
+    }
+
     override fun visitText(ctx: JSongParser.TextContext): JsonNode? {
         return push(TextNode(ctx.text.substring(1, ctx.text.length - 1)))
     }
 
-}
+} //~ Processor

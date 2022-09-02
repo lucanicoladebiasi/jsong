@@ -8,14 +8,14 @@ import com.fasterxml.jackson.databind.node.TextNode
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
-class JSonataTestDataTypes {
+class JSongTestDataTypes {
 
     /**
      * https://docs.jsonata.org/construction#json-literals
      */
     @Test
     fun `Literal - array`() {
-        val expected = JSON.mapper.createArrayNode().add("value1").add("value2")
+        val expected = JSongTestResources.mapper.createArrayNode().add("value1").add("value2")
         val actual = JSong.of("[\"value1\", \"value2\"]").evaluate()
         assertEquals(expected, actual)
     }
@@ -63,7 +63,7 @@ class JSonataTestDataTypes {
      */
     @Test
     fun `Literal - object`() {
-        val expected = JSON.mapper.createObjectNode()
+        val expected = JSongTestResources.mapper.createObjectNode()
             .set<ObjectNode>("key1", TextNode("value1"))
             .set<ObjectNode>("key2", TextNode("value2"))
         val actual = JSong.of("{\"key1\": \"value1\", \"key2\": \"value2\"}").evaluate()
@@ -129,7 +129,7 @@ class JSonataTestDataTypes {
      * https://docs.jsonata.org/construction#json-literals
      */
     @Test
-    fun Text() {
+    fun `Literal - text`() {
         val text = "\"God's in his heaven — All's right with the world!\""
         val expected = TextNode(text.substring(1, text.length - 1))
         val actual = JSong.of(text).evaluate()
@@ -140,7 +140,7 @@ class JSonataTestDataTypes {
      * https://docs.jsonata.org/construction#json-literals
      */
     @Test
-    fun True() {
+    fun `True - true`() {
         val expected = BooleanNode.TRUE
         val actual = JSong.of("true").evaluate()
         assertEquals(expected, actual)

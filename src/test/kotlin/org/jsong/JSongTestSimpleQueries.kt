@@ -1,15 +1,12 @@
 package org.jsong
 
 import com.fasterxml.jackson.databind.node.BooleanNode
-import com.fasterxml.jackson.databind.node.DecimalNode
 import com.fasterxml.jackson.databind.node.NullNode
 import com.fasterxml.jackson.databind.node.TextNode
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNull
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
-import java.math.BigDecimal
 
 /**
  * Implement the examples described at [https://docs.jsonata.org/simple](https://docs.jsonata.org/simple).
@@ -30,11 +27,10 @@ class JSongTestSimpleQueries {
      * https://docs.jsonata.org/simple#navigating-json-objects
      */
     @Test
-    @Disabled
     fun `Returns a JSON number`() {
-        val expected = DecimalNode(BigDecimal.valueOf(28L))
+        val expected = 28
         val actual = JSong.of("Age").evaluate(JSongTestResources.address)
-        assertEquals(expected, actual)
+        assertEquals(expected, actual?.asInt())
     }
 
     /**

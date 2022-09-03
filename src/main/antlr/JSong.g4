@@ -19,6 +19,7 @@ exp
     | filter
     | map
     | path
+    | scope
     ;
 
 array
@@ -44,7 +45,7 @@ number
     ;
 
 map
-    : '.' exp
+    : '.' exp filter?
     ;
 
 obj

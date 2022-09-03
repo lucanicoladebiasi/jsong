@@ -45,18 +45,6 @@ class Processor internal constructor(
         }
     }
 
-    private fun isNumericArray(node: JsonNode?): Boolean {
-        when (node) {
-            is ArrayNode -> {
-                for (i in 0 until node.size()) {
-                    if (!node[i].isNumber) return false
-                }
-                return true
-            }
-            else -> return false
-        }
-    }
-
     private fun offset(node: ArrayNode, index: Int): Int {
         return when {
             index < 0 -> node.size() + index
@@ -105,30 +93,19 @@ class Processor internal constructor(
         )
     }
 
+
     override fun visitFilter(ctx: JSongParser.FilterContext): JsonNode? {
         val exp = mapper.createArrayNode()
-        array(pop()).forEach { node ->
-            push(node)
-            visit(ctx.exp())
-            val rhs = pop()
-            when {
-                isNumericArray(rhs) -> {
-                    val lhs = array(pop())
-                    rhs?.forEach { index ->
-                        lhs[offset(lhs, index.asInt())]?.let { exp.add(it) }
-                    }
-                }
-                rhs?.isNumber == true -> {
-                    val lhs = array(pop())
-                    lhs[offset(lhs, rhs.asInt())]?.let { exp.add(it) }
-                }
-                else -> {
-                    val lhs = pop()
-                    if (functions.boolean(rhs).booleanValue()) exp.add(lhs)
-                }
+        visit(ctx.exp())
+        val rhs = pop()
+        val lhs = array(pop())
+        when(rhs) {
+            is NumericNode -> {
+                lhs[offset(lhs, rhs.asInt())]?.let { exp.add(it) }
             }
+            else -> {}
         }
-        return exp
+        return push(exp)
     }
 
     override fun visitJsong(ctx: JSongParser.JsongContext): JsonNode? {
@@ -143,6 +120,9 @@ class Processor internal constructor(
         array(pop()).forEach { node ->
             push(node)
             visit(ctx.exp())
+            if (ctx.filter() != null) {
+                visit(ctx.filter())
+            }
             pop()?.let { exp.add(it) }
         }
         return push(exp)
@@ -178,8 +158,7 @@ class Processor internal constructor(
         ctx.exp().forEach { ctx_exp ->
             visit(ctx_exp)
         }
-        val exp = array(flatten(stack.pop()))
-        return push(exp)
+        return stack.firstOrNull()
     }
 
     override fun visitText(ctx: JSongParser.TextContext): JsonNode? {

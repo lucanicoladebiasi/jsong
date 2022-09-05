@@ -225,22 +225,20 @@ class JSongTestSimpleQueries {
     /**
      * https://docs.jsonata.org/simple#navigating-json-arrays
      */
-//    @Test
-//    fun `Returns a range of items by creating an array of indexes`() {
-//        val expression = "Phone[[0..1]]"
-//        val evaluation = JSonata.of(expression).evaluate(JSON.of(doc))
-//
-//        @Language("JSON")
-//        val expected = JSON.of(
-//            """
-//            [
-//              { "type": "home", "number": "0203 544 1234" },
-//              { "type": "office", "number": "01962 001234" }
-//            ]
-//        """.trimIndent()
-//        )
-//        assertEquals(expected, evaluation.context)
-//    }
+    @Test
+    fun `Returns a range of items by creating an array of indexes`() {
+        @Language("JSON")
+        val expected = JSongTestResources.mapper.readTree(
+            """
+            [
+              { "type": "home", "number": "0203 544 1234" },
+              { "type": "office", "number": "01962 001234" }
+            ]
+        """.trimIndent()
+        )
+        val actual = JSong.of("Phone|[0..1]|").evaluate(JSongTestResources.address)
+        assertEquals(expected, actual)
+    }
 
     /**
      * https://docs.jsonata.org/simple#top-level-arrays-nested-arrays-and-array-flattening

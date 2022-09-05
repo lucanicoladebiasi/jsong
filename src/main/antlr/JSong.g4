@@ -19,7 +19,11 @@ exp
     | filter
     | map
     | path
+    | ranges
     | scope
+    | context_binding
+    | positional_binding
+    | context
     ;
 
 array
@@ -31,6 +35,15 @@ bool
     : TRUE
     | FALSE
     ;
+
+context
+    : '$'
+    ;
+
+context_binding
+    : '@' context path
+    ;
+
 
 filter
     : '|' exp '|'?
@@ -49,12 +62,28 @@ map
     ;
 
 obj
-    : '{' exp ':' exp (',' exp ':' exp)* '}'
+    : '{' pair (',' pair)* '}'
     | '{' '}'
+    ;
+
+pair
+    : key = exp ':' value = exp
     ;
 
 path
     : PATH
+    ;
+
+positional_binding
+    : '#' context path
+    ;
+
+range
+    : min = exp '..' max = exp
+    ;
+
+ranges
+    : '[' range (',' range)* ']'
     ;
 
 scope:
@@ -82,5 +111,8 @@ fragment ESC: '\\' (["\\/bfnrt] | UNICODE);
 fragment UNICODE: 'u' HEX HEX HEX HEX;
 fragment HEX: [0-9a-fA-F];
 fragment SAFECODEPOINT: ~ ["\\\u0000-\u001F];
+
+GREATER: '>';
+LESS: '<';
 
 WS: [ \t\n\r]+ -> skip;

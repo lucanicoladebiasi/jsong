@@ -1,12 +1,9 @@
 package org.jsong
 
-import com.fasterxml.jackson.databind.node.BooleanNode
-import com.fasterxml.jackson.databind.node.DecimalNode
-import com.fasterxml.jackson.databind.node.NullNode
-import com.fasterxml.jackson.databind.node.ObjectNode
-import com.fasterxml.jackson.databind.node.TextNode
+import com.fasterxml.jackson.databind.node.*
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import kotlin.test.assertTrue
 
 class JSongTestDataTypes {
 
@@ -29,14 +26,6 @@ class JSongTestDataTypes {
         val actual = JSong.of("false").evaluate()
         assertEquals(expected, actual)
     }
-
-//    @Test
-//    fun visitValue_interval() {
-//        val expression = "2.718281828459~3.14159265359"
-//        val evaluation = JSonata.of(expression).evaluate()
-//        val expected = IntervalNode(JsonNodeFactory.instance, "2.718281828459".toBigDecimal(), "3.14159265359".toBigDecimal())
-//        assertEquals(expected, evaluation.context)
-//    }
 
     /**
      * https://docs.jsonata.org/construction#json-literals
@@ -70,49 +59,46 @@ class JSongTestDataTypes {
         assertEquals(expected, actual)
     }
 
-    /**
-     * https://tradexchain.atlassian.net/wiki/spaces/MP/pages/3253174275/HOWTO+match+documents+with+JSonata+and+ng-jsonata-lib
-     */
-//    @Test
-//    fun Percent() {
-//        val expression = "10 2.5%"
-//        val expected = JSON.of("0.25")
-//        val evaluation = JSonata.of(expression).evaluate()
-//        assertEquals(expected, evaluation.context)
-//    }
+    @Test
+    fun `Literal - range twisted`() {
+        val expected = RangeNode.of("2.718281828459".toBigDecimal(), "3.14159265359".toBigDecimal())
+        val actual = JSong.of("[3.14159265359..2.718281828459]").evaluate()
+        assertEquals(expected, actual)
+    }
 
     /**
      * https://docs.jsonata.org/numeric-operators#-range
      */
-//    @Test
-//    fun Range() {
-//        val expression = "[1..3]"
-//        val evaluation = JSonata.of(expression).evaluate()
-//        val expected = JSON.of("[1, 2, 3]")
-//        assertEquals(expected, evaluation.context)
-//    }
+    @Test
+    fun `Literal - range as array`()  {
+        val expected = JSongTestResources.mapper.createArrayNode().add(1).add(2).add(3)
+        val actual = JSong.of("[1..3]").evaluate()
+        assertTrue(actual is RangeNode)
+        assertEquals(expected, actual.indexes)
+    }
 
     /**
      * https://docs.jsonata.org/numeric-operators#-range
      */
-//    @Test
-//    fun `Range with gap`() {
-//        val expression = "[1..3, 5..7]"
-//        val evaluation = JSonata.of(expression).evaluate()
-//        val expected = JSON.of("[1, 2, 3, 5, 6, 7]")
-//        assertEquals(expected, evaluation.context)
-//    }
+    @Test
+    fun `Literal - range with gap`() {
+        val expected = JSongTestResources.mapper.createArrayNode().add(1).add(2).add(3).add(5).add(6).add(7)
+        val actual = JSong.of("[1..3, 5..7]").evaluate()
+        assertTrue(actual is RangeNodes)
+        assertEquals(expected, actual.indexes)
+    }
 
     /**
      * https://docs.jsonata.org/numeric-operators#-range
      */
-//    @Test
-//    fun `Range with gaps overlapping`() {
-//        val expression = "[1..3, 5..7, 2..4]"
-//        val evaluation = JSonata.of(expression).evaluate()
-//        val expected = JSON.of("[1, 2, 3, 4, 5, 6, 7]")
-//        assertEquals(expected, evaluation.context)
-//    }
+    @Test
+    fun `Literal - range with overlapping gap`() {
+        val expected = JSongTestResources.mapper.createArrayNode().add(1).add(2).add(3).add(4).add(5).add(6).add(7)
+        val actual = JSong.of("[1..3, 5..7, 2..4]").evaluate()
+        assertTrue(actual is RangeNodes)
+        assertEquals(expected, actual.indexes)
+    }
+
 
     /**
      * https://docs.jsonata.org/regex
@@ -140,7 +126,7 @@ class JSongTestDataTypes {
      * https://docs.jsonata.org/construction#json-literals
      */
     @Test
-    fun `True - true`() {
+    fun `Literal - true`() {
         val expected = BooleanNode.TRUE
         val actual = JSong.of("true").evaluate()
         assertEquals(expected, actual)

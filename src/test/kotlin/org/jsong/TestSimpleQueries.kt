@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test
 /**
  * Implement the examples described at [https://docs.jsonata.org/simple](https://docs.jsonata.org/simple).
  */
-class JSongTestSimpleQueries {
+class TestSimpleQueries {
 
     /**
      * https://docs.jsonata.org/simple#navigating-json-objects
@@ -19,7 +19,7 @@ class JSongTestSimpleQueries {
     @Test
     fun `Returns a JSON string`() {
         val expected = TextNode("Smith")
-        val actual = JSong.of("Surname").evaluate(JSongTestResources.address)
+        val actual = JSong.of("Surname").evaluate(TestResources.address)
         assertEquals(expected, actual)
     }
 
@@ -29,7 +29,7 @@ class JSongTestSimpleQueries {
     @Test
     fun `Returns a JSON number`() {
         val expected = 28
-        val actual = JSong.of("Age").evaluate(JSongTestResources.address)
+        val actual = JSong.of("Age").evaluate(TestResources.address)
         assertEquals(expected, actual?.asInt())
     }
 
@@ -39,7 +39,7 @@ class JSongTestSimpleQueries {
     @Test
     fun `Field references are separated by dot`() {
         val expected = TextNode("Winchester")
-        val actual = JSong.of("Address.City").evaluate(JSongTestResources.address)
+        val actual = JSong.of("Address.City").evaluate(TestResources.address)
         assertEquals(expected, actual)
     }
 
@@ -49,7 +49,7 @@ class JSongTestSimpleQueries {
     @Test
     fun `Matched the path and returns the null value`() {
         val expected = NullNode.instance
-        val actual = JSong.of("Other.Misc").evaluate(JSongTestResources.address)
+        val actual = JSong.of("Other.Misc").evaluate(TestResources.address)
         assertEquals(expected, actual)
     }
 
@@ -58,7 +58,7 @@ class JSongTestSimpleQueries {
      */
     @Test
     fun `Path not found`() {
-        val actual = JSong.of("Other.Nothing").evaluate(JSongTestResources.address)
+        val actual = JSong.of("Other.Nothing").evaluate(TestResources.address)
         assertNull(actual)
     }
 
@@ -68,7 +68,7 @@ class JSongTestSimpleQueries {
     @Test
     fun `Field references containing whitespace or reserved tokens can be enclosed in backticks`() {
         val expected = BooleanNode.TRUE
-        val actual = JSong.of("Other.`Over 18 ?`").evaluate(JSongTestResources.address)
+        val actual = JSong.of("Other.`Over 18 ?`").evaluate(TestResources.address)
         assertEquals(expected, actual)
     }
 
@@ -78,7 +78,7 @@ class JSongTestSimpleQueries {
     @Test
     fun `Returns the first item`() {
         @Language("JSON")
-        val expected = JSongTestResources.mapper.readTree(
+        val expected = TestResources.mapper.readTree(
             """
             { 
               "type": "home", 
@@ -86,7 +86,7 @@ class JSongTestSimpleQueries {
             }
         """.trimIndent()
         )
-        val actual = JSong.of("Phone|0|").evaluate(JSongTestResources.address)
+        val actual = JSong.of("Phone|0|").evaluate(TestResources.address)
         assertEquals(expected, actual)
     }
 
@@ -96,14 +96,14 @@ class JSongTestSimpleQueries {
     @Test
     fun `Returns the second item`() {
         @Language("JSON")
-        val expected = JSongTestResources.mapper.readTree(
+        val expected = TestResources.mapper.readTree(
             """
             { 
               "type": "office", 
               "number": "01962 001234" }
         """.trimIndent()
         )
-        val actual = JSong.of("Phone|1|").evaluate(JSongTestResources.address)
+        val actual = JSong.of("Phone|1|").evaluate(TestResources.address)
         assertEquals(expected, actual)
     }
 
@@ -113,7 +113,7 @@ class JSongTestSimpleQueries {
     @Test
     fun `Return the last item`() {
         @Language("JSON")
-        val expected = JSongTestResources.mapper.readTree(
+        val expected = TestResources.mapper.readTree(
             """
             { 
               "type": "mobile", 
@@ -121,7 +121,7 @@ class JSongTestSimpleQueries {
             }
         """.trimIndent()
         )
-        val actual = JSong.of("Phone|-1|").evaluate(JSongTestResources.address)
+        val actual = JSong.of("Phone|-1|").evaluate(TestResources.address)
         assertEquals(expected, actual)
     }
 
@@ -131,7 +131,7 @@ class JSongTestSimpleQueries {
     @Test
     fun `Negative indexed count from the end`() {
         @Language("JSON")
-        val expected = JSongTestResources.mapper.readTree(
+        val expected = TestResources.mapper.readTree(
             """
             { 
               "type": "office", 
@@ -139,7 +139,7 @@ class JSongTestSimpleQueries {
             }
         """.trimIndent()
         )
-        val actual = JSong.of( "Phone|-2|").evaluate(JSongTestResources.address)
+        val actual = JSong.of( "Phone|-2|").evaluate(TestResources.address)
         assertEquals(expected, actual)
     }
 
@@ -148,7 +148,7 @@ class JSongTestSimpleQueries {
      */
     @Test
     fun `Doesn't exist - returns nothing`() {
-        val actual = JSong.of("Phone|8|").evaluate(JSongTestResources.address)
+        val actual = JSong.of("Phone|8|").evaluate(TestResources.address)
         assertNull(actual)
     }
 
@@ -158,12 +158,12 @@ class JSongTestSimpleQueries {
     @Test
     fun `Selects the number field in the first item`() {
         @Language("JSON")
-        val expected = JSongTestResources.mapper.readTree(
+        val expected = TestResources.mapper.readTree(
             """
             "0203 544 1234"
         """.trimIndent()
         )
-        val actual = JSong.of("Phone|0|.number").evaluate(JSongTestResources.address)
+        val actual = JSong.of("Phone|0|.number").evaluate(TestResources.address)
         assertEquals(expected, actual)
     }
 
@@ -173,7 +173,7 @@ class JSongTestSimpleQueries {
     @Test
     fun `No index is given to Phone so it selects all of them (the whole array), then it selects all the number fields for each of them`() {
         @Language("JSON")
-        val expected = JSongTestResources.mapper.readTree(
+        val expected = TestResources.mapper.readTree(
             """
             [ 
               "0203 544 1234", 
@@ -183,7 +183,7 @@ class JSongTestSimpleQueries {
             ]
             """.trimIndent()
         )
-        val actual = JSong.of("Phone.number").evaluate(JSongTestResources.address)
+        val actual = JSong.of("Phone.number").evaluate(TestResources.address)
         assertEquals(expected, actual)
     }
 
@@ -193,7 +193,7 @@ class JSongTestSimpleQueries {
     @Test
     fun `Might expect it to just return the first number, but it returns the first number of each of the items selected by Phone`() {
         @Language("JSON")
-        val expected = JSongTestResources.mapper.readTree(
+        val expected = TestResources.mapper.readTree(
             """
             [ 
               "0203 544 1234", 
@@ -203,7 +203,7 @@ class JSongTestSimpleQueries {
             ]
             """.trimIndent()
         )
-        val actual = JSong.of("Phone.number|0|").evaluate(JSongTestResources.address)
+        val actual = JSong.of("Phone.number|0|").evaluate(TestResources.address)
         assertEquals(expected, actual)
     }
 
@@ -213,12 +213,12 @@ class JSongTestSimpleQueries {
     @Test
     fun `Applies the index to the array returned by Phone dot number`() {
         @Language("JSON")
-        val expected = JSongTestResources.mapper.readTree(
+        val expected = TestResources.mapper.readTree(
             """
             "0203 544 1234"
             """.trimIndent()
         )
-        val actual = JSong.of("(Phone.number)|0|").evaluate(JSongTestResources.address)
+        val actual = JSong.of("(Phone.number)|0|").evaluate(TestResources.address)
         assertEquals(expected, actual)
     }
 
@@ -228,7 +228,7 @@ class JSongTestSimpleQueries {
     @Test
     fun `Returns a range of items by creating an array of indexes`() {
         @Language("JSON")
-        val expected = JSongTestResources.mapper.readTree(
+        val expected = TestResources.mapper.readTree(
             """
             [
               { "type": "home", "number": "0203 544 1234" },
@@ -236,7 +236,7 @@ class JSongTestSimpleQueries {
             ]
         """.trimIndent()
         )
-        val actual = JSong.of("Phone|[0..1]|").evaluate(JSongTestResources.address)
+        val actual = JSong.of("Phone|[0..1]|").evaluate(TestResources.address)
         assertEquals(expected, actual)
     }
 

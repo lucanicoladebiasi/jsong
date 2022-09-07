@@ -5,14 +5,14 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import kotlin.test.assertTrue
 
-class JSongTestDataTypes {
+class TestDataTypes {
 
     /**
      * https://docs.jsonata.org/construction#json-literals
      */
     @Test
     fun `Literal - array`() {
-        val expected = JSongTestResources.mapper.createArrayNode().add("value1").add("value2")
+        val expected = TestResources.mapper.createArrayNode().add("value1").add("value2")
         val actual = JSong.of("[\"value1\", \"value2\"]").evaluate()
         assertEquals(expected, actual)
     }
@@ -52,7 +52,7 @@ class JSongTestDataTypes {
      */
     @Test
     fun `Literal - object`() {
-        val expected = JSongTestResources.mapper.createObjectNode()
+        val expected = TestResources.mapper.createObjectNode()
             .set<ObjectNode>("key1", TextNode("value1"))
             .set<ObjectNode>("key2", TextNode("value2"))
         val actual = JSong.of("{\"key1\": \"value1\", \"key2\": \"value2\"}").evaluate()
@@ -71,7 +71,7 @@ class JSongTestDataTypes {
      */
     @Test
     fun `Literal - range as array`()  {
-        val expected = JSongTestResources.mapper.createArrayNode().add(1).add(2).add(3)
+        val expected = TestResources.mapper.createArrayNode().add(1).add(2).add(3)
         val actual = JSong.of("[1..3]").evaluate()
         assertTrue(actual is RangeNode)
         assertEquals(expected, actual.indexes)
@@ -82,7 +82,7 @@ class JSongTestDataTypes {
      */
     @Test
     fun `Literal - range with gap`() {
-        val expected = JSongTestResources.mapper.createArrayNode().add(1).add(2).add(3).add(5).add(6).add(7)
+        val expected = TestResources.mapper.createArrayNode().add(1).add(2).add(3).add(5).add(6).add(7)
         val actual = JSong.of("[1..3, 5..7]").evaluate()
         assertTrue(actual is RangeNodes)
         assertEquals(expected, actual.indexes)
@@ -93,7 +93,7 @@ class JSongTestDataTypes {
      */
     @Test
     fun `Literal - range with overlapping gap`() {
-        val expected = JSongTestResources.mapper.createArrayNode().add(1).add(2).add(3).add(4).add(5).add(6).add(7)
+        val expected = TestResources.mapper.createArrayNode().add(1).add(2).add(3).add(4).add(5).add(6).add(7)
         val actual = JSong.of("[1..3, 5..7, 2..4]").evaluate()
         assertTrue(actual is RangeNodes)
         assertEquals(expected, actual.indexes)

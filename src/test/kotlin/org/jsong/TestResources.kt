@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.intellij.lang.annotations.Language
 
-object JSongTestResources {
+object TestResources {
 
     val mapper = ObjectMapper()
 

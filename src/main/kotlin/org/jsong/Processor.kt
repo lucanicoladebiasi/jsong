@@ -5,55 +5,20 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.*
 import org.jsong.antlr.JSongBaseVisitor
 import org.jsong.antlr.JSongParser
+import java.lang.UnsupportedOperationException
 import java.util.*
 
 class Processor internal constructor(
     private val mapper: ObjectMapper,
-    private val root: JsonNode?
+    root: JsonNode?
 ) : JSongBaseVisitor<JsonNode?>() {
 
-    private val functions = Functions()
+    private val functions = Functions(mapper)
 
     private val stack = ArrayDeque<JsonNode>()
 
     init {
         push(root)
-    }
-
-    private fun array(node: JsonNode?): ArrayNode {
-        return when (node) {
-            null -> mapper.createArrayNode()
-            is ArrayNode -> node
-            else -> mapper.createArrayNode().add(node)
-        }
-    }
-
-    private fun flatten(node: JsonNode?): JsonNode? {
-        return when (node) {
-            is RangeNodes -> when(node.size()) {
-                0 -> null
-                1 -> flatten(node[0]) as RangeNode
-                else -> {
-                    val res = RangeNodes(mapper.nodeFactory)
-                    node.forEach { element ->
-                        flatten(element)?.let { res.add(it as RangeNode) }
-                    }
-                    res
-                }
-            }
-            is ArrayNode -> when (node.size()) {
-                0 -> null
-                1 -> flatten(node[0])
-                else -> {
-                    val res = mapper.createArrayNode()
-                    node.forEach { element ->
-                        flatten(element)?.let { res.add(it) }
-                    }
-                    res
-                }
-            }
-            else -> node
-        }
     }
 
     private fun offset(node: ArrayNode, index: Int): Int {
@@ -99,49 +64,78 @@ class Processor internal constructor(
             when {
                 ctx.FALSE() != null -> BooleanNode.FALSE
                 ctx.TRUE() != null -> BooleanNode.TRUE
-                else -> throw IllegalArgumentException("${ctx.text} not recognized")
+                else -> throw IllegalArgumentException("$ctx not recognized")
             }
         )
     }
 
-    override fun visitFilter(ctx: JSongParser.FilterContext): JsonNode? {
-        val exp = mapper.createArrayNode()
-        visit(ctx.exp())
-        val rhs = pop()
-        val lhs = array(pop())
-        when(rhs) {
-            is NumericNode -> {
-                lhs[offset(lhs, rhs.asInt())]?.let { exp.add(it) }
-            }
-            is RangeNodes -> {
-                rhs.indexes.forEach { index ->
-                    lhs[offset(lhs, index.asInt())]?.let { exp.add(it) }
-                }
-            }
-            else -> {}
-        }
-        return push(exp)
-    }
-
     override fun visitJsong(ctx: JSongParser.JsongContext): JsonNode? {
-        ctx.exp().forEach {
-            visit(it)
-        }
-        return flatten(stack.firstOrNull())
+        super.visitJsong(ctx)
+        return functions.flatten(stack.firstOrNull())
     }
 
-    override fun visitMap(ctx: JSongParser.MapContext): JsonNode? {
-        val exp = mapper.createArrayNode()
-        array(pop()).forEach { node ->
-            push(node)
-            visit(ctx.exp())
-            if (ctx.filter() != null) {
-                visit(ctx.filter())
-            }
-            pop()?.let { exp.add(it) }
-        }
-        return push(exp)
-    }
+//    override fun visitCompare(ctx: JSongParser.CompareContext): JsonNode? {
+//        visit(ctx.exp())
+//
+//        val rhs = pop()
+//        val res = when {
+//            ctx.GE() != null -> functions.ge(lhs, rhs)
+//            ctx.GT() != null -> functions.gt(lhs, rhs)
+//            ctx.EQ() != null -> functions.eq(lhs, rhs)
+//            ctx.LE() != null -> functions.le(lhs, rhs)
+//            ctx.LT() != null -> functions.lt(lhs, rhs)
+//            ctx.NE() != null -> functions.ne(lhs, rhs)
+//            ctx.IN() != null -> functions.include(lhs, rhs)
+//            else -> throw UnsupportedOperationException("$ctx not recognized")
+//        }
+//        return push(res)
+//    }
+
+//    override fun visitFilter(ctx: JSongParser.FilterContext): JsonNode? {
+//        val exp = mapper.createArrayNode()
+//        val lhs = pop()
+//        functions.array(lhs).forEach { node ->
+//            ctx.exp().forEach {
+//                push(node)
+//                visit(it)
+//                val rhs = pop()
+//                println(rhs)
+//            }
+//
+//        }
+//        return push(exp)
+//    }
+
+    //        ctx.exp().forEach {
+//            push(lhs)
+//            visit(it)
+//        }
+//        when (val rhs = pop()) {
+//            is NumericNode -> {
+//                lhs[offset(lhs, rhs.asInt())]?.let { exp.add(it) }
+//            }
+//            is RangeNodes -> {
+//                rhs.indexes.forEach { index ->
+//                    lhs[offset(lhs, index.asInt())]?.let { exp.add(it) }
+//                }
+//            }
+//            else -> {
+//                println("boo")
+//            }
+//        }
+
+//    override fun visitMap(ctx: JSongParser.MapContext): JsonNode? {
+//        val exp = mapper.createArrayNode()
+//        functions.array(pop()).forEach { node ->
+//            push(node)
+//            visit(ctx.exp())
+//            if (ctx.filter() != null) {
+//                visit(ctx.filter())
+//            }
+//            pop()?.let { exp.add(it) }
+//        }
+//        return push(exp)
+//    }
 
     override fun visitNihil(ctx: JSongParser.NihilContext): JsonNode? {
         return push(NullNode.instance)
@@ -154,22 +148,22 @@ class Processor internal constructor(
     override fun visitObj(ctx: JSongParser.ObjContext): JsonNode? {
         val exp = mapper.createObjectNode()
         ctx.pair().forEachIndexed { index, pairCtx ->
-            visit(pairCtx.key)
-            val key = pop()?.asText() ?: index.toString()
-            visit(pairCtx.value)
-            val value = pop() ?: NullNode.instance
-            exp.set<JsonNode>(key, value)
+            visit(pairCtx.lhs)
+            val lhs = pop()?.asText() ?: index.toString()
+            visit(pairCtx.rhs)
+            val rhs = pop() ?: NullNode.instance
+            exp.set<JsonNode>(lhs, rhs)
         }
         return push(exp)
     }
 
-    override fun visitPath(ctx: JSongParser.PathContext): JsonNode? {
-        var exp = push(PathNode(ctx.text))
-        if (stack.size > 1) {
-            exp = push(select(pop(), pop()))
-        }
-        return exp
-    }
+//    override fun visitPath(ctx: JSongParser.PathContext): JsonNode? {
+//        var exp = push(PathNode(ctx.text))
+//        if (stack.size > 1) {
+//            exp = push(select(pop(), pop()))
+//        }
+//        return exp
+//    }
 
     override fun visitRange(ctx: JSongParser.RangeContext): JsonNode? {
         visit(ctx.min)
@@ -188,12 +182,12 @@ class Processor internal constructor(
         return push(exp)
     }
 
-    override fun visitScope(ctx: JSongParser.ScopeContext): JsonNode? {
-        ctx.exp().forEach { ctx_exp ->
-            visit(ctx_exp)
-        }
-        return stack.firstOrNull()
-    }
+//    override fun visitScope(ctx: JSongParser.ScopeContext): JsonNode? {
+//        ctx.exp().forEach { ctx_exp ->
+//            visit(ctx_exp)
+//        }
+//        return stack.firstOrNull()
+//    }
 
     override fun visitText(ctx: JSongParser.TextContext): JsonNode? {
         return push(TextNode(ctx.text.substring(1, ctx.text.length - 1)))

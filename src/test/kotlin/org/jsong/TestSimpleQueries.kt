@@ -86,7 +86,7 @@ class TestSimpleQueries {
             }
         """.trimIndent()
         )
-        val actual = JSong.of("Phone|0|").evaluate(TestResources.address)
+        val actual = JSong.of("Phone[0]").evaluate(TestResources.address)
         assertEquals(expected, actual)
     }
 

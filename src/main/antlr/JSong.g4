@@ -5,16 +5,7 @@ grammar JSong;
 }
 
 jsong
-    : (exp | map)* EOF
-    ;
-
-literal
-    : array
-    | obj
-    | bool
-    | nihil
-    | number
-    | text
+    : (exp | filter) EOF
     ;
 
 array
@@ -45,6 +36,17 @@ exp
     | scope
     ;
 
+filter
+    : lhs = exp rhs = array;
+
+literal
+    : array
+    | obj
+    | bool
+    | nihil
+    | number
+    | text
+    ;
 
 nihil
     : NULL
@@ -54,9 +56,9 @@ number
     : NUMBER
     ;
 
-map
-    : lhs = exp '.' rhs = exp '[' filter = exp ']'
-    ;
+//map
+//    : lhs = exp '.' rhs = exp '[' filter = exp ']'
+//    ;
 
 obj
     : '{' pair (',' pair)* '}'

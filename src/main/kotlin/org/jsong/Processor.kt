@@ -20,14 +20,6 @@ class Processor internal constructor(
         push(root)
     }
 
-
-    private fun offset(node: ArrayNode, index: Int): Int {
-        return when {
-            index < 0 -> node.size() + index
-            else -> index
-        }
-    }
-
     private fun push(node: JsonNode?): JsonNode? {
         if (node != null) stack.push(node)
         return node
@@ -46,7 +38,12 @@ class Processor internal constructor(
             is ArrayNode -> path.forEach {
                 exp.addAll(select(it, node))
             }
-            is NumericNode -> functions.array(node).get(path.asInt())?.let { exp.add(it) }
+            is NumericNode -> {
+                val array = functions.array(node)
+                val value = path.asInt()
+                val index = if (value < 0) array.size() + value else value
+                functions.array(node).get(index)?.let { exp.add(it) }
+            }
             is PathNode -> when (node) {
                 is ObjectNode -> node[path.asText()]?.let {
                     when(it) {

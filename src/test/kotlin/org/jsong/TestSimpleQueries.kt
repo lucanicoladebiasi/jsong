@@ -103,7 +103,7 @@ class TestSimpleQueries {
               "number": "01962 001234" }
         """.trimIndent()
         )
-        val actual = JSong.of("Phone|1|").evaluate(TestResources.address)
+        val actual = JSong.of("Phone[1]").evaluate(TestResources.address)
         assertEquals(expected, actual)
     }
 
@@ -121,7 +121,7 @@ class TestSimpleQueries {
             }
         """.trimIndent()
         )
-        val actual = JSong.of("Phone|-1|").evaluate(TestResources.address)
+        val actual = JSong.of("Phone[-1]").evaluate(TestResources.address)
         assertEquals(expected, actual)
     }
 
@@ -139,7 +139,7 @@ class TestSimpleQueries {
             }
         """.trimIndent()
         )
-        val actual = JSong.of( "Phone|-2|").evaluate(TestResources.address)
+        val actual = JSong.of( "Phone[-2]").evaluate(TestResources.address)
         assertEquals(expected, actual)
     }
 
@@ -148,7 +148,7 @@ class TestSimpleQueries {
      */
     @Test
     fun `Doesn't exist - returns nothing`() {
-        val actual = JSong.of("Phone|8|").evaluate(TestResources.address)
+        val actual = JSong.of("Phone[8]").evaluate(TestResources.address)
         assertNull(actual)
     }
 
@@ -163,7 +163,7 @@ class TestSimpleQueries {
             "0203 544 1234"
         """.trimIndent()
         )
-        val actual = JSong.of("Phone|0|.number").evaluate(TestResources.address)
+        val actual = JSong.of("Phone[0].number").evaluate(TestResources.address)
         assertEquals(expected, actual)
     }
 

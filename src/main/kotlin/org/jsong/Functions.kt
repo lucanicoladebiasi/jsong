@@ -12,6 +12,10 @@ import java.math.BigDecimal
 
 class Functions(private val mapper: ObjectMapper) {
 
+    fun add(lhs: JsonNode?, rhs: JsonNode?): DecimalNode {
+        return DecimalNode((lhs?.decimalValue() ?: BigDecimal.ZERO).add(rhs?.decimalValue() ?: BigDecimal.ZERO))
+    }
+
     fun array(node: JsonNode?): ArrayNode {
         return when (node) {
             null -> mapper.createArrayNode()
@@ -44,17 +48,21 @@ class Functions(private val mapper: ObjectMapper) {
         }
     }
 
+    fun div(lhs: JsonNode?, rhs: JsonNode?): DecimalNode {
+        return DecimalNode((lhs?.decimalValue() ?: BigDecimal.ZERO).div(rhs?.decimalValue() ?: BigDecimal.ZERO))
+    }
+
     fun eq(lhs: JsonNode?, rhs: JsonNode?): BooleanNode {
         return BooleanNode.valueOf(flatten(lhs) == flatten(rhs))
     }
 
     fun flatten(node: JsonNode?): JsonNode? {
         return when (node) {
-            is RangeNodes -> when (node.size()) {
+            is RangesNode -> when (node.size()) {
                 0 -> null
                 1 -> flatten(node[0]) as RangeNode
                 else -> {
-                    val res = RangeNodes(mapper.nodeFactory)
+                    val res = RangesNode(mapper.nodeFactory)
                     node.forEach { element ->
                         flatten(element)?.let { res.add(it as RangeNode) }
                     }
@@ -136,6 +144,18 @@ class Functions(private val mapper: ObjectMapper) {
 
     fun ne(lhs: JsonNode?, rhs: JsonNode?): BooleanNode {
         return BooleanNode.valueOf(flatten(lhs) != flatten(rhs))
+    }
+
+    fun mul(lhs: JsonNode?, rhs: JsonNode?): DecimalNode {
+        return DecimalNode((lhs?.decimalValue() ?: BigDecimal.ZERO).multiply(rhs?.decimalValue() ?: BigDecimal.ZERO))
+    }
+
+    fun reminder(lhs: JsonNode?, rhs: JsonNode?): DecimalNode {
+        return DecimalNode((lhs?.decimalValue() ?: BigDecimal.ZERO).remainder(rhs?.decimalValue() ?: BigDecimal.ZERO))
+    }
+
+    fun sub(lhs: JsonNode?, rhs: JsonNode?): DecimalNode {
+        return DecimalNode((lhs?.decimalValue() ?: BigDecimal.ZERO).subtract(rhs?.decimalValue() ?: BigDecimal.ZERO))
     }
 
 }

@@ -5,11 +5,15 @@ grammar JSong;
 }
 
 jsong
-    : (exp | filter) EOF
+    : exp* EOF
+    ;
+
+add
+    : '+' exp
     ;
 
 array
-    : '[' exp (',' exp)* ']'
+    : '[' literal (',' literal)* ']'
     | '[' ']'
     ;
 
@@ -26,18 +30,30 @@ context_binding
     : '@' context path
     ;
 
+div
+    : '/' exp
+    ;
+
 exp
-    : context
+    : add
+    | context
     | context_binding
+    | div
+    | filter
     | literal
+    | map
+    | mul
     | path
     | positional_binding
     | ranges
+    | reminder
     | scope
+    | sub
     ;
 
 filter
-    : lhs = exp rhs = array;
+    : '[' exp ']'
+    ;
 
 literal
     : array
@@ -48,6 +64,14 @@ literal
     | text
     ;
 
+map
+    : '.' exp filter?
+    ;
+
+mul
+    : '*' exp
+    ;
+
 nihil
     : NULL
     ;
@@ -55,10 +79,6 @@ nihil
 number
     : NUMBER
     ;
-
-//map
-//    : lhs = exp '.' rhs = exp '[' filter = exp ']'
-//    ;
 
 obj
     : '{' pair (',' pair)* '}'
@@ -85,8 +105,16 @@ ranges
     : '[' range (',' range)* ']'
     ;
 
+reminder
+    : '%' exp
+    ;
+
 scope:
     '(' exp (';'? exp)* ')'
+    ;
+
+sub
+    : '-' exp
     ;
 
 text

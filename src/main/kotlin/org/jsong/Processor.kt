@@ -32,9 +32,17 @@ class Processor internal constructor(
         }
     }
 
-    private fun select(path: JsonNode?, node: JsonNode?): ArrayNode {
+    private fun select(node: JsonNode?, path: JsonNode?): ArrayNode {
         val exp = mapper.createArrayNode()
         when (path) {
+            is RangesNode -> {
+                val array = functions.array(node)
+                path.indexes.forEach {
+                    val value = it.asInt()
+                    val index = if (value < 0) array.size() + value else value
+                    array.get(index)?.let { exp.add(it) }
+                }
+            }
             is ArrayNode -> path.forEach {
                 exp.addAll(select(it, node))
             }
@@ -42,7 +50,7 @@ class Processor internal constructor(
                 val array = functions.array(node)
                 val value = path.asInt()
                 val index = if (value < 0) array.size() + value else value
-                functions.array(node).get(index)?.let { exp.add(it) }
+                array.get(index)?.let { exp.add(it) }
             }
             is PathNode -> when (node) {
                 is ObjectNode -> node[path.asText()]?.let {
@@ -56,9 +64,16 @@ class Processor internal constructor(
         return exp
     }
 
+    override fun visitAdd(ctx: JSongParser.AddContext): JsonNode? {
+        visit(ctx.exp())
+        val rhs = pop()
+        val lhs = pop()
+        return push(functions.add(lhs, rhs))
+    }
+
     override fun visitArray(ctx: JSongParser.ArrayContext): JsonNode? {
         val exp = mapper.createArrayNode()
-        ctx.exp().forEach {
+        ctx.children.forEach {
             visit(it)
             pop()?.let { exp.add(it) }
         }
@@ -75,10 +90,13 @@ class Processor internal constructor(
         )
     }
 
+    override fun visitContext(ctx: JSongParser.ContextContext): JsonNode? {
+        return push(stack.firstOrNull())
+    }
+
     override fun visitJsong(ctx: JSongParser.JsongContext): JsonNode? {
-        when {
-            ctx.exp() != null -> visit(ctx.exp())
-            ctx.filter() != null -> visit(ctx.filter())
+        ctx.children.forEach {
+            visit(it)
         }
         return functions.flatten(stack.firstOrNull())
     }
@@ -101,44 +119,26 @@ class Processor internal constructor(
 //    }
 
     override fun visitFilter(ctx: JSongParser.FilterContext): JsonNode? {
-        visit(ctx.lhs)
-        visit(ctx.rhs)
-        val rhs = pop()
-        val lhs = pop()
-        return push(select(rhs, lhs))
+        visit(ctx.exp())
+        val path = pop()
+        return push(when(val node = pop()) {
+            null -> node
+            else -> select(node, path)
+        })
     }
 
-
-//        ctx.exp().forEach {
-//            push(lhs)
-//            visit(it)
-//        }
-//        when (val rhs = pop()) {
-//            is NumericNode -> {
-//                lhs[offset(lhs, rhs.asInt())]?.let { exp.add(it) }
-//            }
-//            is RangeNodes -> {
-//                rhs.indexes.forEach { index ->
-//                    lhs[offset(lhs, index.asInt())]?.let { exp.add(it) }
-//                }
-//            }
-//            else -> {
-//                println("boo")
-//            }
-//        }
-
-//    override fun visitMap(ctx: JSongParser.MapContext): JsonNode? {
-//        val exp = mapper.createArrayNode()
-//        functions.array(pop()).forEach { node ->
-//            push(node)
-//            visit(ctx.exp())
-//            if (ctx.filter() != null) {
-//                visit(ctx.filter())
-//            }
-//            pop()?.let { exp.add(it) }
-//        }
-//        return push(exp)
-//    }
+    override fun visitMap(ctx: JSongParser.MapContext): JsonNode? {
+        val exp = mapper.createArrayNode()
+        functions.array(pop()).forEach { node ->
+            push(node)
+            visit(ctx.exp())
+            if (ctx.filter() != null) {
+                visit(ctx.filter())
+            }
+            pop()?.let { exp.addAll(functions.array(it)) }
+        }
+        return push(exp)
+    }
 
     override fun visitNihil(ctx: JSongParser.NihilContext): JsonNode? {
         return push(NullNode.instance)
@@ -161,8 +161,7 @@ class Processor internal constructor(
     }
 
     override fun visitPath(ctx: JSongParser.PathContext): JsonNode? {
-        push(PathNode(ctx.text))
-        return push(select(pop(), pop()))
+        return push(select(pop(), PathNode(ctx.text)))
     }
 
     override fun visitRange(ctx: JSongParser.RangeContext): JsonNode? {
@@ -174,7 +173,7 @@ class Processor internal constructor(
     }
 
     override fun visitRanges(ctx: JSongParser.RangesContext): JsonNode? {
-        val exp = RangeNodes(mapper.nodeFactory)
+        val exp = RangesNode(mapper.nodeFactory)
         ctx.range().forEach {
             visit(it)
             exp.add(pop())
@@ -182,12 +181,12 @@ class Processor internal constructor(
         return push(exp)
     }
 
-//    override fun visitScope(ctx: JSongParser.ScopeContext): JsonNode? {
-//        ctx.exp().forEach { ctx_exp ->
-//            visit(ctx_exp)
-//        }
-//        return stack.firstOrNull()
-//    }
+    override fun visitScope(ctx: JSongParser.ScopeContext): JsonNode? {
+        ctx.children.forEach {
+            visit(it)
+        }
+        return stack.firstOrNull()
+    }
 
     override fun visitText(ctx: JSongParser.TextContext): JsonNode? {
         return push(TextNode(ctx.text.substring(1, ctx.text.length - 1)))

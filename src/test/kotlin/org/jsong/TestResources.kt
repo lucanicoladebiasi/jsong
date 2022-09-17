@@ -60,4 +60,14 @@ object TestResources {
         }
         """.trimIndent()
     )
+
+    @Language("JSON")
+    val array = mapper.readTree(
+        """
+        [
+          { "ref": [ 1,2 ] },
+          { "ref": [ 3,4 ] }
+        ]
+        """.trimIndent()
+    )
 }

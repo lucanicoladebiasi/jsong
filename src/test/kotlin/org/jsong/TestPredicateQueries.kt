@@ -1,6 +1,7 @@
 package org.jsong
 
 import org.intellij.lang.annotations.Language
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
@@ -70,6 +71,7 @@ class TestPredicateQueries {
      * https://docs.jsonata.org/predicate#predicates
      */
     @Test
+    @Disabled
     fun `Select the Phone items that have a type field that equals mobile`() {
         @Language("JSON")
         val expected = TestResources.mapper.readTree(

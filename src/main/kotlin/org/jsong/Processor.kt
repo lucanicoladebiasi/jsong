@@ -43,15 +43,18 @@ class Processor internal constructor(
                     array.get(index)?.let { exp.add(it) }
                 }
             }
+
             is ArrayNode -> path.forEach {
                 exp.addAll(select(it, node))
             }
+
             is NumericNode -> {
                 val array = functions.array(node)
                 val value = path.asInt()
                 val index = if (value < 0) array.size() + value else value
                 array.get(index)?.let { exp.add(it) }
             }
+
             is PathNode -> when (node) {
                 is ObjectNode -> node[path.asText()]?.let {
                     when (it) {
@@ -116,10 +119,11 @@ class Processor internal constructor(
     }
 
     override fun visitFilter(ctx: JSongParser.FilterContext): JsonNode? {
+        val node = pop()
         visit(ctx.exp())
         val path = pop()
         return push(
-            when (val node = pop()) {
+            when (node) {
                 null -> node
                 else -> select(node, path)
             }
@@ -172,6 +176,7 @@ class Processor internal constructor(
                 }
                 pop()?.let { exp.addAll(functions.array(it)) }
             }
+
             is RangesNode -> pop.indexes.forEach { index ->
                 push(index)
                 visit(ctx.exp())
@@ -180,14 +185,16 @@ class Processor internal constructor(
                 }
                 pop()?.let { exp.addAll(functions.array(it)) }
             }
-            else -> functions.array(pop()).forEach { node ->
-                push(node)
-                visit(ctx.exp())
-                if (ctx.filter() != null) {
-                    visit(ctx.filter())
+
+            else -> functions.array(pop).forEach { node ->
+                    push(node)
+                    visit(ctx.exp())
+                    if (ctx.filter() != null) {
+                        visit(ctx.filter())
+                    }
+                    pop()?.let { exp.addAll(functions.array(it)) }
                 }
-                pop()?.let { exp.addAll(functions.array(it)) }
-            }
+
         }
         return push(exp)
     }

@@ -8,9 +8,16 @@ import com.fasterxml.jackson.databind.node.DecimalNode
 import com.fasterxml.jackson.databind.node.NullNode
 import com.fasterxml.jackson.databind.node.NumericNode
 import com.fasterxml.jackson.databind.node.ObjectNode
+import java.lang.Integer.decode
+import java.lang.Integer.max
 import java.math.BigDecimal
+import java.math.MathContext
+import java.math.RoundingMode
 
-class Functions(private val mapper: ObjectMapper) {
+class Functions(
+    private val mapper: ObjectMapper,
+    private val mathContext: MathContext = MathContext.DECIMAL128
+    ) {
 
     fun add(lhs: JsonNode?, rhs: JsonNode?): DecimalNode {
         return DecimalNode((lhs?.decimalValue() ?: BigDecimal.ZERO).add(rhs?.decimalValue() ?: BigDecimal.ZERO))
@@ -49,7 +56,9 @@ class Functions(private val mapper: ObjectMapper) {
     }
 
     fun div(lhs: JsonNode?, rhs: JsonNode?): DecimalNode {
-        return DecimalNode((lhs?.decimalValue() ?: BigDecimal.ZERO).div(rhs?.decimalValue() ?: BigDecimal.ZERO))
+        val dividend = lhs?.decimalValue() ?: BigDecimal.ZERO
+        val divisor = rhs?.decimalValue() ?: BigDecimal.ZERO
+        return DecimalNode(dividend.divide(divisor, mathContext))
     }
 
     fun eq(lhs: JsonNode?, rhs: JsonNode?): BooleanNode {
@@ -84,28 +93,28 @@ class Functions(private val mapper: ObjectMapper) {
         }
     }
 
-    fun ge(lhs: JsonNode?, rhs: JsonNode?): BooleanNode {
-        return BooleanNode.valueOf(
-            when (val lhn = flatten(lhs)) {
-                null -> false
-                else -> when (val rhn = flatten(rhs)) {
-                    null -> false
-                    is DecimalNode -> lhn.bigIntegerValue() >= rhn.bigIntegerValue()
-                    is NumericNode -> lhn.bigIntegerValue() >= rhn.bigIntegerValue()
-                    else -> lhn.asText() > rhn.asText()
-                }
-            }
-        )
-    }
-
     fun gt(lhs: JsonNode?, rhs: JsonNode?): BooleanNode {
         return BooleanNode.valueOf(
             when (val lhn = flatten(lhs)) {
                 null -> false
                 else -> when (val rhn = flatten(rhs)) {
                     null -> false
-                    is DecimalNode -> lhn.bigIntegerValue() > rhn.bigIntegerValue()
-                    is NumericNode -> lhn.bigIntegerValue() > rhn.bigIntegerValue()
+                    is DecimalNode -> lhn.decimalValue() > rhn.decimalValue()
+                    is NumericNode -> lhn.decimalValue() > rhn.decimalValue()
+                    else -> lhn.asText() > rhn.asText()
+                }
+            }
+        )
+    }
+
+    fun gte(lhs: JsonNode?, rhs: JsonNode?): BooleanNode {
+        return BooleanNode.valueOf(
+            when (val lhn = flatten(lhs)) {
+                null -> false
+                else -> when (val rhn = flatten(rhs)) {
+                    null -> false
+                    is DecimalNode -> lhn.decimalValue() >= rhn.decimalValue()
+                    is NumericNode -> lhn.decimalValue() >= rhn.decimalValue()
                     else -> lhn.asText() > rhn.asText()
                 }
             }
@@ -113,21 +122,7 @@ class Functions(private val mapper: ObjectMapper) {
     }
 
     fun include(lhs: JsonNode?, rhs: JsonNode?): BooleanNode {
-        val lhs = flatten(lhs)
-        val rhs = array(flatten(rhs))
-        return BooleanNode.valueOf(rhs.contains(lhs))
-    }
-
-    fun le(lhs: JsonNode?, rhs: JsonNode?): BooleanNode {
-        return BooleanNode.valueOf(when (val lhn = flatten(lhs)) {
-            null -> false
-            else -> when (val rhn = flatten(rhs)) {
-                null -> false
-                is DecimalNode -> lhn.bigIntegerValue() <= rhn.bigIntegerValue()
-                is NumericNode -> lhn.bigIntegerValue() <= rhn.bigIntegerValue()
-                else -> lhn.asText() > rhn.asText()
-            }
-        })
+        return BooleanNode.valueOf(array(flatten(rhs)).contains(flatten(lhs)))
     }
 
     fun lt(lhs: JsonNode?, rhs: JsonNode?): BooleanNode {
@@ -135,8 +130,20 @@ class Functions(private val mapper: ObjectMapper) {
             null -> false
             else -> when (val rhn = flatten(rhs)) {
                 null -> false
-                is DecimalNode -> lhn.bigIntegerValue() < rhn.bigIntegerValue()
-                is NumericNode -> lhn.bigIntegerValue() < rhn.bigIntegerValue()
+                is DecimalNode -> lhn.decimalValue() < rhn.decimalValue()
+                is NumericNode -> lhn.decimalValue() < rhn.decimalValue()
+                else -> lhn.asText() > rhn.asText()
+            }
+        })
+    }
+
+    fun lte(lhs: JsonNode?, rhs: JsonNode?): BooleanNode {
+        return BooleanNode.valueOf(when (val lhn = flatten(lhs)) {
+            null -> false
+            else -> when (val rhn = flatten(rhs)) {
+                null -> false
+                is DecimalNode -> lhn.decimalValue() <= rhn.decimalValue()
+                is NumericNode -> lhn.decimalValue() <= rhn.decimalValue()
                 else -> lhn.asText() > rhn.asText()
             }
         })

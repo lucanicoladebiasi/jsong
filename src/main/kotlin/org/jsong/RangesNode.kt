@@ -22,16 +22,4 @@ class RangesNode constructor(nodeFactory: JsonNodeFactory) : ArrayNode(nodeFacto
             return _nodeFactory.arrayNode().addAll(set.sorted().map { IntNode(it) })
         }
 
-    fun add(value: RangeNode?): RangesNode {
-        return super.add(value) as RangesNode
-    }
-
-    fun addAll(nodes: MutableCollection<out RangeNode>?): RangesNode {
-        return super.addAll(nodes) as RangesNode
-    }
-
-    fun addAll(other: RangesNode?): RangesNode {
-        return super.addAll(other) as RangesNode
-    }
-
 }

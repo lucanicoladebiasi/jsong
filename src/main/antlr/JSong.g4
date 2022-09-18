@@ -34,15 +34,26 @@ div
     : '/' exp
     ;
 
+eq
+    : '=' exp
+    ;
+
 exp
     : add
     | context
     | context_binding
     | div
+    | eq
     | filter
+    | gt
+    | gte
+    | in
     | literal
+    | lt
+    | lte
     | map
     | mul
+    | ne
     | path
     | positional_binding
     | ranges
@@ -55,6 +66,19 @@ filter
     : '[' exp ']'
     ;
 
+gt
+    : '>' exp
+    ;
+
+gte
+    : '>=' exp
+    ;
+
+in
+    : 'in' exp
+    ;
+
+
 literal
     : array
     | obj
@@ -64,12 +88,24 @@ literal
     | text
     ;
 
+lt
+    : '<' exp
+    ;
+
+lte
+    : '<=' exp
+    ;
+
 map
     : '.' exp filter?
     ;
 
 mul
     : '*' exp
+    ;
+
+ne
+    : '!=' exp
     ;
 
 nihil
@@ -127,7 +163,7 @@ FALSE: 'false';
 
 NULL: 'null';
 
-NUMBER: '-'? INT ('.' [0-9] +)? EXP?;
+NUMBER: INT ('.' [0-9] +)? EXP?;
 fragment INT: '0' | [1-9] [0-9]*;
 fragment EXP: [Ee] [+\-]? INT;
 

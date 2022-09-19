@@ -8,11 +8,13 @@ import org.jsong.antlr.JSongParser
 import java.util.*
 
 class Processor internal constructor(
-        private val mapper: ObjectMapper,
-        root: JsonNode?
+    private val mapper: ObjectMapper,
+    root: JsonNode?
 ) : JSongBaseVisitor<JsonNode?>() {
     private val functions = Functions(mapper)
     private val stack = ArrayDeque<JsonNode>()
+    @Volatile
+    private var isToFlatten = true
 
     init {
         push(root)
@@ -82,13 +84,19 @@ class Processor internal constructor(
         return push(exp)
     }
 
+    override fun visitArrayConstructor(ctx: JSongParser.ArrayConstructorContext): JsonNode? {
+        visit(ctx.exp())
+        isToFlatten = false
+        return push(functions.array(pop()))
+    }
+
     override fun visitBool(ctx: JSongParser.BoolContext): JsonNode? {
         return push(
-                when {
-                    ctx.FALSE() != null -> BooleanNode.FALSE
-                    ctx.TRUE() != null -> BooleanNode.TRUE
-                    else -> throw IllegalArgumentException("$ctx not recognized")
-                }
+            when {
+                ctx.FALSE() != null -> BooleanNode.FALSE
+                ctx.TRUE() != null -> BooleanNode.TRUE
+                else -> throw IllegalArgumentException("$ctx not recognized")
+            }
         )
     }
 
@@ -119,7 +127,6 @@ class Processor internal constructor(
         visit(ctx.rhs)
         when(val rhs = pop()) {
             is NumericNode -> {
-
                 val value = rhs.asInt()
                 val offset = if (value < 0) lhs.size() + value else value
                 lhs.get(offset)?.let { exp.add(it) }
@@ -142,7 +149,6 @@ class Processor internal constructor(
                     }
                 }
             }
-
         }
         return push(exp)
     }
@@ -173,7 +179,7 @@ class Processor internal constructor(
 
     override fun visitJsong(ctx: JSongParser.JsongContext): JsonNode? {
         ctx.exp()?.let { visit(it) }
-        return functions.flatten(stack.firstOrNull())
+        return stack.firstOrNull()?.let { if (isToFlatten) functions.flatten(it) else it }
     }
 
     override fun visitLt(ctx: JSongParser.LtContext): JsonNode? {
@@ -196,6 +202,12 @@ class Processor internal constructor(
         val exp = mapper.createArrayNode()
         visit(ctx.lhs)
         when(val lhs = pop()) {
+            is RangeNode -> lhs.indexes.forEach { index ->
+                push(index)
+                visit(ctx.rhs)
+                pop()?.let { exp.addAll(functions.array(it)) }
+            }
+
             is RangesNode -> lhs.indexes.forEach { index ->
                 push(index)
                 visit(ctx.rhs)

@@ -34,6 +34,7 @@ exp
     | lhs = exp 'in' rhs = exp      #in
     | lhs = exp '[' rhs = exp ']'   #filter
     | lhs = exp '.' rhs = exp       #map
+    | exp '[]'                      #arrayConstructor
     | '(' exp (';'? exp)* ')'       #scope
     | '[' range (',' range)* ']'    #ranges
     | PATH                          #path

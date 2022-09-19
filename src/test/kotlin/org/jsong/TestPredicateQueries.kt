@@ -55,7 +55,6 @@ class TestPredicateQueries {
      * https://docs.JSong.org/predicate#singleton-array-and-value-equivalence
      */
     @Test
-    @Disabled
     fun `Singleton array and value equivalence - array of object`() {
         @Language("JSON")
         val expected = TestResources.mapper.readTree(

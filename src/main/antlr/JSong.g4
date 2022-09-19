@@ -5,12 +5,9 @@ grammar JSong;
 }
 
 jsong
-    : exp* EOF
+    : exp? EOF
     ;
 
-add
-    : '+' exp
-    ;
 
 array
     : '[' literal (',' literal)* ']'
@@ -22,62 +19,27 @@ bool
     | FALSE
     ;
 
-context
-    : '$'
-    ;
-
-context_binding
-    : '@' context path
-    ;
-
-div
-    : '/' exp
-    ;
-
-eq
-    : '=' exp
-    ;
-
 exp
-    : add
-    | context
-    | context_binding
-    | div
-    | eq
-    | filter
-    | gt
-    | gte
-    | in
-    | literal
-    | lt
-    | lte
-    | map
-    | mul
-    | ne
-    | path
-    | positional_binding
-    | ranges
-    | reminder
-    | scope
-    | sub
+    : lhs = exp '*' rhs = exp       #mul
+    | lhs = exp '/' rhs = exp       #div
+    | lhs = exp '%' rhs = exp       #reminder
+    | lhs = exp '+' rhs = exp       #add
+    | lhs = exp '-' rhs = exp       #sub
+    | lhs = exp '=' rhs = exp       #eq
+    | lhs = exp '!=' rhs = exp      #ne
+    | lhs = exp '>' rhs = exp       #gt
+    | lhs = exp '<' rhs = exp       #lt
+    | lhs = exp '>=' rhs = exp      #gte
+    | lhs = exp '<='rhs = exp       #lte
+    | lhs = exp 'in' rhs = exp      #in
+    | lhs = exp '[' rhs = exp ']'   #filter
+    | lhs = exp '.' rhs = exp       #map
+    | '(' exp (';'? exp)* ')'       #scope
+    | '[' range (',' range)* ']'    #ranges
+    | PATH                          #path
+    | literal                       #json
+    | '$'                           #context
     ;
-
-filter
-    : '[' exp ']'
-    ;
-
-gt
-    : '>' exp
-    ;
-
-gte
-    : '>=' exp
-    ;
-
-in
-    : 'in' exp
-    ;
-
 
 literal
     : array
@@ -86,26 +48,6 @@ literal
     | nihil
     | number
     | text
-    ;
-
-lt
-    : '<' exp
-    ;
-
-lte
-    : '<=' exp
-    ;
-
-map
-    : '.' exp filter?
-    ;
-
-mul
-    : '*' exp
-    ;
-
-ne
-    : '!=' exp
     ;
 
 nihil
@@ -125,32 +67,9 @@ pair
     : lhs = exp ':' rhs = exp
     ;
 
-path
-    : PATH
-    ;
-
-positional_binding
-    : '#' context path
-    ;
 
 range
     : min = exp '..' max = exp
-    ;
-
-ranges
-    : '[' range (',' range)* ']'
-    ;
-
-reminder
-    : '%' exp
-    ;
-
-scope:
-    '(' exp (';'? exp)* ')'
-    ;
-
-sub
-    : '-' exp
     ;
 
 text
@@ -163,7 +82,7 @@ FALSE: 'false';
 
 NULL: 'null';
 
-NUMBER: INT ('.' [0-9] +)? EXP?;
+NUMBER: '-'? INT ('.' [0-9] +)? EXP?;
 fragment INT: '0' | [1-9] [0-9]*;
 fragment EXP: [Ee] [+\-]? INT;
 

@@ -18,7 +18,7 @@ class TestNumericOperators {
     @Test
     fun Addition() {
         val expected = DecimalNode(BigDecimal.valueOf(7L))
-        val actual = JSong.of("5+2").evaluate()
+        val actual = JSong.of("5 + 2").evaluate()
         assertEquals(expected, actual)
     }
 
@@ -28,7 +28,7 @@ class TestNumericOperators {
     @Test
     fun Subtraction() {
         val expected = DecimalNode(BigDecimal(3L))
-        val actual = JSong.of("5-2").evaluate()
+        val actual = JSong.of("5 - 2").evaluate()
         assertEquals(expected, actual)
     }
 
@@ -48,7 +48,7 @@ class TestNumericOperators {
     @Test
     fun Multiplication() {
         val expected = DecimalNode(BigDecimal(10L))
-        val actual = JSong.of("5*2").evaluate()
+        val actual = JSong.of("5 * 2").evaluate()
         assertEquals(expected, actual)
     }
 
@@ -58,7 +58,7 @@ class TestNumericOperators {
     @Test
     fun Division() {
         val expected = DecimalNode(BigDecimal(2.5))
-        val actual = JSong.of("5/2").evaluate()
+        val actual = JSong.of("5 / 2").evaluate()
         assertEquals(expected, actual)
     }
 
@@ -68,7 +68,7 @@ class TestNumericOperators {
     @Test
     fun Reminder() {
         val expected = DecimalNode(BigDecimal.ONE)
-        val actual = JSong.of("5%2").evaluate()
+        val actual = JSong.of("5 % 2").evaluate()
         assertEquals(expected, actual)
     }
 
@@ -114,7 +114,7 @@ class TestNumericOperators {
             .add(BigDecimal(9L))
             .add(BigDecimal(16L))
             .add(BigDecimal(25L))
-        val actual = JSong.of("[1..5].(\$*\$)").evaluate()
+        val actual = JSong.of("[1..5].(\$ * \$)").evaluate()
         assertEquals(expected, actual)
     }
 

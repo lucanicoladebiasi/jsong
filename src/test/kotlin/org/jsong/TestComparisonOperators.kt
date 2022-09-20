@@ -3,7 +3,6 @@ package org.jsong
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
@@ -84,7 +83,6 @@ class TestComparisonOperators {
      * https://docs.jsonata.org/comparison-operators#in-inclusion
      */
     @Test
-    @Disabled
     fun `in (Inclusion) - in array`() {
         assertTrue(JSong.of("\"world\" in [\"hello\", \"world\"]").evaluate()?.booleanValue() ?: false)
     }
@@ -102,7 +100,6 @@ class TestComparisonOperators {
      * https://docs.jsonata.org/comparison-operators#in-inclusion
      */
     @Test
-    @Disabled
     fun `in (Inclusion) - in predicate`() {
         @Language("JSON")
         val expected = TestResources.mapper.readTree(

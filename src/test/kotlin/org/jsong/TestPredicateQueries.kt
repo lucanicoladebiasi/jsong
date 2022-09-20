@@ -8,6 +8,7 @@ import kotlin.test.assertEquals
  * https://docs.JSong.org/predicate
  */
 class TestPredicateQueries {
+
     /**
      * https://docs.JSong.org/predicate#predicates
      */
@@ -22,6 +23,7 @@ class TestPredicateQueries {
         val actual = JSong.of("Phone[type='mobile']").evaluate(TestResources.address)
         assertEquals(expected, actual)
     }
+
     /**
      * https://docs.JSong.org/predicate#predicates
      */
@@ -36,6 +38,7 @@ class TestPredicateQueries {
         val actual = JSong.of("Phone[type='mobile'].number").evaluate(TestResources.address)
         assertEquals(expected, actual)
     }
+
     /**
      * https://docs.JSong.org/predicate#predicates
      */
@@ -50,6 +53,7 @@ class TestPredicateQueries {
         val actual = JSong.of("Phone[type='office'].number").evaluate(TestResources.address)
         assertEquals(expected, actual)
     }
+
     /**
      * https://docs.JSong.org/predicate#singleton-array-and-value-equivalence
      */
@@ -64,6 +68,7 @@ class TestPredicateQueries {
         val actual = JSong.of("Address[].City").evaluate(TestResources.address)
         assertEquals(expected, actual)
     }
+
     /**
      * https://docs.JSong.org/predicate#singleton-array-and-value-equivalence
      */
@@ -78,6 +83,7 @@ class TestPredicateQueries {
         val actual = JSong.of("Phone[0][].number").evaluate(TestResources.address)
         assertEquals(expected, actual)
     }
+
     /**
      * https://docs.JSong.org/predicate#singleton-array-and-value-equivalence
      */
@@ -92,6 +98,7 @@ class TestPredicateQueries {
         val actual = JSong.of("Phone[][type='home'].number").evaluate(TestResources.address)
         assertEquals(expected, actual)
     }
+
     /**
      * https://docs.JSong.org/predicate#singleton-array-and-value-equivalence
      */
@@ -106,10 +113,10 @@ class TestPredicateQueries {
         val actual = JSong.of("Phone[type='office'].number[]").evaluate(TestResources.address)
         assertEquals(expected, actual)
     }
+
     /**
      * https://docs.JSong.org/predicate#wildcards
      */
-
     @Test
     fun `Use of asterix instead of field name to select all fields in an object - postfix`() {
         @Language("JSON")
@@ -121,6 +128,7 @@ class TestPredicateQueries {
         val actual = JSong.of("Address.*").evaluate(TestResources.address)
         assertEquals(expected, actual)
     }
+
     /**
      * https://docs.JSong.org/predicate#wildcards
      */
@@ -135,6 +143,7 @@ class TestPredicateQueries {
         val actual = JSong.of("*.Postcode").evaluate(TestResources.address)
         assertEquals(expected, actual)
     }
+
     /**
      * https://docs.JSong.org/predicate#navigate-arbitrary-depths
      */

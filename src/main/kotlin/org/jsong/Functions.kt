@@ -2,17 +2,9 @@ package org.jsong
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.node.ArrayNode
-import com.fasterxml.jackson.databind.node.BooleanNode
-import com.fasterxml.jackson.databind.node.DecimalNode
-import com.fasterxml.jackson.databind.node.NullNode
-import com.fasterxml.jackson.databind.node.NumericNode
-import com.fasterxml.jackson.databind.node.ObjectNode
-import java.lang.Integer.decode
-import java.lang.Integer.max
+import com.fasterxml.jackson.databind.node.*
 import java.math.BigDecimal
 import java.math.MathContext
-import java.math.RoundingMode
 
 class Functions(
     private val mapper: ObjectMapper,
@@ -21,6 +13,10 @@ class Functions(
 
     fun add(lhs: JsonNode?, rhs: JsonNode?): DecimalNode {
         return DecimalNode((lhs?.decimalValue() ?: BigDecimal.ZERO).add(rhs?.decimalValue() ?: BigDecimal.ZERO))
+    }
+
+    fun and(lhs: JsonNode?, rhs: JsonNode?): BooleanNode {
+        return BooleanNode.valueOf(boolean(lhs).booleanValue() && boolean(rhs).booleanValue())
     }
 
     fun array(node: JsonNode?): ArrayNode {
@@ -155,6 +151,10 @@ class Functions(
 
     fun mul(lhs: JsonNode?, rhs: JsonNode?): DecimalNode {
         return DecimalNode((lhs?.decimalValue() ?: BigDecimal.ZERO).multiply(rhs?.decimalValue() ?: BigDecimal.ZERO))
+    }
+
+    fun or(lhs: JsonNode?, rhs: JsonNode?): BooleanNode {
+        return BooleanNode.valueOf(boolean(lhs).booleanValue() || boolean(rhs).booleanValue())
     }
 
     fun reminder(lhs: JsonNode?, rhs: JsonNode?): DecimalNode {

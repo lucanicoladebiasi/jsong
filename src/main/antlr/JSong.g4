@@ -32,6 +32,8 @@ exp
     | lhs = exp '>=' rhs = exp      #gte
     | lhs = exp '<='rhs = exp       #lte
     | lhs = exp 'in' rhs = exp      #in
+    | lhs = exp 'and' rhs = exp     #and
+    | lhs = exp 'or' rhs = exp      #or
     | lhs = exp '[' rhs = exp ']'   #filter
     | lhs = exp '.' rhs = exp       #map
     | exp '[]'                      #arrayConstructor

@@ -66,11 +66,23 @@ class Processor internal constructor(
     }
 
     override fun visitAdd(ctx: JSongParser.AddContext): JsonNode? {
+        val pop = stack.firstOrNull()
         visit(ctx.lhs)
         val lhs = pop()
+        if (pop != null) stack.push(pop)
         visit(ctx.rhs)
         val rhs = pop()
         return push(functions.add(lhs, rhs))
+    }
+
+    override fun visitAnd(ctx: JSongParser.AndContext): JsonNode? {
+        val pop = stack.firstOrNull()
+        visit(ctx.lhs)
+        val lhs = pop()
+        if (pop != null) stack.push(pop)
+        visit(ctx.rhs)
+        val rhs = pop()
+        return push(functions.and(lhs, rhs))
     }
 
     override fun visitArray(ctx: JSongParser.ArrayContext): JsonNode? {
@@ -107,16 +119,20 @@ class Processor internal constructor(
     }
 
     override fun visitDiv(ctx: JSongParser.DivContext): JsonNode? {
+        val pop = stack.firstOrNull()
         visit(ctx.lhs)
         val lhs = pop()
+        if (pop != null) stack.push(pop)
         visit(ctx.rhs)
         val rhs = pop()
         return push(functions.div(lhs, rhs))
     }
 
     override fun visitEq(ctx: JSongParser.EqContext): JsonNode? {
+        val pop = stack.firstOrNull()
         visit(ctx.lhs)
         val lhs = pop()
+        if (pop != null) stack.push(pop)
         visit(ctx.rhs)
         val rhs = pop()
         return push(functions.eq(lhs, rhs))
@@ -146,7 +162,8 @@ class Processor internal constructor(
                 lhs.forEach { element ->
                     push(element)
                     visit(ctx.rhs)
-                    if (functions.boolean(pop()).booleanValue()) {
+                    val predicate = pop()
+                    if (functions.boolean(predicate).booleanValue()) {
                         exp.add(element)
                     }
                 }
@@ -156,24 +173,30 @@ class Processor internal constructor(
     }
 
     override fun visitGt(ctx: JSongParser.GtContext): JsonNode? {
+        val pop = stack.firstOrNull()
         visit(ctx.lhs)
         val lhs = pop()
+        if (pop != null) stack.push(pop)
         visit(ctx.rhs)
         val rhs = pop()
         return push(functions.gt(lhs, rhs))
     }
 
     override fun visitGte(ctx: JSongParser.GteContext): JsonNode? {
+        val pop = stack.firstOrNull()
         visit(ctx.lhs)
         val lhs = pop()
+        if (pop != null) stack.push(pop)
         visit(ctx.rhs)
         val rhs = pop()
         return push(functions.gte(lhs, rhs))
     }
 
     override fun visitIn(ctx: JSongParser.InContext): JsonNode? {
+        val pop = stack.firstOrNull()
         visit(ctx.lhs)
         val lhs = pop()
+        if (pop != null) stack.push(pop)
         visit(ctx.rhs)
         val rhs = pop()
         return push(functions.include(lhs, rhs))
@@ -185,16 +208,20 @@ class Processor internal constructor(
     }
 
     override fun visitLt(ctx: JSongParser.LtContext): JsonNode? {
+        val pop = stack.firstOrNull()
         visit(ctx.lhs)
         val lhs = pop()
+        if (pop != null) stack.push(pop)
         visit(ctx.rhs)
         val rhs = pop()
         return push(functions.lt(lhs, rhs))
     }
 
     override fun visitLte(ctx: JSongParser.LteContext): JsonNode? {
+        val pop = stack.firstOrNull()
         visit(ctx.lhs)
         val lhs = pop()
+        if (pop != null) stack.push(pop)
         visit(ctx.rhs)
         val rhs = pop()
         return push(functions.lte(lhs, rhs))
@@ -226,16 +253,31 @@ class Processor internal constructor(
     }
 
     override fun visitMul(ctx: JSongParser.MulContext): JsonNode? {
+        val pop = stack.firstOrNull()
         visit(ctx.lhs)
         val lhs = pop()
+        if (pop != null) stack.push(pop)
         visit(ctx.rhs)
         val rhs = pop()
         return push(functions.mul(lhs, rhs))
     }
 
-    override fun visitNe(ctx: JSongParser.NeContext): JsonNode? {
+    override fun visitOr(ctx: JSongParser.OrContext): JsonNode? {
+        val pop = stack.firstOrNull()
         visit(ctx.lhs)
         val lhs = pop()
+        if (pop != null) stack.push(pop)
+        visit(ctx.rhs)
+        val rhs = pop()
+        return push(functions.or(lhs, rhs))
+    }
+
+
+    override fun visitNe(ctx: JSongParser.NeContext): JsonNode? {
+        val pop = stack.firstOrNull()
+        visit(ctx.lhs)
+        val lhs = pop()
+        if (pop != null) stack.push(pop)
         visit(ctx.rhs)
         val rhs = pop()
         return push(functions.ne(lhs, rhs))
@@ -266,8 +308,10 @@ class Processor internal constructor(
     }
 
     override fun visitRange(ctx: JSongParser.RangeContext): JsonNode? {
+        val pop = stack.firstOrNull()
         visit(ctx.min)
         val min = stack.pop()
+        if (pop != null) stack.push(pop)
         visit(ctx.max)
         val max = stack.pop()
         return push(RangeNode.of(min.decimalValue(), max.decimalValue(), mapper.nodeFactory))
@@ -283,8 +327,10 @@ class Processor internal constructor(
     }
 
     override fun visitReminder(ctx: JSongParser.ReminderContext): JsonNode? {
+        val pop = stack.firstOrNull()
         visit(ctx.lhs)
         val lhs = pop()
+        if (pop != null) stack.push(pop)
         visit(ctx.rhs)
         val rhs = pop()
         return push(functions.reminder(lhs, rhs))
@@ -298,8 +344,10 @@ class Processor internal constructor(
     }
 
     override fun visitSub(ctx: JSongParser.SubContext): JsonNode? {
+        val pop = stack.firstOrNull()
         visit(ctx.lhs)
         val lhs = pop()
+        if (pop != null) stack.push(pop)
         visit(ctx.rhs)
         val rhs = pop()
         return push(functions.sub(lhs, rhs))

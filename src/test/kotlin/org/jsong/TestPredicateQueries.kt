@@ -1,7 +1,6 @@
 package org.jsong
 
 import org.intellij.lang.annotations.Language
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
@@ -69,7 +68,6 @@ class TestPredicateQueries {
      * https://docs.JSong.org/predicate#singleton-array-and-value-equivalence
      */
     @Test
-    @Disabled
     fun `Singleton array and value equivalence - array of element`() {
         @Language("JSON")
         val expected = TestResources.mapper.readTree(
@@ -83,7 +81,6 @@ class TestPredicateQueries {
     /**
      * https://docs.JSong.org/predicate#singleton-array-and-value-equivalence
      */
-    @Disabled
     @Test
     fun `Singleton array and value equivalence - array then predicate`() {
         @Language("JSON")
@@ -98,7 +95,6 @@ class TestPredicateQueries {
     /**
      * https://docs.JSong.org/predicate#singleton-array-and-value-equivalence
      */
-    @Disabled
     @Test
     fun `Singleton array and value equivalence - predicate then array`() {
         @Language("JSON")
@@ -113,7 +109,7 @@ class TestPredicateQueries {
     /**
      * https://docs.JSong.org/predicate#wildcards
      */
-    @Disabled
+
     @Test
     fun `Use of asterix instead of field name to select all fields in an object - postfix`() {
         @Language("JSON")
@@ -128,7 +124,6 @@ class TestPredicateQueries {
     /**
      * https://docs.JSong.org/predicate#wildcards
      */
-    @Disabled
     @Test
     fun `Use of asterix instead of field name to select all fields in an object - prefix`() {
         @Language("JSON")
@@ -143,7 +138,6 @@ class TestPredicateQueries {
     /**
      * https://docs.JSong.org/predicate#navigate-arbitrary-depths
      */
-    @Disabled
     @Test
     fun `Navigate arbitrary depths`() {
         @Language("JSON")

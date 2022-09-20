@@ -39,6 +39,8 @@ exp
     | '[' range (',' range)* ']'    #ranges
     | PATH                          #path
     | literal                       #json
+    | '**'                          #descendants
+    | '*'                           #wildcard
     | '$'                           #context
     ;
 

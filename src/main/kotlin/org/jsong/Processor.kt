@@ -20,6 +20,19 @@ class Processor internal constructor(
         push(root)
     }
 
+    private fun descendants(node: JsonNode?): ArrayNode {
+        val exp = mapper.createArrayNode()
+        functions.array(node).forEach { element ->
+            element.fields().forEach { property ->
+                if (property.value != null) {
+                    exp.addAll(descendants(property.value).toList())
+                    exp.add(property.value)
+                }
+            }
+        }
+        return exp
+    }
+
     private fun push(node: JsonNode?): JsonNode? {
         if (node != null) stack.push(node)
         return node
@@ -102,6 +115,10 @@ class Processor internal constructor(
 
     override fun visitContext(ctx: JSongParser.ContextContext): JsonNode? {
         return push(stack.firstOrNull())
+    }
+
+    override fun visitDescendants(ctx: JSongParser.DescendantsContext): JsonNode? {
+        return push(descendants(pop()))
     }
 
     override fun visitDiv(ctx: JSongParser.DivContext): JsonNode? {
@@ -305,5 +322,15 @@ class Processor internal constructor(
 
     override fun visitText(ctx: JSongParser.TextContext): JsonNode? {
         return push(TextNode(ctx.text.substring(1, ctx.text.length - 1)))
+    }
+
+    override fun visitWildcard(ctx: JSongParser.WildcardContext): JsonNode? {
+        val exp = mapper.createArrayNode()
+        functions.array(pop()).forEach { element ->
+            element.fields().forEach { property ->
+                exp.add(property.value)
+            }
+        }
+        return push(exp)
     }
 } //~ Processor

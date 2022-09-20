@@ -9,7 +9,7 @@ import java.math.MathContext
 class Functions(
     private val mapper: ObjectMapper,
     private val mathContext: MathContext = MathContext.DECIMAL128
-    ) {
+) {
 
     fun add(lhs: JsonNode?, rhs: JsonNode?): DecimalNode {
         return DecimalNode((lhs?.decimalValue() ?: BigDecimal.ZERO).add(rhs?.decimalValue() ?: BigDecimal.ZERO))
@@ -24,6 +24,20 @@ class Functions(
             null -> mapper.createArrayNode()
             is ArrayNode -> node
             else -> mapper.createArrayNode().add(node)
+        }
+    }
+
+    fun average(array: JsonNode?): DecimalNode {
+        return when (array) {
+            null -> throw NullPointerException("<array> null in ${Syntax.AVERAGE}")
+            is ArrayNode -> {
+                var sum = BigDecimal.ZERO
+                array.forEach { element ->
+                    sum = sum.add(number(element).decimalValue())
+                }
+                div(DecimalNode(sum), DecimalNode(array.size().toBigDecimal()))
+            }
+            else -> number(array)
         }
     }
 
@@ -74,6 +88,7 @@ class Functions(
                     res
                 }
             }
+
             is ArrayNode -> when (node.size()) {
                 0 -> null
                 1 -> flatten(node[0])
@@ -85,6 +100,7 @@ class Functions(
                     res
                 }
             }
+
             else -> node
         }
     }
@@ -122,35 +138,80 @@ class Functions(
     }
 
     fun lt(lhs: JsonNode?, rhs: JsonNode?): BooleanNode {
-        return BooleanNode.valueOf(when (val lhn = flatten(lhs)) {
-            null -> false
-            else -> when (val rhn = flatten(rhs)) {
+        return BooleanNode.valueOf(
+            when (val lhn = flatten(lhs)) {
                 null -> false
-                is DecimalNode -> lhn.decimalValue() < rhn.decimalValue()
-                is NumericNode -> lhn.decimalValue() < rhn.decimalValue()
-                else -> lhn.asText() > rhn.asText()
+                else -> when (val rhn = flatten(rhs)) {
+                    null -> false
+                    is DecimalNode -> lhn.decimalValue() < rhn.decimalValue()
+                    is NumericNode -> lhn.decimalValue() < rhn.decimalValue()
+                    else -> lhn.asText() > rhn.asText()
+                }
             }
-        })
+        )
     }
 
     fun lte(lhs: JsonNode?, rhs: JsonNode?): BooleanNode {
-        return BooleanNode.valueOf(when (val lhn = flatten(lhs)) {
-            null -> false
-            else -> when (val rhn = flatten(rhs)) {
+        return BooleanNode.valueOf(
+            when (val lhn = flatten(lhs)) {
                 null -> false
-                is DecimalNode -> lhn.decimalValue() <= rhn.decimalValue()
-                is NumericNode -> lhn.decimalValue() <= rhn.decimalValue()
-                else -> lhn.asText() > rhn.asText()
+                else -> when (val rhn = flatten(rhs)) {
+                    null -> false
+                    is DecimalNode -> lhn.decimalValue() <= rhn.decimalValue()
+                    is NumericNode -> lhn.decimalValue() <= rhn.decimalValue()
+                    else -> lhn.asText() > rhn.asText()
+                }
             }
-        })
+        )
     }
 
     fun ne(lhs: JsonNode?, rhs: JsonNode?): BooleanNode {
         return BooleanNode.valueOf(flatten(lhs) != flatten(rhs))
     }
 
+    fun max(array: JsonNode?): DecimalNode {
+        return when (array) {
+            null -> throw NullPointerException("<array> is null in ${Syntax.MAX}")
+            is ArrayNode -> {
+                var max = Double.MIN_VALUE
+                array.forEach { element ->
+                    max = max.coerceAtLeast(number(element).asDouble())
+                }
+                DecimalNode(max.toBigDecimal())
+            }
+            else -> number(array)
+        }
+    }
+
+    fun min(array: JsonNode?): DecimalNode {
+        return when (array) {
+            null -> throw NullPointerException("<array> is null in ${Syntax.MIN}")
+            is ArrayNode -> {
+                var min = Double.MAX_VALUE
+                array.forEach { element -> min = min.coerceAtMost(element.asDouble()) }
+                DecimalNode(min.toBigDecimal())
+            }
+            else -> number(array)
+        }
+    }
+
     fun mul(lhs: JsonNode?, rhs: JsonNode?): DecimalNode {
         return DecimalNode((lhs?.decimalValue() ?: BigDecimal.ZERO).multiply(rhs?.decimalValue() ?: BigDecimal.ZERO))
+    }
+
+    fun number(arg: JsonNode?): DecimalNode {
+        return DecimalNode(
+            when (arg) {
+                null -> throw NullPointerException("<arg> null in ${Syntax.NUMBER}")
+                is BooleanNode -> when (arg) {
+                    BooleanNode.TRUE -> BigDecimal.ONE
+                    else -> BigDecimal.ZERO
+                }
+
+                is NumericNode -> arg.decimalValue()
+                else -> arg.asText().toBigDecimal()
+            }
+        )
     }
 
     fun or(lhs: JsonNode?, rhs: JsonNode?): BooleanNode {
@@ -163,6 +224,20 @@ class Functions(
 
     fun sub(lhs: JsonNode?, rhs: JsonNode?): DecimalNode {
         return DecimalNode((lhs?.decimalValue() ?: BigDecimal.ZERO).subtract(rhs?.decimalValue() ?: BigDecimal.ZERO))
+    }
+
+    fun sum(array: JsonNode?): DecimalNode {
+        return when (array) {
+            null -> throw NullPointerException("<array> is null in ${Syntax.SUM}")
+            is ArrayNode -> {
+                var sum = BigDecimal.ZERO
+                array.forEach { element ->
+                    sum = sum.add(number(element).decimalValue())
+                }
+                DecimalNode(sum)
+            }
+            else -> number(array)
+        }
     }
 
 }

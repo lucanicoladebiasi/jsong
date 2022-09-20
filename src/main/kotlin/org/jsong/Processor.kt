@@ -6,9 +6,12 @@ import com.fasterxml.jackson.databind.node.*
 import org.jsong.antlr.JSongBaseVisitor
 import org.jsong.antlr.JSongParser
 import java.util.*
+import kotlin.random.Random
 
 class Processor internal constructor(
-    private val mapper: ObjectMapper, root: JsonNode?
+    private val mapper: ObjectMapper,
+    private val random: Random,
+    root: JsonNode?
 ) : JSongBaseVisitor<JsonNode?>() {
 
     private val functions = Functions(mapper)
@@ -94,6 +97,60 @@ class Processor internal constructor(
         return push(exp)
     }
 
+    override fun visitArrayFunction(ctx: JSongParser.ArrayFunctionContext): JsonNode? {
+        val args = mutableListOf<JsonNode>()
+        val mem = pop()
+        ctx.exp().forEach { arg ->
+            if (mem != null) push(mem)
+            visit(arg)
+            pop()?.let { args.add(it) }
+        }
+        val fnc = ctx.array_fun()
+        val exp = when {
+            fnc.APPEND() != null -> when (args.size) {
+                1 -> functions.append(mem, args[0])
+                2 -> functions.append(args[0], args[1])
+                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.APPEND}")
+            }
+
+            fnc.COUNT() != null -> when (args.size) {
+                0 -> functions.count(mem)
+                1 -> functions.count(args[0])
+                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.COUNT}")
+            }
+
+            fnc.DISTINCT() != null -> mapper.createArrayNode().addAll(
+                when (args.size) {
+                    0 -> functions.distinct(mem)
+                    1 -> functions.distinct(args[0])
+                    else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.DISTINCT}")
+                }
+            )
+
+            fnc.REVERSE() != null -> when (args.size) {
+                0 -> functions.reverse(mem)
+                1 -> functions.reverse(args[0])
+                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.REVERSE}")
+            }
+
+            fnc.SHUFFLE() != null -> when (args.size) {
+                0 -> functions.shuffle(mem, random)
+                1 -> functions.shuffle(args[0], random)
+                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.SHUFFLE}")
+            }
+
+            fnc.SORT() != null -> when (args.size) {
+                0 -> functions.sort(mem)
+                1 -> functions.sort(args[0])
+                2 -> functions.sort(args[0])
+                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.SORT}")
+            }
+
+            else -> throw UnsupportedOperationException("${ctx.text} not recognized")
+        }
+        return push(exp)
+    }
+
     override fun visitArrayConstructor(ctx: JSongParser.ArrayConstructorContext): JsonNode? {
         visit(ctx.exp())
         isToFlatten = false
@@ -108,6 +165,39 @@ class Processor internal constructor(
                 else -> throw IllegalArgumentException("$ctx not recognized")
             }
         )
+    }
+
+    override fun visitBooleanFunction(ctx: JSongParser.BooleanFunctionContext): JsonNode? {
+        val args = mutableListOf<JsonNode>()
+        val mem = pop()
+        ctx.exp().forEach { arg ->
+            if (mem != null) push(mem)
+            visit(arg)
+            pop()?.let { args.add(it) }
+        }
+        val fnc = ctx.bool_fun()
+        val exp = when {
+            fnc.BOOLEAN() != null -> when (args.size) {
+                0 -> functions.boolean(mem)
+                1 -> functions.boolean(args[0])
+                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.BOOLEAN}")
+            }
+
+            fnc.EXISTS() != null -> when (args.size) {
+                0 -> functions.exists(mem)
+                1 -> functions.exists(args[0])
+                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.EXISTS}")
+            }
+
+            fnc.NOT() != null -> when (args.size) {
+                0 -> functions.not(mem)
+                1 -> functions.not(args[0])
+                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.NOT}")
+            }
+
+            else -> throw UnsupportedOperationException("${ctx.text} not recognized")
+        }
+        return push(exp)
     }
 
     override fun visitContext(ctx: JSongParser.ContextContext): JsonNode? {
@@ -291,7 +381,7 @@ class Processor internal constructor(
         return push(DecimalNode(ctx.NUMBER().text.toBigDecimal()))
     }
 
-    override fun visitNumericAggregate(ctx: JSongParser.NumericAggregateContext): JsonNode? {
+    override fun visitNumericAggregateFunction(ctx: JSongParser.NumericAggregateFunctionContext): JsonNode? {
         val args = mutableListOf<JsonNode>()
         val mem = pop()
         ctx.exp().forEach { arg ->
@@ -405,4 +495,5 @@ class Processor internal constructor(
         }
         return push(exp)
     }
+
 } //~ Processor

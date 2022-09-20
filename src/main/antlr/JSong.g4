@@ -13,10 +13,27 @@ array
     | '[' ']'
     ;
 
+array_fun
+    : APPEND
+    | COUNT
+    | DISTINCT
+    | SORT
+    | REVERSE
+    | SHUFFLE
+    | ZIP
+    ;
+
+
 bool
     : TRUE
     | FALSE
     ;
+
+bool_fun
+      : BOOLEAN
+      | EXISTS
+      | NOT
+      ;
 
 exp
     : lhs = exp '*' rhs = exp               #mul
@@ -35,7 +52,9 @@ exp
     | lhs = exp 'or' rhs = exp              #or
     | lhs = exp '[' rhs = exp ']'           #filter
     | lhs = exp '.' rhs = exp               #map
-    | num_aggregate '(' exp? (',' exp)* ')' #numericAggregate
+    | array_fun '(' exp? (',' exp)* ')'     #arrayFunction
+    | bool_fun '(' exp? (',' exp)* ')'      #booleanFunction
+    | num_aggregate '(' exp? (',' exp)* ')' #numericAggregateFunction
     | exp '[]'                              #arrayConstructor
     | '(' exp (';'? exp)* ')'               #scope
     | '[' range (',' range)* ']'            #ranges
@@ -88,6 +107,23 @@ range
 text
     : STRING
     ;
+
+// ARRAY FUNCTIONS
+
+APPEND:     '$append';
+COUNT:      '$count';
+DISTINCT:   '$distinct';
+SORT:       '$sort';
+REVERSE:    '$reverse';
+SHUFFLE:    '$shuffle';
+ZIP:        '$zip';
+
+
+// BOOLEAN FUNCTIONS
+
+BOOLEAN:    '$boolean';
+EXISTS:     '$exists';
+NOT:        '$not';
 
 // NUMERIC AGGREGATE FUNCTIONS
 

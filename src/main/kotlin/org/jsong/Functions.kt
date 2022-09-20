@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.*
 import java.math.BigDecimal
 import java.math.MathContext
+import kotlin.random.Random
 
 class Functions(
     private val mapper: ObjectMapper,
@@ -17,6 +18,13 @@ class Functions(
 
     fun and(lhs: JsonNode?, rhs: JsonNode?): BooleanNode {
         return BooleanNode.valueOf(boolean(lhs).booleanValue() && boolean(rhs).booleanValue())
+    }
+
+    fun append(array1: JsonNode?, array2: JsonNode?): ArrayNode {
+        val exp = mapper.createArrayNode()
+        exp.addAll(array(array1))
+        exp.addAll(array(array2))
+        return exp
     }
 
     fun array(node: JsonNode?): ArrayNode {
@@ -37,6 +45,7 @@ class Functions(
                 }
                 div(DecimalNode(sum), DecimalNode(array.size().toBigDecimal()))
             }
+
             else -> number(array)
         }
     }
@@ -65,6 +74,24 @@ class Functions(
         }
     }
 
+    fun count(array: JsonNode?): DecimalNode {
+        return when (array) {
+            null -> throw NullPointerException("<array> is null in ${Syntax.COUNT}")
+            is ArrayNode -> DecimalNode(array.size().toBigDecimal())
+            else -> DecimalNode(BigDecimal.ONE)
+        }
+    }
+
+    fun distinct(array: JsonNode?): ArrayNode {
+        val exp = mapper.nodeFactory.arrayNode()
+        when (array) {
+            null -> throw NullPointerException("<array> null in ${Syntax.DISTINCT}")
+            is ArrayNode -> array.forEach { if (!exp.contains(it)) exp.add(it) }
+            else -> exp.add(array)
+        }
+        return exp
+    }
+
     fun div(lhs: JsonNode?, rhs: JsonNode?): DecimalNode {
         val dividend = lhs?.decimalValue() ?: BigDecimal.ZERO
         val divisor = rhs?.decimalValue() ?: BigDecimal.ZERO
@@ -73,6 +100,15 @@ class Functions(
 
     fun eq(lhs: JsonNode?, rhs: JsonNode?): BooleanNode {
         return BooleanNode.valueOf(flatten(lhs) == flatten(rhs))
+    }
+
+    fun exists(arg: JsonNode?): BooleanNode {
+        return BooleanNode.valueOf(
+            when (arg) {
+                is ArrayNode -> !arg.isEmpty
+                else -> arg != null
+            }
+        )
     }
 
     fun flatten(node: JsonNode?): JsonNode? {
@@ -179,6 +215,7 @@ class Functions(
                 }
                 DecimalNode(max.toBigDecimal())
             }
+
             else -> number(array)
         }
     }
@@ -191,12 +228,17 @@ class Functions(
                 array.forEach { element -> min = min.coerceAtMost(element.asDouble()) }
                 DecimalNode(min.toBigDecimal())
             }
+
             else -> number(array)
         }
     }
 
     fun mul(lhs: JsonNode?, rhs: JsonNode?): DecimalNode {
         return DecimalNode((lhs?.decimalValue() ?: BigDecimal.ZERO).multiply(rhs?.decimalValue() ?: BigDecimal.ZERO))
+    }
+
+    fun not(arg: JsonNode?): BooleanNode {
+        return BooleanNode.valueOf(!boolean(arg).booleanValue())
     }
 
     fun number(arg: JsonNode?): DecimalNode {
@@ -222,6 +264,33 @@ class Functions(
         return DecimalNode((lhs?.decimalValue() ?: BigDecimal.ZERO).remainder(rhs?.decimalValue() ?: BigDecimal.ZERO))
     }
 
+    fun reverse(array: JsonNode?): ArrayNode {
+        val list = mutableListOf<JsonNode>()
+        when (array) {
+            null -> throw NullPointerException("<array> is null in ${Syntax.REVERSE}")
+            is ArrayNode -> array.forEach { list.add(it) }
+            else -> list.add(array)
+        }
+        list.reverse()
+        return mapper.createArrayNode().addAll(list)
+    }
+
+    fun sort(array: JsonNode?): ArrayNode {
+        TODO("not implemented yet")
+    }
+
+    fun shuffle(array: JsonNode?, random: Random): ArrayNode {
+        val list = mutableListOf<JsonNode>()
+        when (array) {
+            null -> throw NullPointerException("<array> null in ${Syntax.SHUFFLE}")
+            is RangeNode -> array.indexes.forEach { list.add(it) }
+            is RangesNode -> array.indexes.forEach { list.add(it) }
+            is ArrayNode -> array.forEach { list.add(it) }
+            else -> list.add(array)
+        }
+        return mapper.createArrayNode().addAll(list.shuffled(random))
+    }
+
     fun sub(lhs: JsonNode?, rhs: JsonNode?): DecimalNode {
         return DecimalNode((lhs?.decimalValue() ?: BigDecimal.ZERO).subtract(rhs?.decimalValue() ?: BigDecimal.ZERO))
     }
@@ -236,6 +305,7 @@ class Functions(
                 }
                 DecimalNode(sum)
             }
+
             else -> number(array)
         }
     }

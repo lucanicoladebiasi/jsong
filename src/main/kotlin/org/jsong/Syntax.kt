@@ -46,7 +46,7 @@ object Syntax {
     const val MIN = "\$min(array)"
     const val SUM = "\$sum(array)"
 
-    const val BOOLEAN_OF = "\$boolean(arg)"
+    const val BOOLEAN = "\$boolean(arg)"
     const val EXISTS = "\$exists(arg)"
     const val NOT = "\$not(arg)"
 

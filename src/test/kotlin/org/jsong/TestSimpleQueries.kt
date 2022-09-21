@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test
 /**
  * Implement the examples described at [https://docs.jsonata.org/simple](https://docs.jsonata.org/simple).
  */
-class PhoneTestSimpleQueries {
+class TestSimpleQueries {
 
     /**
      * https://docs.jsonata.org/simple#navigating-json-objects

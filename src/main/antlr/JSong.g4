@@ -57,6 +57,7 @@ exp
     | bool_fun '(' exp? (',' exp)* ')'      #booleanFunction
     | num_aggregate '(' exp? (',' exp)* ')' #numericAggregateFunction
     | exp '[]'                              #arrayConstructor
+    | exp '.*'                              #wildcardPostfix
     | '(' exp (';'? exp)* ')'               #scope
     | '[' range (',' range)* ']'            #ranges
     | '@$' LABEL                            #contextVariableBinding
@@ -66,7 +67,7 @@ exp
     | LABEL                                 #path
     | literal                               #json
     | '**'                                  #descendants
-    | '*'                                   #wildcard
+    | '*.' exp                              #wildcardPrefix
     | '$$'                                  #root
     | '$'                                   #context
     ;

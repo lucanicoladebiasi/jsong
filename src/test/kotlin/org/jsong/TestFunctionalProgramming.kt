@@ -10,15 +10,10 @@ class TestFunctionalProgramming {
      */
     @Test
     fun `variable binding`() {
-        val expression = """
-        Account.Order.Product.(
-          {$}p := Price;
-          {$}q := Quantity;
-          {$}p * {$}q
-        )
-        """.trimIndent()
-        val expected = JSong.of("[68.9, 21.67, 137.8, 107.99]")
+        val expression = "Account.Order.Product.(\$p := Price; \$q := Quantity; \$p * \$q)"
+        val expected = JSong.of("[68.9, 21.67, 137.8, 107.99]").evaluate()
         val actual = JSong.of(expression).evaluate(TestResources.invoice)
         assertEquals(expected, actual)
     }
+
 }

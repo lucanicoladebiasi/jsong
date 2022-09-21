@@ -11,8 +11,8 @@ class TestOtherOperators {
      */
     @Test
     fun `& (Concatenation)`() {
-        val actual = JSong.of("\"Hello\" & \"World\"").evaluate()
         val expected = TextNode("HelloWorld")
+        val actual = JSong.of("\"Hello\" & \"World\"").evaluate()
         assertEquals(expected, actual)
     }
 

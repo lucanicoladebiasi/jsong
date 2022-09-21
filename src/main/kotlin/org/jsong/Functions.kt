@@ -239,7 +239,10 @@ class Functions(
     }
 
     fun mul(lhs: JsonNode?, rhs: JsonNode?): DecimalNode {
-        return DecimalNode((lhs?.decimalValue() ?: BigDecimal.ZERO).multiply(rhs?.decimalValue() ?: BigDecimal.ZERO))
+        return DecimalNode(
+            (flatten(lhs)?.decimalValue() ?: BigDecimal.ZERO)
+                .multiply(flatten(rhs)?.decimalValue() ?: BigDecimal.ZERO)
+        )
     }
 
     fun not(arg: JsonNode?): BooleanNode {

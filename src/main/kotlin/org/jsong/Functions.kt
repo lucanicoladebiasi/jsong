@@ -3,6 +3,7 @@ package org.jsong
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.*
+import java.lang.StringBuilder
 import java.math.BigDecimal
 import java.math.MathContext
 import kotlin.random.Random
@@ -72,6 +73,10 @@ class Functions(
             is ObjectNode -> BooleanNode.valueOf(!arg.isEmpty)
             else -> BooleanNode.valueOf(!arg.asText().isNullOrEmpty())
         }
+    }
+
+    fun concatenate(prefix: JsonNode?, suffix: JsonNode?): TextNode {
+        return TextNode(StringBuilder(string(prefix).textValue()).append(string(suffix).textValue()).toString())
     }
 
     fun count(array: JsonNode?): DecimalNode {
@@ -289,6 +294,18 @@ class Functions(
             else -> list.add(array)
         }
         return mapper.createArrayNode().addAll(list.shuffled(random))
+    }
+
+    fun string(arg: JsonNode?, prettify: JsonNode? = null): TextNode {
+        return when (arg) {
+            is TextNode -> arg
+            else -> TextNode(
+                when (prettify?.asBoolean() ?: false) {
+                    true -> mapper.writerWithDefaultPrettyPrinter().writeValueAsString(arg)
+                    else -> mapper.writeValueAsString(arg)
+                }
+            )
+        }
     }
 
     fun sub(lhs: JsonNode?, rhs: JsonNode?): DecimalNode {

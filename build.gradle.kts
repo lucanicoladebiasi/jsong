@@ -28,6 +28,10 @@ tasks.generateGrammarSource {
     arguments = arguments + listOf("-visitor", "-long-messages")
 }
 
+tasks.compileTestKotlin {
+    dependsOn(tasks.generateTestGrammarSource)
+}
+
 tasks.test {
     useJUnitPlatform()
 }

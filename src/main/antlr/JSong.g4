@@ -41,6 +41,7 @@ exp
     | lhs = exp '%' rhs = exp               #reminder
     | lhs = exp '+' rhs = exp               #add
     | lhs = exp '-' rhs = exp               #sub
+    | lhs = exp '&' rhs = exp               #concatenate
     | lhs = exp '=' rhs = exp               #eq
     | lhs = exp '!=' rhs = exp              #ne
     | lhs = exp '>' rhs = exp               #gt
@@ -58,10 +59,15 @@ exp
     | exp '[]'                              #arrayConstructor
     | '(' exp (';'? exp)* ')'               #scope
     | '[' range (',' range)* ']'            #ranges
-    | PATH                                  #path
+    | '@$' LABEL                            #contextVariableBinding
+    | '#$' LABEL                            #positionalVariableBinding
+    | '$' LABEL ':=' exp                    #variableBinding
+    | '$' LABEL                             #variable
+    | LABEL                                 #path
     | literal                               #json
     | '**'                                  #descendants
     | '*'                                   #wildcard
+    | '$$'                                  #root
     | '$'                                   #context
     ;
 
@@ -144,7 +150,7 @@ NUMBER: '-'? INT ('.' [0-9] +)? EXP?;
 fragment INT: '0' | [1-9] [0-9]*;
 fragment EXP: [Ee] [+\-]? INT;
 
-PATH: ([a-zA-Z][0-9a-zA-Z]*) | ('`' (.)+? '`');
+LABEL: ([a-zA-Z][0-9a-zA-Z]*) | ('`' (.)+? '`');
 
 STRING: ('"' (ESC | SAFECODEPOINT)* '"' ) | ('\'' (ESC | SAFECODEPOINT)* '\'' );
 fragment ESC: '\\' (["\\/bfnrt] | UNICODE);

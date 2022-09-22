@@ -138,7 +138,7 @@ class TestPredicateQueries {
         val expected = TestResources.mapper.readTree(
             """
             "SO21 2JN"
-        """.trimIndent()
+            """.trimIndent()
         )
         val actual = JSong.of("*.Postcode").evaluate(TestResources.address)
         assertEquals(expected, actual)
@@ -153,9 +153,34 @@ class TestPredicateQueries {
         val expected = TestResources.mapper.readTree(
             """
             [ "SO21 2JN", "E1 6RF" ]
-        """.trimIndent()
+            """.trimIndent()
         )
         val actual = JSong.of("**.Postcode").evaluate(TestResources.address)
         assertEquals(expected, actual)
+    }
+
+    /**
+     * https://docs.jsonata.org/path-operators#-positional-variable-binding
+     */
+    @Test
+    fun `Positional variable binding`() {
+        val expression = "library.books#\$i['Kernighan' in authors].{ 'title': title,'index': \$i }"
+        @Language("JSON")
+        val expected = JSong.of(
+            """
+            [
+                {
+                    "title": "The C Programming Language",
+                    "index": 1
+                },
+                {
+                    "title": "The AWK Programming Language",
+                    "index": 2
+                }
+            ]                 
+            """.trimIndent()
+        )
+        val actual = JSong.of(expression).evaluate(TestResources.library)
+        println(actual)
     }
 }

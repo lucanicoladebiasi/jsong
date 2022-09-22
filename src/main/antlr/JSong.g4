@@ -36,40 +36,39 @@ bool_fun
       ;
 
 exp
-    : lhs = exp '*' rhs = exp               #mul
-    | lhs = exp '/' rhs = exp               #div
-    | lhs = exp '%' rhs = exp               #reminder
-    | lhs = exp '+' rhs = exp               #add
-    | lhs = exp '-' rhs = exp               #sub
-    | lhs = exp '&' rhs = exp               #concatenate
-    | lhs = exp '=' rhs = exp               #eq
-    | lhs = exp '!=' rhs = exp              #ne
-    | lhs = exp '>' rhs = exp               #gt
-    | lhs = exp '<' rhs = exp               #lt
-    | lhs = exp '>=' rhs = exp              #gte
-    | lhs = exp '<='rhs = exp               #lte
-    | lhs = exp 'in' rhs = exp              #in
-    | lhs = exp 'and' rhs = exp             #and
-    | lhs = exp 'or' rhs = exp              #or
-    | lhs = exp '[' rhs = exp ']'           #filter
-    | lhs = exp '.' rhs = exp               #map
-    | array_fun '(' exp? (',' exp)* ')'     #arrayFunction
-    | bool_fun '(' exp? (',' exp)* ')'      #booleanFunction
-    | num_aggregate '(' exp? (',' exp)* ')' #numericAggregateFunction
-    | exp '[]'                              #arrayConstructor
-    | exp '.*'                              #wildcardPostfix
-    | '(' exp (';'? exp)* ')'               #scope
-    | '[' range (',' range)* ']'            #ranges
-    | '@$' LABEL                            #contextVariableBinding
-    | '#$' LABEL                            #positionalVariableBinding
-    | '$' LABEL ':=' exp                    #variableBinding
-    | '$' LABEL                             #variable
-    | LABEL                                 #path
-    | literal                               #json
-    | '**'                                  #descendants
-    | '*.' exp                              #wildcardPrefix
-    | '$$'                                  #root
-    | '$'                                   #context
+    : lhs = exp '*' rhs = exp                   #mul
+    | lhs = exp '/' rhs = exp                   #div
+    | lhs = exp '%' rhs = exp                   #reminder
+    | lhs = exp '+' rhs = exp                   #add
+    | lhs = exp '-' rhs = exp                   #sub
+    | lhs = exp '&' rhs = exp                   #concatenate
+    | lhs = exp '=' rhs = exp                   #eq
+    | lhs = exp '!=' rhs = exp                  #ne
+    | lhs = exp '>' rhs = exp                   #gt
+    | lhs = exp '<' rhs = exp                   #lt
+    | lhs = exp '>=' rhs = exp                  #gte
+    | lhs = exp '<='rhs = exp                   #lte
+    | lhs = exp 'in' rhs = exp                  #in
+    | lhs = exp 'and' rhs = exp                 #and
+    | lhs = exp 'or' rhs = exp                  #or
+    | lhs = exp '[' rhs = exp ']'               #filter
+    | lhs = exp '.' rhs = exp                   #map
+    | array_fun '(' exp? (',' exp)* ')'         #arrayFunction
+    | bool_fun '(' exp? (',' exp)* ')'          #booleanFunction
+    | num_aggregate_fun '(' exp? (',' exp)* ')' #numericAggregateFunction
+    | num_fun '(' exp? (',' exp)* ')'           #numericFunction
+    | exp '[]'                                  #arrayConstructor
+    | exp '.*'                                  #wildcardPostfix
+    | '(' exp (';'? exp)* ')'                   #scope
+    | '[' range (',' range)* ']'                #ranges
+    | '$' LABEL ':=' exp                        #variableBinding
+    | '$' LABEL                                 #variable
+    | LABEL                                     #path
+    | literal                                   #json
+    | '**'                                      #descendants
+    | '*.' exp                                  #wildcardPrefix
+    | '$$'                                      #root
+    | '$'                                       #context
     ;
 
 literal
@@ -89,12 +88,28 @@ number
     : NUMBER
     ;
 
-num_aggregate
+num_aggregate_fun
     : AVERAGE
     | SUM
     | MAX
     | MIN
     ;
+
+num_fun
+    : ABS
+    | CEIL
+    | FLOOR
+    | FORMAT_BASE
+    | FORMAT_INTEGER
+    | FORMAT_NUMBER
+    | NUMBER_OF
+    | PARSE_INTEGER
+    | POWER
+    | RANDOM
+    | ROUND
+    | SQRT
+    ;
+
 
 
 obj
@@ -138,6 +153,21 @@ AVERAGE:    '$average';
 SUM:        '$sum';
 MAX:        '$max';
 MIN:        '$min';
+
+// NUMERIC FUNCTIONS
+
+ABS:            '$abs';
+CEIL:           '$ceil';
+FLOOR:          '$floor';
+FORMAT_BASE:    '$formatBase';
+FORMAT_INTEGER: '$formatInteger';
+FORMAT_NUMBER:  '$formatNumber';
+NUMBER_OF:      '$number';
+PARSE_INTEGER:  '$parseInteger';
+POWER:          '$power';
+RANDOM:         '$random';
+ROUND:          '$round';
+SQRT:           '$sqrt';
 
 // JSON LITERALS
 

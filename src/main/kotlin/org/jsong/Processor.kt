@@ -22,6 +22,9 @@ class Processor internal constructor(
     @Volatile
     private var isToFlatten = true
 
+    @Volatile
+    private var position: Int = 0
+
     init {
         variables.push(mutableMapOf())
         push(root)
@@ -89,8 +92,8 @@ class Processor internal constructor(
 
     override fun visitArray(ctx: JSongParser.ArrayContext): JsonNode? {
         val exp = mapper.createArrayNode()
-        ctx.children.forEach {
-            visit(it)
+        ctx.children.forEach { child ->
+            visit(child)
             pop()?.let { exp.add(it) }
         }
         return push(exp)
@@ -319,6 +322,7 @@ class Processor internal constructor(
         visit(ctx.lhs)
         when (val lhs = pop()) {
             is RangeNode -> lhs.indexes.forEach { index ->
+                position = index.asInt()
                 context.push(index)
                 visit(ctx.rhs)
                 pop()?.let { exp.addAll(functions.array(it)) }
@@ -326,6 +330,7 @@ class Processor internal constructor(
             }
 
             is RangesNode -> lhs.indexes.forEach { index ->
+                position = index.asInt()
                 context.push(index)
                 push(index)
                 visit(ctx.rhs)
@@ -333,7 +338,8 @@ class Processor internal constructor(
                 context.pop()
             }
 
-            else -> functions.array(lhs).forEach { element ->
+            else -> functions.array(lhs).forEachIndexed { index, element ->
+                position = index
                 context.push(element)
                 visit(ctx.rhs)
                 pop()?.let { exp.addAll(functions.array(it)) }
@@ -382,7 +388,7 @@ class Processor internal constructor(
             visit(arg)
             pop()?.let { args.add(it) }
         }
-        val fnc = ctx.num_aggregate()
+        val fnc = ctx.num_aggregate_fun()
         val exp = when {
             fnc.AVERAGE() != null -> when (args.size) {
                 0 -> functions.average(pop())
@@ -406,6 +412,94 @@ class Processor internal constructor(
                 0 -> functions.sum(pop())
                 1 -> functions.sum(args[0])
                 else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.SUM}")
+            }
+
+            else -> throw UnsupportedOperationException("${ctx.text} not recognized")
+        }
+        return push(exp)
+    }
+
+    override fun visitNumericFunction(ctx: JSongParser.NumericFunctionContext): JsonNode? {
+        val args = mutableListOf<JsonNode>()
+        ctx.exp().forEach { arg ->
+            visit(arg)
+            pop()?.let { args.add(it) }
+        }
+        val fnc = ctx.num_fun()
+        val exp = when {
+             fnc.ABS() != null -> when (args.size) {
+                0 -> functions.abs(pop())
+                1 -> functions.abs(args[0])
+                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.ABS}")
+            }
+
+            fnc.CEIL() != null -> when (args.size) {
+                0 -> functions.ceil(pop())
+                1 -> functions.ceil(args[0])
+                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.CEIL}")
+            }
+
+            fnc.FLOOR() != null -> when (args.size) {
+                0 -> functions.floor(pop())
+                1 -> functions.floor(args[0])
+                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.FLOOR}")
+            }
+
+            fnc.FORMAT_BASE() != null -> when (args.size) {
+                0 -> functions.formatBase(pop())
+                1 -> functions.formatBase(args[0])
+                2 -> functions.formatBase(args[0], args[1])
+                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.FORMAT_BASE}")
+            }
+
+            fnc.FORMAT_INTEGER() != null -> when (args.size) {
+                1 -> functions.formatInteger(pop(), args[0])
+                2 -> functions.formatInteger(args[0], args[1])
+                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.FORMAT_INTEGER}")
+            }
+
+            fnc.FORMAT_NUMBER() != null -> when (args.size) {
+                1 -> functions.formatNumber(pop(), args[0])
+                2 -> functions.formatNumber(args[0], args[1])
+                3 -> functions.formatNumber(args[0], args[1], args[2])
+                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.FORMAT_NUMBER}")
+            }
+
+            fnc.NUMBER_OF() != null -> when (args.size) {
+                0 -> functions.number(pop())
+                1 -> functions.number(args[0])
+                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.NUMBER}")
+            }
+
+            fnc.PARSE_INTEGER() != null -> when (args.size) {
+                1 -> functions.parseInteger(pop(), args[0])
+                2 -> functions.parseInteger(args[0], args[1])
+                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.PARSE_INTEGER}")
+            }
+
+            fnc.POWER() != null -> when (args.size) {
+                1 -> functions.power(pop(), args[0])
+                2 -> functions.power(args[0], args[1])
+                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.POWER}")
+            }
+
+            fnc.RANDOM() != null -> when (args.size) {
+                0 -> functions.randomFrom(random)
+                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.RANDOM}")
+            }
+
+            fnc.ROUND() != null -> when (args.size) {
+                0 -> functions.round(pop())
+                1 -> functions.round(args[0])
+                2 -> functions.round(args[0], args[1])
+                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.ROUND}")
+            }
+
+
+            fnc.SQRT() != null -> when (args.size) {
+                0 -> functions.sqrt(pop())
+                1 -> functions.sqrt(args[0])
+                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.SQRT}")
             }
 
             else -> throw UnsupportedOperationException("${ctx.text} not recognized")

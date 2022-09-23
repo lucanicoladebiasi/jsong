@@ -200,7 +200,7 @@ class TestPathOperators {
      */
     @Test
     @Disabled
-    fun `order by decreasing price, incresing quantity`() {
+    fun `order by decreasing price, increasing quantity`() {
         @Language("JSON")
         val expected = JSong.of(
             """
@@ -338,6 +338,13 @@ class TestPathOperators {
         ).evaluate()
         val actual = JSong.of("Account.Order.Product^(Price * Quantity)").evaluate(TestResources.invoice)
         assertEquals(expected, actual)
+    }
+
+    @Test
+    fun `Positional variable binding`() {
+        val expression = "library.books#\$i[\"Kernighan\" in authors].{\"title\": title, \"index\": \$i }"
+        val actual = JSong.of(expression).evaluate(TestResources.library)
+
     }
 
 } //~ JSonataTestPathOperators

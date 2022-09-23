@@ -16,17 +16,13 @@ class Processor internal constructor(
 
     private val context = ArrayDeque<JsonNode?>()
     private val functions = Functions(mapper)
+    private val register = Register()
     private val stack = ArrayDeque<JsonNode>()
-    private val variables = ArrayDeque<MutableMap<String, JsonNode?>>()
 
     @Volatile
     private var isToFlatten = true
 
-    @Volatile
-    private var position: Int = 0
-
     init {
-        variables.push(mutableMapOf())
         push(root)
     }
 
@@ -234,10 +230,10 @@ class Processor internal constructor(
         val exp = mapper.createArrayNode()
         visit(ctx.lhs)
         val lhs = functions.array(pop())
-        lhs.forEachIndexed{ index, element ->
+        lhs.forEachIndexed { index, element ->
             context.push(element)
             visit(ctx.rhs)
-            when(val rhs = pop()) {
+            when (val rhs = pop()) {
                 is NumericNode -> {
                     val value = rhs.asInt()
                     val offset = if (value < 0) lhs.size() + value else value
@@ -245,15 +241,17 @@ class Processor internal constructor(
                         exp.addAll(functions.array(element))
                     }
                 }
+
                 is RangeNode -> {
                     if (rhs.indexes.map {
-                        val value = it.asInt()
-                        val offset = if (value < 0) lhs.size() + value else value
-                        offset
-                    }.contains(index)) {
+                            val value = it.asInt()
+                            val offset = if (value < 0) lhs.size() + value else value
+                            offset
+                        }.contains(index)) {
                         exp.addAll(functions.array(element))
                     }
                 }
+
                 is RangesNode -> {
                     if (rhs.indexes.map {
                             val value = it.asInt()
@@ -263,6 +261,7 @@ class Processor internal constructor(
                         exp.addAll(functions.array(element))
                     }
                 }
+
                 else -> if (functions.boolean(rhs).asBoolean()) {
                     exp.addAll(functions.array(element))
                 }
@@ -321,31 +320,34 @@ class Processor internal constructor(
         val exp = mapper.createArrayNode()
         visit(ctx.lhs)
         when (val lhs = pop()) {
-            is RangeNode -> lhs.indexes.forEach { index ->
-                position = index.asInt()
+            is RangeNode -> lhs.forEach { index ->
                 context.push(index)
                 visit(ctx.rhs)
-                pop()?.let { exp.addAll(functions.array(it)) }
+                pop()?.let {
+                    exp.addAll(functions.array(it))
+                }
                 context.pop()
             }
 
-            is RangesNode -> lhs.indexes.forEach { index ->
-                position = index.asInt()
-                context.push(index)
-                push(index)
-                visit(ctx.rhs)
-                pop()?.let { exp.addAll(functions.array(it)) }
-                context.pop()
-            }
+            is RangesNode ->
+                lhs.indexes.forEach { index ->
+                    context.push(index)
+                    push(index)
+                    visit(ctx.rhs)
+                    pop()?.let {
+                        exp.addAll(functions.array(it))
+                    }
+                    context.pop()
+                }
 
             else -> functions.array(lhs).forEachIndexed { index, element ->
-                position = index
                 context.push(element)
                 visit(ctx.rhs)
                 pop()?.let { exp.addAll(functions.array(it)) }
                 context.pop()
             }
         }
+
         return push(exp)
     }
 
@@ -427,7 +429,7 @@ class Processor internal constructor(
         }
         val fnc = ctx.num_fun()
         val exp = when {
-             fnc.ABS() != null -> when (args.size) {
+            fnc.ABS() != null -> when (args.size) {
                 0 -> functions.abs(pop())
                 1 -> functions.abs(args[0])
                 else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.ABS}")
@@ -495,7 +497,6 @@ class Processor internal constructor(
                 else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.ROUND}")
             }
 
-
             fnc.SQRT() != null -> when (args.size) {
                 0 -> functions.sqrt(pop())
                 1 -> functions.sqrt(args[0])
@@ -556,11 +557,11 @@ class Processor internal constructor(
     }
 
     override fun visitScope(ctx: JSongParser.ScopeContext): JsonNode? {
-        variables.push(mutableMapOf())
+        register.push()
         ctx.children.forEach {
             visit(it)
         }
-        variables.pop()
+        register.pop()
         return stack.firstOrNull()
     }
 
@@ -577,14 +578,22 @@ class Processor internal constructor(
     }
 
     override fun visitVariable(ctx: JSongParser.VariableContext): JsonNode? {
-        return push(variables.peek()[ctx.LABEL().text])
+        return push(
+            when (val exp = register.recall(ctx.LABEL().text)) {
+                is List<*> -> {
+                    val index = exp.indexOf(context.firstOrNull())
+                    if (index < 0) null else IntNode(index)
+                }
+                is JsonNode -> exp
+                else -> null
+            }
+        )
     }
 
     override fun visitVariableBinding(ctx: JSongParser.VariableBindingContext): JsonNode? {
-        val label = ctx.LABEL().text
         visit(ctx.exp())
         val exp = pop()
-        variables.peek()[label] = exp
+        register.store(ctx.LABEL().text, exp)
         return push(exp)
     }
 
@@ -610,6 +619,5 @@ class Processor internal constructor(
         }
         return push(exp)
     }
-
 
 } //~ Processor

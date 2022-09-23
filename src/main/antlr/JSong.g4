@@ -51,8 +51,8 @@ exp
     | lhs = exp 'in' rhs = exp                  #in
     | lhs = exp 'and' rhs = exp                 #and
     | lhs = exp 'or' rhs = exp                  #or
-    | lhs = exp '[' rhs = exp ']'               #filter
-    | lhs = exp '.' rhs = exp                   #map
+    | lhs = exp ('[' rhs = exp ']')             #filter
+    | lhs = exp '.' rhs = exp ('#$'LABEL)?      #map
     | array_fun '(' exp? (',' exp)* ')'         #arrayFunction
     | bool_fun '(' exp? (',' exp)* ')'          #booleanFunction
     | num_aggregate_fun '(' exp? (',' exp)* ')' #numericAggregateFunction

@@ -25,7 +25,8 @@ class TestPathOperators {
      */
     @Test
     fun `map results in array`() {
-        val expected = JSong.of("[ \"0203 544 1234\", \"01962 001234\", \"01962 001235\", \"077 7700 1234\" ]").evaluate()
+        val expected =
+            JSong.of("[ \"0203 544 1234\", \"01962 001234\", \"01962 001235\", \"077 7700 1234\" ]").evaluate()
         val actual = JSong.of("Phone.number").evaluate(TestResources.address)
         assertEquals(expected, actual)
     }
@@ -340,11 +341,29 @@ class TestPathOperators {
         assertEquals(expected, actual)
     }
 
+    /**
+     * https://docs.jsonata.org/path-operators#-positional-variable-binding
+     */
     @Test
     fun `Positional variable binding`() {
+        @Language("JSON")
+        val expected = TestResources.mapper.readTree(
+            """
+            [
+              {
+                "title": "The C Programming Language",
+                "index": 1
+              },
+              {
+                "title": "The AWK Programming Language",
+                "index": 2
+              }
+            ]
+            """.trimIndent()
+        )
         val expression = "library.books#\$i[\"Kernighan\" in authors].{\"title\": title, \"index\": \$i }"
         val actual = JSong.of(expression).evaluate(TestResources.library)
-
+        assertEquals(expected, actual)
     }
 
 } //~ JSonataTestPathOperators

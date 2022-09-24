@@ -57,12 +57,15 @@ exp
     | bool_fun '(' exp? (',' exp)* ')'          #booleanFunction
     | num_aggregate_fun '(' exp? (',' exp)* ')' #numericAggregateFunction
     | num_fun '(' exp? (',' exp)* ')'           #numericFunction
+    | obj_fun '(' exp? (',' exp)* ')'           #objectFunction
+    | text_fun '(' exp? (',' exp)* ')'          #textFunction
     | exp '[]'                                  #arrayConstructor
     | exp '.*'                                  #wildcardPostfix
     | '(' exp (';'? exp)* ')'                   #scope
     | '[' range (',' range)* ']'                #ranges
     | '$' LABEL ':=' exp                        #variableBinding
     | '$' LABEL                                 #variable
+    | REGEX                                     #regex
     | LABEL                                     #path
     | literal                                   #json
     | '**'                                      #descendants
@@ -110,11 +113,20 @@ num_fun
     | SQRT
     ;
 
-
-
 obj
     : '{' pair (',' pair)* '}'
     | '{' '}'
+    ;
+
+obj_fun
+    : ASSERT
+    | EACH
+    | ERROR
+    | KEYS
+    | LOOKUP
+    | MERGE
+    | SPREAD
+    | TYPE
     ;
 
 pair
@@ -128,6 +140,30 @@ range
 
 text
     : STRING
+    ;
+
+text_fun
+    : CONTAINS
+    | BASE64_DECODE
+    | BASE64_ENCODE
+    | DECODE_URL
+    | DECODE_URL_COMPONENT
+    | ENCODE_URL
+    | ENCODE_URL_COMPONENT
+    | EVAL
+    | JOIN
+    | LENGTH
+    | LOWERCASE
+    | MATCH
+    | PAD
+    | REPLACE
+    | SPLIT
+    | STRING_OF
+    | SUBSTRING
+    | SUBSTRING_AFTER
+    | SUBSTRING_BEFORE
+    | TRIM
+    | UPPERCASE
     ;
 
 // ARRAY FUNCTIONS
@@ -168,6 +204,45 @@ POWER:          '$power';
 RANDOM:         '$random';
 ROUND:          '$round';
 SQRT:           '$sqrt';
+
+// OBJECT FUNCTIONS
+
+ASSERT: '$assert';
+EACH:   '$each';
+ERROR:  '$error';
+KEYS:   '$keys';
+LOOKUP: '$lookup';
+MERGE:  '$merge';
+SPREAD: '$spread';
+TYPE:   '$type';
+
+// TEXT FUNCTIONS
+
+CONTAINS:               '$contains';
+BASE64_DECODE:          '$base64decode';
+BASE64_ENCODE:          '$base64encode';
+DECODE_URL:             '$decodeUrl';
+DECODE_URL_COMPONENT:   '$decodeUrlComponent';
+ENCODE_URL:             '$encodeUrl';
+ENCODE_URL_COMPONENT:   '$encodeUrlComponent';
+EVAL:                   '$eval';
+JOIN:                   '$join';
+LENGTH:                 '$length';
+LOWERCASE:              '$lowercase';
+MATCH:                  '$match';
+PAD:                    '$pad';
+REPLACE:                '$replace';
+SPLIT:                  '$split';
+STRING_OF:              '$string';
+SUBSTRING:              '$substring';
+SUBSTRING_AFTER:        '$substringAfter';
+SUBSTRING_BEFORE:       '$substringBefore';
+TRIM:                   '$trim';
+UPPERCASE:              '$uppercase';
+
+// REGULAR EXPRESSIONS
+
+REGEX: '/' (.)+? '/' 'i'? 'm'?;
 
 // JSON LITERALS
 

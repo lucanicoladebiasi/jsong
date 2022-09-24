@@ -7,12 +7,50 @@ import java.lang.StringBuilder
 import java.math.BigDecimal
 import java.math.MathContext
 import java.math.RoundingMode
+import java.net.URLDecoder
+import java.net.URLEncoder
+import java.util.*
 import kotlin.random.Random
 
 class Functions(
     private val mapper: ObjectMapper,
-    private val mathContext: MathContext = MathContext.DECIMAL128
+    private val random: Random,
+    private val mathContext: MathContext = MathContext.DECIMAL128,
 ) {
+
+    companion object {
+
+        /**
+         * Used in [match] method..
+         */
+        private const val TAG_GROUPS = "groups"
+
+        /**
+         * Used in [match] method.
+         */
+        private const val TAG_INDEX = "index"
+
+        /**
+         * Used in [match] method.
+         */
+        private const val TAG_MATCH = "match"
+
+        /**
+         * Used in [trim] method.
+         */
+        private val whitespaceRegex = "\\s+".toRegex()
+
+    }
+
+    enum class Type(val descriptor: TextNode) {
+        ARRAY(TextNode("array")),
+        BOOLEAN(TextNode("boolean")),
+        NULL(TextNode("null")),
+        NUMBER(TextNode("number")),
+        OBJECT(TextNode("object")),
+        STRING(TextNode("string")),
+        UNDEFINED(TextNode("undefined"))
+    }
 
     fun abs(number: JsonNode?): DecimalNode {
         return DecimalNode(
@@ -46,6 +84,13 @@ class Functions(
         }
     }
 
+    fun assert(condition: JsonNode?, message: JsonNode?): BooleanNode {
+        return when (boolean(condition)) {
+            BooleanNode.TRUE -> BooleanNode.TRUE
+            else -> throw AssertionError(string(message).toString())
+        }
+    }
+
     fun average(array: JsonNode?): DecimalNode {
         return when (array) {
             null -> throw NullPointerException("<array> null in ${Syntax.AVERAGE}")
@@ -61,6 +106,20 @@ class Functions(
         }
     }
 
+    fun base64decode(str: JsonNode?): TextNode {
+        return when (str) {
+            null -> throw java.lang.NullPointerException("<str> null in ${Syntax.BASE64_DECODE}")
+            else -> TextNode(Base64.getDecoder().decode(string(str).asText()).toString(Charsets.UTF_8))
+        }
+    }
+
+    fun base64encode(str: JsonNode?): TextNode {
+        return when (val flt = flatten(str)) {
+            null -> throw NullPointerException("<str> null in ${Syntax.BASE64_ENCODE}")
+            else -> TextNode(Base64.getEncoder().encodeToString(flt.asText().toByteArray()))
+        }
+    }
+
     private fun boolean(array: ArrayNode): Boolean {
         if (!array.isEmpty) {
             array.forEach { node ->
@@ -70,9 +129,6 @@ class Functions(
         return false
     }
 
-    /**
-     *
-     */
     fun boolean(arg: JsonNode?): BooleanNode {
         return when (arg) {
             null -> BooleanNode.FALSE
@@ -87,6 +143,19 @@ class Functions(
 
     fun concatenate(prefix: JsonNode?, suffix: JsonNode?): TextNode {
         return TextNode(StringBuilder(string(prefix).textValue()).append(string(suffix).textValue()).toString())
+    }
+
+    fun contains(str: JsonNode?, pattern: JsonNode?): BooleanNode {
+        return BooleanNode.valueOf(
+            when (val flt = flatten(str)) {
+                null -> throw NullPointerException("<str> null in ${Syntax.CONTAINS}")
+                else -> when (pattern) {
+                    null -> throw NullPointerException("<pattern> null in ${Syntax.CONTAINS}")
+                    is RegexNode -> flt.asText().contains(pattern.regex)
+                    else -> flt.asText().contains(string(pattern).asText())
+                }
+            }
+        )
     }
 
     fun ceil(number: JsonNode?): DecimalNode {
@@ -106,6 +175,20 @@ class Functions(
         }
     }
 
+    fun decodeUrl(str: JsonNode?): TextNode {
+        return when (val flt = flatten(str)) {
+            null -> throw java.lang.NullPointerException("<str> is null in ${Syntax.DECODE_URL}")
+            else -> TextNode(URLDecoder.decode(flt.asText(), Charsets.UTF_8.toString()))
+        }
+    }
+
+    fun decodeUrlComponent(str: JsonNode?): JsonNode {
+        return when (val flt = flatten(str)) {
+            null -> throw IllegalArgumentException("str is null in ${Syntax.DECODE_URL_COMPONENT}")
+            else -> TextNode(URLDecoder.decode(flt.asText(), Charsets.UTF_8.toString()))
+        }
+    }
+
     fun distinct(array: JsonNode?): ArrayNode {
         val exp = mapper.nodeFactory.arrayNode()
         when (array) {
@@ -122,8 +205,37 @@ class Functions(
         return DecimalNode(dividend.divide(divisor, mathContext))
     }
 
+    fun encodeUrl(str: JsonNode?): TextNode {
+        return when (val flt = flatten(str)) {
+            null -> throw NullPointerException("<str> null in ${Syntax.ENCODE_URL}")
+            else -> TextNode(URLEncoder.encode(flt.asText(), Charsets.UTF_8.toString()))
+        }
+    }
+
+    fun encodeUrlComponent(str: JsonNode?): TextNode {
+        return when (val flt = flatten(str)) {
+            null -> throw NullPointerException("<str> is null in ${Syntax.ENCODE_URL_COMPONENT}")
+            else -> TextNode(URLEncoder.encode(flt.asText(), Charsets.UTF_8.toString()))
+        }
+    }
+
     fun eq(lhs: JsonNode?, rhs: JsonNode?): BooleanNode {
         return BooleanNode.valueOf(flatten(lhs) == flatten(rhs))
+    }
+
+    fun error(message: JsonNode?): JsonNode? {
+        @Suppress("UNREACHABLE_CODE")
+        return when (message) {
+            null -> throw java.lang.IllegalArgumentException("<message> is null in ${Syntax.ERROR}")
+            else -> throw Error(string(message).asText())
+        }
+    }
+
+    fun eval(expr: JsonNode?, context: JsonNode? = null): JsonNode? {
+        return when (expr) {
+            null -> expr
+            else -> JSong.of(expr.asText(), random, mapper).evaluate(context)
+        }
     }
 
     fun exists(arg: JsonNode?): BooleanNode {
@@ -232,6 +344,54 @@ class Functions(
         return BooleanNode.valueOf(array(flatten(rhs)).contains(flatten(lhs)))
     }
 
+    fun join(array: JsonNode?, separator: JsonNode? = null): TextNode {
+        return when (array) {
+            null -> throw NullPointerException("<array> is null in ${Syntax.JOIN}")
+            !is ArrayNode -> TextNode(string(array).asText())
+            else -> TextNode(array.joinToString(separator?.asText("") ?: "") { string(it).asText() })
+        }
+    }
+
+    fun keys(obj: JsonNode?): ArrayNode {
+        val set = mutableSetOf<String>()
+        when (obj) {
+            is ArrayNode -> obj.forEach {
+                if (it is ObjectNode) it.fieldNames().forEach { key -> set.add(key) }
+            }
+
+            is ObjectNode -> obj.fieldNames().forEach { key -> set.add(key) }
+            else -> {} // do nothing
+        }
+        return mapper.createArrayNode().addAll(set.map { TextNode(it) })
+    }
+
+    fun length(str: JsonNode?): DecimalNode {
+        return when (val flt = flatten(str)) {
+            null -> throw NullPointerException("<str> is null in ${Syntax.LENGTH_OF}")
+            else -> DecimalNode(flt.asText().length.toBigDecimal())
+        }
+    }
+
+    fun lookup(obj: JsonNode?, key: JsonNode?): JsonNode? {
+        return when (key) {
+            null -> null
+            else -> when (obj) {
+                is ArrayNode -> mapper.createArrayNode()
+                    .addAll(obj.filterIsInstance<ObjectNode>().map { it[key.asText()] })
+
+                is ObjectNode -> obj[key.asText()]
+                else -> null
+            }
+        }
+    }
+
+    fun lowercase(str: JsonNode?): TextNode {
+        return when (val flt = flatten(str)) {
+            null -> throw NullPointerException("<str> is null in ${Syntax.LOWERCASE}")
+            else -> TextNode(flt.asText().lowercase((Locale.getDefault())))
+        }
+    }
+
     fun lt(lhs: JsonNode?, rhs: JsonNode?): BooleanNode {
         return BooleanNode.valueOf(
             when (val lhn = flatten(lhs)) {
@@ -260,8 +420,25 @@ class Functions(
         )
     }
 
-    fun ne(lhs: JsonNode?, rhs: JsonNode?): BooleanNode {
-        return BooleanNode.valueOf(flatten(lhs) != flatten(rhs))
+    @Suppress("UNUSED_PARAMETER")
+    fun match(str: JsonNode?, pattern: JsonNode?, limit: JsonNode? = null): ArrayNode {
+        return when (str) {
+            null -> throw NullPointerException("<str> null in ${Syntax.MATCH}")
+            else -> when (pattern) {
+                !is RegexNode -> throw NullPointerException("<pattern> is not regex in ${Syntax.MATCH}")
+                else -> mapper.nodeFactory.arrayNode().addAll(
+                    pattern.regex.findAll(string(str).asText()).map { matchResult ->
+                        mapper.nodeFactory.objectNode()
+                            .put(TAG_MATCH, matchResult.value)
+                            .put(TAG_INDEX, matchResult.range.first)
+                            .set<ObjectNode>(
+                                TAG_GROUPS,
+                                mapper.nodeFactory.arrayNode().addAll(matchResult.groupValues.map { TextNode(it) })
+                            )
+                    }.toList()
+                )
+            }
+        }
     }
 
     fun max(array: JsonNode?): DecimalNode {
@@ -279,6 +456,31 @@ class Functions(
         }
     }
 
+    fun merge(array: JsonNode?): ObjectNode {
+        val obj = mapper.createObjectNode()
+        if (array is ArrayNode) {
+            array.filterIsInstance<ObjectNode>().forEach { node ->
+                node.fields().forEach { entry ->
+                    when (obj.has(entry.key)) {
+                        true -> {
+                            val arr = mapper.createArrayNode()
+                            when (obj[entry.key]) {
+                                null -> {}
+                                is ArrayNode -> obj[entry.key].forEach { arr.add(it) }
+                                else -> arr.add(obj[entry.key])
+                            }
+                            arr.add(entry.value)
+                            obj.set<ArrayNode>(entry.key, arr)
+                        }
+
+                        else -> obj.set<JsonNode>(entry.key, entry.value)
+                    }
+                }
+            }
+        }
+        return obj
+    }
+
     fun min(array: JsonNode?): DecimalNode {
         return when (array) {
             null -> throw NullPointerException("<array> is null in ${Syntax.MIN}")
@@ -292,10 +494,15 @@ class Functions(
         }
     }
 
+
     fun mul(lhs: JsonNode?, rhs: JsonNode?): DecimalNode {
         return DecimalNode(
             number(lhs).decimalValue().multiply(number(rhs).decimalValue())
         )
+    }
+
+    fun ne(lhs: JsonNode?, rhs: JsonNode?): BooleanNode {
+        return BooleanNode.valueOf(flatten(lhs) != flatten(rhs))
     }
 
     fun not(arg: JsonNode?): BooleanNode {
@@ -324,6 +531,26 @@ class Functions(
         return BooleanNode.valueOf(boolean(lhs).booleanValue() || boolean(rhs).booleanValue())
     }
 
+    fun pad(str: JsonNode?, width: JsonNode?, char: JsonNode? = null): TextNode {
+        return when (val flt = flatten(str)) {
+            null -> throw NullPointerException("<str> is null in ${Syntax.PAD}")
+            else -> when (width) {
+                null -> throw NullPointerException("<width> is null in ${Syntax.PAD}")
+                else -> {
+                    val txt = flt.asText()
+                    val offset = width.asInt(0)
+                    val pad = char?.asText()?.get(0) ?: ' '
+                    TextNode(
+                        when {
+                            offset < 0 -> txt.padStart(-offset, pad)
+                            else -> txt.padEnd(offset, pad)
+                        }
+                    )
+                }
+            }
+        }
+    }
+
     @Throws(UnsupportedOperationException::class)
     @Suppress("UNUSED_PARAMETER")
     fun parseInteger(string: JsonNode?, picture: JsonNode?): DecimalNode {
@@ -349,6 +576,22 @@ class Functions(
     fun reminder(lhs: JsonNode?, rhs: JsonNode?): DecimalNode {
         return DecimalNode(number(lhs).decimalValue().remainder(number(rhs).decimalValue()))
     }
+
+    fun replace(str: JsonNode?, pattern: JsonNode?, replacement: JsonNode?): TextNode {
+        return when (val flt = flatten(str)) {
+            null -> throw NullPointerException("<str> is null in ${Syntax.REPLACE}")
+            else -> when (replacement) {
+                null -> throw NullPointerException("<replacement> is null in ${Syntax.REPLACE}")
+                else -> when (pattern) {
+                    is RegexNode -> TextNode(flt.asText().replace(pattern.regex, string(replacement).asText()))
+                    else -> TextNode(
+                        flt.asText().replace(string(pattern).asText(), string(replacement).asText())
+                    )
+                }
+            }
+        }
+    }
+
 
     fun reverse(array: JsonNode?): ArrayNode {
         val list = mutableListOf<JsonNode>()
@@ -391,6 +634,43 @@ class Functions(
         return mapper.createArrayNode().addAll(list.shuffled(random))
     }
 
+    fun split(str: JsonNode?, separator: JsonNode?, limit: JsonNode? = null): ArrayNode {
+        return mapper.nodeFactory.arrayNode().addAll(
+            when (val flt_str = flatten(str)) {
+                null -> throw NullPointerException("<str> is null in ${Syntax.SPLIT}")
+                else -> when (separator) {
+                    null -> throw NullPointerException("<separator> is null in ${Syntax.SPLIT}")
+                    is RegexNode -> flt_str.asText().split(separator.regex, limit?.asInt(0) ?: 0)
+                    else -> flt_str.asText().split(
+                        separator.asText(),
+                        ignoreCase = false,
+                        limit = limit?.asInt(0) ?: 0
+                    )
+                }
+            }.map { TextNode(it) }
+        )
+    }
+
+    fun spread(obj: JsonNode?): ArrayNode {
+        val res = mapper.createArrayNode()
+        when (obj) {
+            is ArrayNode -> {
+                obj.filterIsInstance<ObjectNode>().forEach {
+                    it.fields().forEach { entry ->
+                        res.add(mapper.createObjectNode().set<JsonNode>(entry.key, entry.value))
+                    }
+                }
+            }
+
+            is ObjectNode -> {
+                obj.fields().forEach { entry ->
+                    res.add(mapper.createObjectNode().set<JsonNode>(entry.key, entry.value))
+                }
+            }
+        }
+        return res
+    }
+
     fun sqrt(number: JsonNode?): DecimalNode {
         return DecimalNode(
             when (number) {
@@ -405,8 +685,8 @@ class Functions(
             is TextNode -> arg
             else -> TextNode(
                 when (prettify?.asBoolean() ?: false) {
-                    true -> mapper.writerWithDefaultPrettyPrinter().writeValueAsString(arg)
-                    else -> mapper.writeValueAsString(arg)
+                    true -> mapper.writerWithDefaultPrettyPrinter().writeValueAsString(flatten(arg))
+                    else -> mapper.writeValueAsString(flatten(arg))
                 }
             )
         }
@@ -414,6 +694,45 @@ class Functions(
 
     fun sub(lhs: JsonNode?, rhs: JsonNode?): DecimalNode {
         return DecimalNode(number(lhs).decimalValue().subtract(number(rhs).decimalValue()))
+    }
+
+    fun substring(str: JsonNode?, start: JsonNode? = null, length: JsonNode? = null): TextNode {
+        return when (val flt = flatten(str)) {
+            null -> throw NullPointerException("<str> is null in ${Syntax.SUBSTRING}")
+            else -> {
+                val txt = flt.asText()
+                val offset = start?.asInt() ?: 0
+                val first = 0.coerceAtLeast(if (offset < 0) txt.length + offset else offset)
+                    .coerceAtMost(txt.length)
+                val last = 0.coerceAtLeast(length?.let { first + length.asInt() } ?: txt.length)
+                    .coerceAtMost(txt.length)
+                TextNode(txt.substring(first, last))
+            }
+        }
+    }
+
+    fun substringAfter(str: JsonNode?, chars: JsonNode?): TextNode {
+        return TextNode(
+            when (val flt = flatten(str)) {
+                null -> throw NullPointerException("<str> is null in ${Syntax.SUBSTRING_AFTER}")
+                else -> when (chars) {
+                    null -> throw NullPointerException("<chars> is null in ${Syntax.SUBSTRING_AFTER}")
+                    else -> flt.asText().substringAfter(string(chars).asText())
+                }
+            }
+        )
+    }
+
+    fun substringBefore(str: JsonNode?, chars: JsonNode?): TextNode {
+        return TextNode(
+            when (val flt = flatten(str)) {
+                null -> throw NullPointerException("<str> is null in ${Syntax.SUBSTRING_BEFORE} ")
+                else -> when (chars) {
+                    null -> throw NullPointerException("<chars> is null in ${Syntax.SUBSTRING_BEFORE}")
+                    else -> flt.asText().substringBefore(string(chars).asText())
+                }
+            }
+        )
     }
 
     fun sum(array: JsonNode?): DecimalNode {
@@ -429,6 +748,36 @@ class Functions(
 
             else -> number(array)
         }
+    }
+
+    fun trim(str: JsonNode?): TextNode {
+        return TextNode(
+            when (val flt = flatten(str)) {
+                null -> throw NullPointerException("<str> null in ${Syntax.TRIM}")
+                else -> flt.asText().replace(whitespaceRegex, " ").trim()
+            }
+        )
+    }
+
+    fun type(value: JsonNode?): TextNode {
+        return when (value) {
+            is ArrayNode -> Type.ARRAY.descriptor
+            is BooleanNode -> Type.BOOLEAN.descriptor
+            is NullNode -> Type.NULL.descriptor
+            is NumericNode -> Type.NUMBER.descriptor
+            is ObjectNode -> Type.OBJECT.descriptor
+            is TextNode -> Type.STRING.descriptor
+            else -> Type.UNDEFINED.descriptor
+        }
+    }
+
+    fun uppercase(str: JsonNode?): TextNode {
+        return TextNode(
+            when (val flt = flatten(str)) {
+                null -> throw NullPointerException("<str> is null in ${Syntax.UPPERCASE}")
+                else -> flt.asText().uppercase(Locale.getDefault())
+            }
+        )
     }
 
 }

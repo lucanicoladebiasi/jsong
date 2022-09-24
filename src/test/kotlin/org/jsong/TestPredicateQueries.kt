@@ -159,28 +159,5 @@ class TestPredicateQueries {
         assertEquals(expected, actual)
     }
 
-    /**
-     * https://docs.jsonata.org/path-operators#-positional-variable-binding
-     */
-    @Test
-    fun `Positional variable binding`() {
-        val expression = "library.books#\$i['Kernighan' in authors].{ 'title': title,'index': \$i }"
-        @Language("JSON")
-        val expected = JSong.of(
-            """
-            [
-                {
-                    "title": "The C Programming Language",
-                    "index": 1
-                },
-                {
-                    "title": "The AWK Programming Language",
-                    "index": 2
-                }
-            ]                 
-            """.trimIndent()
-        )
-        val actual = JSong.of(expression).evaluate(TestResources.library)
-        println(actual)
-    }
+
 }

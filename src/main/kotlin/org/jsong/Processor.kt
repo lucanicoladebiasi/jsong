@@ -15,7 +15,7 @@ class Processor internal constructor(
 ) : JSongBaseVisitor<JsonNode?>() {
 
     private val context = ArrayDeque<JsonNode?>()
-    private val functions = Functions(mapper)
+    private val functions = Functions(mapper, random)
     private val register = Register()
     private val stack = ArrayDeque<JsonNode>()
 
@@ -347,7 +347,9 @@ class Processor internal constructor(
                 context.pop()
             }
         }
-
+        if (ctx.LABEL() != null && ctx.LABEL().text.isNotBlank()) {
+            register.store(ctx.LABEL().text, exp.toList())
+        }
         return push(exp)
     }
 
@@ -515,10 +517,67 @@ class Processor internal constructor(
             val lhs = pop()?.asText() ?: index.toString()
             visit(pairCtx.rhs)
             val rhs = pop() ?: NullNode.instance
-            exp.set<JsonNode>(lhs, rhs)
+            exp.set<JsonNode>(lhs, if (isToFlatten) functions.flatten(rhs) else rhs)
         }
         return push(exp)
     }
+
+    override fun visitObjectFunction(ctx: JSongParser.ObjectFunctionContext): JsonNode? {
+        val args = mutableListOf<JsonNode>()
+        ctx.exp().forEach { arg ->
+            visit(arg)
+            pop()?.let { args.add(it) }
+        }
+        val fnc = ctx.obj_fun()
+        val exp = when {
+            fnc.ASSERT() != null -> when (args.size) {
+                1 -> functions.assert(pop(), args[0])
+                2 -> functions.assert(args[0], args[1])
+                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.ASSERT}")
+            }
+
+            fnc.ERROR() != null -> when (args.size) {
+                0 -> functions.error(pop())
+                1 -> functions.error(args[0])
+                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.ERROR}")
+            }
+
+            fnc.KEYS() != null -> when (args.size) {
+                0 -> functions.keys(pop())
+                1 -> functions.keys(args[0])
+                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.KEYS}")
+            }
+
+            fnc.LOOKUP() != null -> when (args.size) {
+                1 -> functions.lookup(pop(), args[0])
+                2 -> functions.lookup(args[0], args[1])
+                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.LOOKUP}")
+            }
+
+            fnc.MERGE() != null -> when (args.size) {
+                0 -> functions.merge(pop())
+                1 -> functions.merge(args[0])
+                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.MERGE}")
+            }
+
+            fnc.SPREAD() != null -> when (args.size) {
+                0 -> functions.spread(pop())
+                1 -> functions.spread(args[0])
+                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.SPREAD}")
+            }
+
+            fnc.TYPE() != null -> when (args.size) {
+                0 -> functions.type(pop())
+                1 -> functions.type(args[0])
+                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.TYPE}")
+            }
+
+            else -> throw UnsupportedOperationException("${ctx.text} not recognized")
+        }
+        return push(exp)
+
+    }
+
 
     override fun visitPath(ctx: JSongParser.PathContext): JsonNode? {
         context.firstOrNull()?.let {
@@ -542,6 +601,10 @@ class Processor internal constructor(
             exp.add(pop())
         }
         return push(exp)
+    }
+
+    override fun visitRegex(ctx: JSongParser.RegexContext): JsonNode? {
+        return push(RegexNode(ctx.REGEX().text))
     }
 
     override fun visitReminder(ctx: JSongParser.ReminderContext): JsonNode? {
@@ -577,6 +640,150 @@ class Processor internal constructor(
         return push(TextNode(ctx.text.substring(1, ctx.text.length - 1)))
     }
 
+    override fun visitTextFunction(ctx: JSongParser.TextFunctionContext): JsonNode? {
+        val args = mutableListOf<JsonNode>()
+        ctx.exp().forEach { arg ->
+            visit(arg)
+            pop()?.let { args.add(it) }
+        }
+        val fnc = ctx.text_fun()
+        val exp = when {
+            fnc.BASE64_DECODE() != null -> when (args.size) {
+                0 -> functions.base64decode(pop())
+                1 -> functions.base64decode(args[0])
+                else -> throw IllegalArgumentException("\${ctx.text} requires ${Syntax.BASE64_DECODE}")
+            }
+
+            fnc.BASE64_ENCODE() != null -> when (args.size) {
+                0 -> functions.base64encode(pop())
+                1 -> functions.base64encode(args[0])
+                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.BASE64_ENCODE}")
+            }
+
+            fnc.CONTAINS() != null -> when (args.size) {
+                1 -> functions.contains(pop(), args[0])
+                2 -> functions.contains(args[0], args[1])
+                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.CONTAINS}")
+            }
+
+            fnc.DECODE_URL() != null -> when (args.size) {
+                0 -> functions.decodeUrl(pop())
+                1 -> functions.decodeUrl(args[0])
+                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.DECODE_URL}")
+            }
+
+            fnc.DECODE_URL_COMPONENT() != null -> when (args.size) {
+                0 -> functions.decodeUrlComponent(pop())
+                1 -> functions.decodeUrlComponent(args[0])
+                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.DECODE_URL_COMPONENT}")
+            }
+
+            fnc.ENCODE_URL() != null -> when (args.size) {
+                0 -> functions.encodeUrl(pop())
+                1 -> functions.encodeUrl(args[0])
+                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.ENCODE_URL}")
+            }
+
+            fnc.ENCODE_URL_COMPONENT() != null -> when (args.size) {
+                0 -> functions.encodeUrlComponent(pop())
+                1 -> functions.encodeUrlComponent(args[0])
+                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.ENCODE_URL_COMPONENT}")
+            }
+
+            fnc.EVAL() != null -> when (args.size) {
+                1 -> functions.eval(args[0], pop())
+                2 -> functions.eval(args[0], args[1])
+                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.EVAL}")
+            }
+
+            fnc.JOIN() != null -> when (args.size) {
+                0 -> functions.join(pop())
+                1 -> functions.join(args[0])
+                2 -> functions.join(args[0], args[1])
+                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.JOIN}")
+            }
+
+            fnc.LENGTH() != null -> when (args.size) {
+                0 -> functions.length(pop())
+                1 -> functions.length(args[0])
+                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.LENGTH_OF}")
+            }
+
+            fnc.LOWERCASE() != null -> when (args.size) {
+                0 -> functions.lowercase(pop())
+                1 -> functions.lowercase(args[0])
+                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.LOWERCASE}")
+            }
+
+            fnc.MATCH() != null -> when (args.size) {
+                1 -> functions.match(pop(), args[0])
+                2 -> functions.match(args[0], args[1])
+                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.MATCH}")
+            }
+
+            fnc.PAD() != null -> when (args.size) {
+                1 -> functions.pad(pop(), args[0])
+                2 -> functions.pad(args[0], args[1])
+                3 -> functions.pad(args[0], args[1], args[2])
+                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.PAD}")
+            }
+
+            fnc.REPLACE() != null -> when (args.size) {
+                2 -> functions.replace(pop(), args[0], args[1])
+                3 -> functions.replace(args[0], args[1], args[2])
+                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.REPLACE}")
+            }
+
+            fnc.SPLIT() != null -> when (args.size) {
+                1 -> functions.split(pop(), args[0])
+                2 -> functions.split(args[0], args[1])
+                3 -> functions.split(args[0], args[1], args[2])
+                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.SPLIT}")
+            }
+
+            fnc.STRING_OF() != null -> when (args.size) {
+                0 -> functions.string(pop())
+                1 -> functions.string(args[0])
+                2 -> functions.string(args[0], args[1])
+                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.STRING_OF}")
+            }
+
+            fnc.SUBSTRING() != null -> when (args.size) {
+                0 -> functions.substring(pop())
+                1 -> functions.substring(args[0])
+                2 -> functions.substring(args[0], args[1])
+                3 -> functions.substring(args[0], args[1], args[2])
+                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.SUBSTRING}")
+            }
+
+            fnc.SUBSTRING_AFTER() != null -> when (args.size) {
+                1 -> functions.substringAfter(pop(), args[0])
+                2 -> functions.substringAfter(args[0], args[1])
+                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.SUBSTRING_AFTER}")
+            }
+
+            fnc.SUBSTRING_BEFORE() != null -> when (args.size) {
+                1 -> functions.substringBefore(pop(), args[0])
+                2 -> functions.substringBefore(args[0], args[1])
+                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.SUBSTRING_BEFORE}")
+            }
+
+            fnc.TRIM() != null -> when (args.size) {
+                0 -> functions.trim(pop())
+                1 -> functions.trim(args[0])
+                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.TRIM}")
+            }
+
+            fnc.UPPERCASE() != null -> when (args.size) {
+                0 -> functions.uppercase(pop())
+                1 -> functions.uppercase(args[0])
+                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.UPPERCASE}")
+            }
+            else -> throw UnsupportedOperationException("${ctx.text} not recognized")
+        }
+        return push(exp)
+    }
+
     override fun visitVariable(ctx: JSongParser.VariableContext): JsonNode? {
         return push(
             when (val exp = register.recall(ctx.LABEL().text)) {
@@ -584,7 +791,8 @@ class Processor internal constructor(
                     val index = exp.indexOf(context.firstOrNull())
                     if (index < 0) null else IntNode(index)
                 }
-                is JsonNode -> exp
+
+                is JsonNode -> functions.flatten(exp)
                 else -> null
             }
         )

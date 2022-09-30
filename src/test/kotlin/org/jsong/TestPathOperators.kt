@@ -366,4 +366,33 @@ class TestPathOperators {
         assertEquals(expected, actual)
     }
 
+    /**
+     * https://docs.jsonata.org/path-operators#-context-variable-binding
+     */
+    @Test
+    fun `Context variable binding`() {
+        @Language("JSON")
+        val expected =
+            """
+            [
+              {
+                "title": "Structure and Interpretation of Computer Programs",
+                "customer": "10001"
+              },
+              {
+                "title": "Compilers: Principles, Techniques, and Tools",
+                "customer": "10003"
+              },
+              {
+                "title": "Structure and Interpretation of Computer Programs",
+                "customer": "10003"
+              }
+            ]   
+            """.trimIndent()
+        //val expression = "library.loans@\$l.books@\$b[\$l.isbn=\$b.isbn].{\"title\": \$b.title, \"customer\": \$l.customer }"
+        val expression = "library.loans@\$l.books@\$b[true]"
+        val actual = JSong.of(expression).evaluate(TestResources.library)
+        println(actual)
+    }
+
 } //~ JSonataTestPathOperators

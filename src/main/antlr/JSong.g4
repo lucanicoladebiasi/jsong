@@ -36,42 +36,43 @@ bool_fun
       ;
 
 exp
-    : lhs = exp '*' rhs = exp                   #mul
-    | lhs = exp '/' rhs = exp                   #div
-    | lhs = exp '%' rhs = exp                   #reminder
-    | lhs = exp '+' rhs = exp                   #add
-    | lhs = exp '-' rhs = exp                   #sub
-    | lhs = exp '&' rhs = exp                   #concatenate
-    | lhs = exp '=' rhs = exp                   #eq
-    | lhs = exp '!=' rhs = exp                  #ne
-    | lhs = exp '>' rhs = exp                   #gt
-    | lhs = exp '<' rhs = exp                   #lt
-    | lhs = exp '>=' rhs = exp                  #gte
-    | lhs = exp '<='rhs = exp                   #lte
-    | lhs = exp 'in' rhs = exp                  #in
-    | lhs = exp 'and' rhs = exp                 #and
-    | lhs = exp 'or' rhs = exp                  #or
-    | lhs = exp ('[' rhs = exp ']')             #filter
-    | lhs = exp '.' rhs = exp ('#$'LABEL)?      #map
-    | array_fun '(' exp? (',' exp)* ')'         #arrayFunction
-    | bool_fun '(' exp? (',' exp)* ')'          #booleanFunction
-    | num_aggregate_fun '(' exp? (',' exp)* ')' #numericAggregateFunction
-    | num_fun '(' exp? (',' exp)* ')'           #numericFunction
-    | obj_fun '(' exp? (',' exp)* ')'           #objectFunction
-    | text_fun '(' exp? (',' exp)* ')'          #textFunction
-    | exp '[]'                                  #arrayConstructor
-    | exp '.*'                                  #wildcardPostfix
-    | '(' exp (';'? exp)* ')'                   #scope
-    | '[' range (',' range)* ']'                #ranges
-    | '$' LABEL ':=' exp                        #variableBinding
-    | '$' LABEL                                 #variable
-    | REGEX                                     #regex
-    | LABEL                                     #path
-    | literal                                   #json
-    | '**'                                      #descendants
-    | '*.' exp                                  #wildcardPrefix
-    | '$$'                                      #root
-    | '$'                                       #context
+    : lhs = exp '*' rhs = exp                               #mul
+    | lhs = exp '/' rhs = exp                               #div
+    | lhs = exp '%' rhs = exp                               #reminder
+    | lhs = exp '+' rhs = exp                               #add
+    | lhs = exp '-' rhs = exp                               #sub
+    | lhs = exp '&' rhs = exp                               #concatenate
+    | lhs = exp '=' rhs = exp                               #eq
+    | lhs = exp '!=' rhs = exp                              #ne
+    | lhs = exp '>' rhs = exp                               #gt
+    | lhs = exp '<' rhs = exp                               #lt
+    | lhs = exp '>=' rhs = exp                              #gte
+    | lhs = exp '<='rhs = exp                               #lte
+    | lhs = exp 'in' rhs = exp                              #in
+    | lhs = exp 'and' rhs = exp                             #and
+    | lhs = exp 'or' rhs = exp                              #or
+    | lhs = exp ('[' rhs = exp ']')                         #filter
+    | lhs = exp '.' rhs = exp ((CTX_BND | POS_BND) LABEL)?  #map
+    | array_fun '(' exp? (',' exp)* ')'                     #arrayFunction
+    | bool_fun '(' exp? (',' exp)* ')'                      #booleanFunction
+    | num_aggregate_fun '(' exp? (',' exp)* ')'             #numericAggregateFunction
+    | num_fun '(' exp? (',' exp)* ')'                       #numericFunction
+    | obj_fun '(' exp? (',' exp)* ')'                       #objectFunction
+    | text_fun '(' exp? (',' exp)* ')'                      #textFunction
+    | time_fun '(' exp? (',' exp)* ')'                      #timeFunction
+    | exp '[]'                                              #arrayConstructor
+    | exp '.*'                                              #wildcardPostfix
+    | '(' exp (';'? exp)* ')'                               #scope
+    | '[' range (',' range)* ']'                            #ranges
+    | '$' LABEL ':=' exp                                    #variableBinding
+    | '$' LABEL                                             #variable
+    | REGEX                                                 #regex
+    | LABEL                                                 #path
+    | literal                                               #json
+    | '**'                                                  #descendants
+    | '*.' exp                                              #wildcardPrefix
+    | '$$'                                                  #root
+    | '$'                                                   #context
     ;
 
 literal
@@ -166,6 +167,13 @@ text_fun
     | UPPERCASE
     ;
 
+time_fun
+    : NOW
+    | MILLIS
+    | FROM_MILLIS
+    | TO_MILLIS
+    ;
+
 // ARRAY FUNCTIONS
 
 APPEND:     '$append';
@@ -240,9 +248,22 @@ SUBSTRING_BEFORE:       '$substringBefore';
 TRIM:                   '$trim';
 UPPERCASE:              '$uppercase';
 
+
+// TIME FUNCTIONS
+
+NOW: '$now';
+MILLIS: '$millis';
+FROM_MILLIS: '$fromMillis';
+TO_MILLIS: '$toMillis';
+
 // REGULAR EXPRESSIONS
 
 REGEX: '/' (.)+? '/' 'i'? 'm'?;
+
+// VARIABLE
+
+CTX_BND: '@$';
+POS_BND: '#$';
 
 // JSON LITERALS
 

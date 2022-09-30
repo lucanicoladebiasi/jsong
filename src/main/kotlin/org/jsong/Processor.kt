@@ -5,17 +5,19 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.*
 import org.jsong.antlr.JSongBaseVisitor
 import org.jsong.antlr.JSongParser
+import java.time.Instant
 import java.util.*
 import kotlin.random.Random
 
 class Processor internal constructor(
     private val mapper: ObjectMapper,
     private val random: Random,
+    private val time: Instant,
     private val root: JsonNode?
 ) : JSongBaseVisitor<JsonNode?>() {
 
     private val context = ArrayDeque<JsonNode?>()
-    private val functions = Functions(mapper, random)
+    private val functions = Functions(mapper, random, time)
     private val register = Register()
     private val stack = ArrayDeque<JsonNode>()
 
@@ -319,7 +321,8 @@ class Processor internal constructor(
     override fun visitMap(ctx: JSongParser.MapContext): JsonNode? {
         val exp = mapper.createArrayNode()
         visit(ctx.lhs)
-        when (val lhs = pop()) {
+        val lhs = pop()
+        when (lhs) {
             is RangeNode -> lhs.forEach { index ->
                 context.push(index)
                 visit(ctx.rhs)
@@ -340,17 +343,30 @@ class Processor internal constructor(
                     context.pop()
                 }
 
-            else -> functions.array(lhs).forEachIndexed { index, element ->
+            else -> functions.array(lhs).forEach { element ->
                 context.push(element)
                 visit(ctx.rhs)
                 pop()?.let { exp.addAll(functions.array(it)) }
                 context.pop()
             }
         }
-        if (ctx.LABEL() != null && ctx.LABEL().text.isNotBlank()) {
-            register.store(ctx.LABEL().text, exp.toList())
-        }
-        return push(exp)
+        return push(
+            when {
+                ctx.CTX_BND() != null -> {
+                    register.store(ctx.LABEL().text, exp)
+                    lhs
+                }
+
+                ctx.POS_BND() != null -> {
+                    register.store(ctx.LABEL().text, exp.toList())
+                    exp
+
+                }
+
+                else -> exp
+            }
+        )
+
     }
 
     override fun visitMul(ctx: JSongParser.MulContext): JsonNode? {
@@ -779,6 +795,49 @@ class Processor internal constructor(
                 1 -> functions.uppercase(args[0])
                 else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.UPPERCASE}")
             }
+
+            else -> throw UnsupportedOperationException("${ctx.text} not recognized")
+        }
+        return push(exp)
+    }
+
+    override fun visitTimeFunction(ctx: JSongParser.TimeFunctionContext): JsonNode? {
+        val args = mutableListOf<JsonNode>()
+        ctx.exp().forEach { arg ->
+            visit(arg)
+            pop()?.let { args.add(it) }
+        }
+        val fnc = ctx.time_fun()
+        val exp = when {
+            fnc.FROM_MILLIS() != null -> TextNode(
+                when (args.size) {
+                    0 -> functions.fromMillis(pop())
+                    1 -> functions.fromMillis(args[0])
+                    2 -> functions.fromMillis(args[0], args[1])
+                    3 -> functions.fromMillis(args[0], args[1], args[2])
+                    else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.FROM_MILLIS}")
+                }
+            )
+
+            fnc.MILLIS() != null -> when (args.size) {
+                0 -> functions.millis(time)
+                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.MILLIS}")
+            }
+
+            fnc.NOW() != null -> when (args.size) {
+                0 -> functions.now(time)
+                1 -> functions.now(time, args[0])
+                2 -> functions.now(time, args[0], args[1])
+                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.NOW}")
+            }
+
+            fnc.TO_MILLIS() != null -> when (args.size) {
+                0 -> functions.toMillis(pop())
+                1 -> functions.toMillis(args[0])
+                2 -> functions.toMillis(args[0], args[1])
+                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.TO_MILLIS}")
+            }
+
             else -> throw UnsupportedOperationException("${ctx.text} not recognized")
         }
         return push(exp)

@@ -9,12 +9,16 @@ import java.math.MathContext
 import java.math.RoundingMode
 import java.net.URLDecoder
 import java.net.URLEncoder
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.*
 import kotlin.random.Random
 
 class Functions(
     private val mapper: ObjectMapper,
     private val random: Random,
+    private val time: Instant,
     private val mathContext: MathContext = MathContext.DECIMAL128,
 ) {
 
@@ -232,9 +236,9 @@ class Functions(
     }
 
     fun eval(expr: JsonNode?, context: JsonNode? = null): JsonNode? {
-        return when (expr) {
+        return when (val exp = flatten(expr)) {
             null -> expr
-            else -> JSong.of(expr.asText(), random, mapper).evaluate(context)
+            else -> JSong.of(exp.asText(), mapper, random, time).evaluate(context)
         }
     }
 
@@ -310,6 +314,22 @@ class Functions(
     @Suppress("UNUSED_PARAMETER")
     fun formatNumber(number: JsonNode?, picture: JsonNode?, options: JsonNode? = null): TextNode {
         throw UnsupportedOperationException("Not implemented yet")
+    }
+
+    fun fromMillis(number: JsonNode?, picture: JsonNode? = null, timezone: JsonNode? = null): String {
+        return when (val value = flatten(number)) {
+            null -> throw IllegalArgumentException("number is null in ${Syntax.FROM_MILLIS}")
+            else -> {
+                val dtf = (picture
+                    ?.let { DateTimeFormatter.ofPattern(picture.asText()) }
+                    ?: DateTimeFormatter.ISO_INSTANT)
+                    .withZone(timezone
+                        ?.let { ZoneId.of(it.asText()) }
+                        ?: ZoneId.systemDefault()
+                    )
+                dtf.format(Instant.ofEpochMilli(value.longValue()))
+            }
+        }
     }
 
     fun gt(lhs: JsonNode?, rhs: JsonNode?): BooleanNode {
@@ -481,6 +501,10 @@ class Functions(
         return obj
     }
 
+    fun millis(time: Instant): DecimalNode {
+        return DecimalNode(time.toEpochMilli().toBigDecimal())
+    }
+
     fun min(array: JsonNode?): DecimalNode {
         return when (array) {
             null -> throw NullPointerException("<array> is null in ${Syntax.MIN}")
@@ -525,6 +549,20 @@ class Functions(
 
             }
         )
+    }
+
+    fun now(time: Instant, picture: JsonNode? = null, timezone: JsonNode? = null): TextNode {
+        val dtf = (
+                picture
+                    ?.let { DateTimeFormatter.ofPattern(picture.asText()) }
+                    ?: DateTimeFormatter.ISO_INSTANT
+                )
+            .withZone(
+                timezone
+                    ?.let { ZoneId.of(it.asText()) }
+                    ?: ZoneId.systemDefault()
+            )
+        return TextNode(dtf.format(time))
     }
 
     fun or(lhs: JsonNode?, rhs: JsonNode?): BooleanNode {
@@ -747,6 +785,19 @@ class Functions(
             }
 
             else -> number(array)
+        }
+    }
+
+    fun toMillis(timestamp: JsonNode?, picture: JsonNode? = null): DecimalNode {
+        return when (timestamp) {
+            null -> throw IllegalArgumentException("timestamp is null in ${Syntax.TO_MILLIS}")
+            else -> {
+                val dtf = (picture
+                    ?.let { DateTimeFormatter.ofPattern(picture.asText()) }
+                    ?: DateTimeFormatter.ISO_INSTANT)
+                    .withZone(ZoneId.systemDefault())
+                DecimalNode(Instant.from(dtf.parse(timestamp.asText())).toEpochMilli().toBigDecimal())
+            }
         }
     }
 

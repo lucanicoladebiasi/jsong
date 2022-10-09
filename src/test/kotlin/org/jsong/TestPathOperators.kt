@@ -1,5 +1,6 @@
 package org.jsong
 
+import com.fasterxml.jackson.databind.node.ArrayNode
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
@@ -390,9 +391,11 @@ class TestPathOperators {
             ]   
             """.trimIndent()
         //val expression = "library.loans@\$l.books@\$b[\$l.isbn=\$b.isbn].{\"title\": \$b.title, \"customer\": \$l.customer }"
-        val expression = "library.loans@\$l.books@\$b[true]"
+        val expression = "library.loans@\$L.books"
         val actual = JSong.of(expression).evaluate(TestResources.library)
         println(actual)
+        println((
+                actual as ArrayNode).size())
     }
 
 } //~ JSonataTestPathOperators

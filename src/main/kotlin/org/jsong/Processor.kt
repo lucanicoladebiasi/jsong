@@ -319,6 +319,7 @@ class Processor internal constructor(
     }
 
     override fun visitMap(ctx: JSongParser.MapContext): JsonNode? {
+        val coc = mapper.createArrayNode() // carry on context
         val exp = mapper.createArrayNode()
         visit(ctx.lhs)
         val lhs = pop()
@@ -354,12 +355,13 @@ class Processor internal constructor(
             when {
                 ctx.CTX_BND() != null -> {
                     register.store(ctx.LABEL().text, exp)
-                    lhs
+                    functions.array(exp).forEach { _ -> coc.add(lhs) }
+                    coc
                 }
 
                 ctx.POS_BND() != null -> {
                     register.store(ctx.LABEL().text, exp.toList())
-                    exp
+                    exp // may be it should be lhs
 
                 }
 
@@ -593,7 +595,6 @@ class Processor internal constructor(
         return push(exp)
 
     }
-
 
     override fun visitPath(ctx: JSongParser.PathContext): JsonNode? {
         context.firstOrNull()?.let {

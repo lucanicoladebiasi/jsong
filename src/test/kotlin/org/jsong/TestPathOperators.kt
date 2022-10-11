@@ -391,11 +391,11 @@ class TestPathOperators {
             ]   
             """.trimIndent()
         //val expression = "library.loans@\$l.books@\$b[\$l.isbn=\$b.isbn].{\"title\": \$b.title, \"customer\": \$l.customer }"
-        val expression = "library.loans@\$L.books"
+        //val expression = "library.loans@\$L.books@\$B.{\"t\": \$B.title}"
+        val expression = "library.loans@\$l.books@\$b[\$b.isbn]"
         val actual = JSong.of(expression).evaluate(TestResources.library)
         println(actual)
-        println((
-                actual as ArrayNode).size())
+        println((actual as ArrayNode).size())
     }
 
 } //~ JSonataTestPathOperators

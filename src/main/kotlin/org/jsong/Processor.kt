@@ -356,7 +356,7 @@ class Processor internal constructor(
                 ctx.CTX_BND() != null -> {
                     register.store(ctx.LABEL().text, exp)
                     functions.array(exp).forEach { _ -> coc.add(lhs) }
-                    coc
+                    coc // carry on context
                 }
 
                 ctx.POS_BND() != null -> {

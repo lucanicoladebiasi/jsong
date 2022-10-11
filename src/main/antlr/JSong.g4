@@ -4,17 +4,17 @@ grammar JSong;
     package org.jsong.antlr;
 }
 
-jsong
-    : exp? EOF
+jsong:
+    exp? EOF
     ;
 
-array
-    : '[' literal (',' literal)* ']'
-    | '[' ']'
+array:
+    '[' literal (',' literal)* ']'  |
+    '[' ']'
     ;
 
-array_fun
-    : APPEND
+array_fun:
+      APPEND
     | COUNT
     | DISTINCT
     | SORT
@@ -24,19 +24,40 @@ array_fun
     ;
 
 
-bool
-    : TRUE
+bool:
+      TRUE
     | FALSE
     ;
 
-bool_fun
-      : BOOLEAN
-      | EXISTS
-      | NOT
-      ;
+bool_fun:
+      BOOLEAN
+    | EXISTS
+    | NOT
+    ;
 
-exp
-    : lhs = exp '*' rhs = exp                               #mul
+exp:
+      literal                                               #json
+    | '[' range (',' range)* ']'                            #ranges
+    | LABEL                                                 #path
+    | REGEX                                                 #regex
+    | exp '[]'                                              #arrayConstructor
+    | '$' LABEL                                             #variable
+    | '$' LABEL ':=' exp                                    #variableBinding
+    | '$'                                                   #context
+    | '$$'                                                  #root
+    | '**'                                                  #descendants
+    | '*.' exp                                              #wildcardPrefix
+    | exp '.*'                                              #wildcardPostfix
+    | lhs = exp '.' rhs = exp ((CTX_BND | POS_BND) LABEL)?  #map
+    | lhs = exp ('[' rhs = exp ']')                         #filter
+    | array_fun '(' exp? (',' exp)* ')'                     #arrayFunction
+    | bool_fun '(' exp? (',' exp)* ')'                      #booleanFunction
+    | num_aggregate_fun '(' exp? (',' exp)* ')'             #numericAggregateFunction
+    | num_fun '(' exp? (',' exp)* ')'                       #numericFunction
+    | obj_fun '(' exp? (',' exp)* ')'                       #objectFunction
+    | text_fun '(' exp? (',' exp)* ')'                      #textFunction
+    | time_fun '(' exp? (',' exp)* ')'                      #timeFunction
+    | lhs = exp '*' rhs = exp                               #mul
     | lhs = exp '/' rhs = exp                               #div
     | lhs = exp '%' rhs = exp                               #reminder
     | lhs = exp '+' rhs = exp                               #add
@@ -51,28 +72,7 @@ exp
     | lhs = exp 'in' rhs = exp                              #in
     | lhs = exp 'and' rhs = exp                             #and
     | lhs = exp 'or' rhs = exp                              #or
-    | lhs = exp ('[' rhs = exp ']')                         #filter
-    | lhs = exp '.' rhs = exp ((CTX_BND | POS_BND) LABEL)?  #map
-    | array_fun '(' exp? (',' exp)* ')'                     #arrayFunction
-    | bool_fun '(' exp? (',' exp)* ')'                      #booleanFunction
-    | num_aggregate_fun '(' exp? (',' exp)* ')'             #numericAggregateFunction
-    | num_fun '(' exp? (',' exp)* ')'                       #numericFunction
-    | obj_fun '(' exp? (',' exp)* ')'                       #objectFunction
-    | text_fun '(' exp? (',' exp)* ')'                      #textFunction
-    | time_fun '(' exp? (',' exp)* ')'                      #timeFunction
-    | exp '[]'                                              #arrayConstructor
-    | exp '.*'                                              #wildcardPostfix
     | '(' exp (';'? exp)* ')'                               #scope
-    | '[' range (',' range)* ']'                            #ranges
-    | '$' LABEL ':=' exp                                    #variableBinding
-    | '$' LABEL                                             #variable
-    | REGEX                                                 #regex
-    | LABEL                                                 #path
-    | literal                                               #json
-    | '**'                                                  #descendants
-    | '*.' exp                                              #wildcardPrefix
-    | '$$'                                                  #root
-    | '$'                                                   #context
     ;
 
 literal
@@ -83,6 +83,7 @@ literal
     | number
     | text
     ;
+
 
 nihil
     : NULL

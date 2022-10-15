@@ -1,14 +1,18 @@
 package org.jsong
 
+import com.fasterxml.jackson.databind.node.ArrayNode
 import java.util.ArrayDeque
 
 internal class Register {
 
     private val scope = ArrayDeque<MutableMap<String, Any>>()
 
+    var index: Int? = null
+
     init {
         push()
     }
+
 
     fun pop(): Register {
         if (scope.size > 1) {
@@ -25,7 +29,14 @@ internal class Register {
     fun recall(name: String): Any? {
         return when (val ref = scope.peek()[name]) {
             is Unit -> null
-            else -> ref
+            else -> when (ref) {
+                is ArrayNode -> when (index) {
+                    null -> ref
+                    else -> ref[index!!]
+                }
+
+                else -> ref
+            }
         }
     }
 

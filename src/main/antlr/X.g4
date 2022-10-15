@@ -17,11 +17,12 @@ bool
     | FALSE
     ;
 
-exp
-    : lhs = exp '.' rhs = exp                               #map
+exp:
+      lhs = exp '.' rhs = exp                               #map
     | lgs = exp '[' rhs = exp ']'                           #filter
     | lhs = exp '=' rhs = exp                               #eq
-    | label                                                 #var
+    | '$' label                                             #var
+    | label                                                 #path
     | literal                                               #json
     ;
 

@@ -263,12 +263,13 @@ class Processor internal constructor(
         return push(functions.eq(lhs, rhs))
     }
 
-    fun _visitFilter(ctx: JSongParser.FilterContext): JsonNode? {
+    override fun visitFilter(ctx: JSongParser.FilterContext): JsonNode? {
         val exp = mapper.createArrayNode()
         visit(ctx.lhs)
         val lhs = functions.array(pop())
         lhs.forEachIndexed { index, element ->
             context.push(element)
+            register.index = index
             visit(ctx.rhs)
             when (val rhs = pop()) {
                 is NumericNode -> {
@@ -299,30 +300,12 @@ class Processor internal constructor(
                     }
                 }
 
-                else -> { if (functions.boolean(rhs).asBoolean()) {
-                    exp.addAll(functions.array(element))
-                }
+                else -> {
+                    if (functions.boolean(rhs).asBoolean()) {
+                        exp.addAll(functions.array(element))
+                    }
                 }
             }
-            context.pop()
-        }
-        return push(exp)
-    }
-
-    override fun visitFilter(ctx: JSongParser.FilterContext): JsonNode? {
-        val exp = mapper.createArrayNode()
-        visit(ctx.lhs)
-        val lhs = functions.array(functions.flatten(pop()))
-        lhs.forEachIndexed { index, element ->
-            context.push(element)
-            register.index = index
-            visit(ctx.rhs)
-
-            val rhs = pop()
-            if (functions.boolean(rhs).asBoolean()) {
-                exp.addAll(functions.array(element))
-            }
-
             register.index = null
             context.pop()
         }

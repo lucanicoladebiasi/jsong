@@ -15,6 +15,7 @@ class JSong private constructor(
     private val parser: JSongParser,
     private val mapper: ObjectMapper,
     private val random: Random,
+    private val register: Register,
     val time: Instant
 
 ) {
@@ -25,16 +26,23 @@ class JSong private constructor(
             exp: String,
             mapper: ObjectMapper = ObjectMapper(),
             random: Random = Random.Default,
+            register: Register = Register(),
             time: Instant = now()
         ): JSong {
-            return JSong(JSongParser(CommonTokenStream(JSongLexer(CharStreams.fromString(exp)))), mapper, random, time)
+            return JSong(
+                JSongParser(CommonTokenStream(JSongLexer(CharStreams.fromString(exp)))),
+                mapper,
+                random,
+                register,
+                time
+            )
         }
-
 
     } //~ companion
 
+
     fun evaluate(node: JsonNode? = null): JsonNode? {
-        return Processor(mapper, random, time, node).visit(parser.jsong())
+        return Processor(mapper, random, register, time, node).visit(parser.jsong())
     }
 
 } //~ JSong

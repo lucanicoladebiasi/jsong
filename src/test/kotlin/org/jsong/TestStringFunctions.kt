@@ -262,6 +262,7 @@ class TestStringFunctions {
     /**
      * https://docs.jsonata.org/string-functions#contains
      */
+    @Disabled
     @Test
     fun `$contains - regex in filter`() {
         val expression = "Phone[\$contains(number, /^077/)]"
@@ -439,6 +440,7 @@ class TestStringFunctions {
      * https://docs.jsonata.org/string-functions#eval
      */
     @Test
+    @Disabled
     fun `$eval()`() {
         val expression = "\$eval(\"[1,2,3]\")"
         val actual = JSong.of(expression).evaluate()

@@ -10,21 +10,31 @@ import java.util.*
 import kotlin.random.Random
 
 class Processor internal constructor(
+    private val context: MutableMap<String, ArrayNode>,
     private val mapper: ObjectMapper,
     private val random: Random,
-    private val register: Register,
     private val time: Instant,
-    private val root: JsonNode?
+    root: JsonNode?
 ) : JSongBaseVisitor<JsonNode?>() {
 
-    private val context = ArrayDeque<JsonNode?>()
+    companion object {
+
+        private const val CONTEXT = "\$"
+
+        private const val ROOT = "\$\$"
+    }
+
     private val functions = Functions(mapper, random, time)
+
+    private val scope = ArrayDeque<JsonNode>()
+
     private val stack = ArrayDeque<JsonNode>()
 
     @Volatile
     private var isToFlatten = true
 
     init {
+        context[ROOT] = functions.array(root)
         push(root)
     }
 
@@ -36,41 +46,6 @@ class Processor internal constructor(
                     exp.addAll(descendants(property.value).toList())
                     exp.add(property.value)
                 }
-            }
-        }
-        return exp
-    }
-
-    private fun map(ctx_lhs: JSongParser.ExpContext, ctx_rhs: JSongParser.ExpContext): ArrayNode? {
-        val exp = mapper.createArrayNode()
-        visit(ctx_lhs)
-        val lhs = pop()
-        when (lhs) {
-            is RangeNode -> lhs.forEach { index ->
-                context.push(index)
-                visit(ctx_rhs)
-                pop()?.let {
-                    exp.addAll(functions.array(it))
-                }
-                context.pop()
-            }
-
-            is RangesNode ->
-                lhs.indexes.forEach { index ->
-                    context.push(index)
-                    push(index)
-                    visit(ctx_rhs)
-                    pop()?.let {
-                        exp.addAll(functions.array(it))
-                    }
-                    context.pop()
-                }
-
-            else -> functions.array(lhs).forEach { element ->
-                context.push(element)
-                visit(ctx_rhs)
-                pop()?.let { exp.addAll(functions.array(it)) }
-                context.pop()
             }
         }
         return exp
@@ -239,8 +214,8 @@ class Processor internal constructor(
         return push(functions.concatenate(lhs, rhs))
     }
 
-    override fun visitContext(ctx: JSongParser.ContextContext): JsonNode? {
-        return push(context.firstOrNull() ?: root)
+   override fun visitContext(ctx: JSongParser.ContextContext): JsonNode? {
+        return push(context[CONTEXT])
     }
 
     override fun visitDescendants(ctx: JSongParser.DescendantsContext): JsonNode? {
@@ -268,8 +243,7 @@ class Processor internal constructor(
         visit(ctx.lhs)
         val lhs = functions.array(functions.flatten(pop()))
         lhs.forEachIndexed { index, element ->
-            context.push(element)
-            register.index = index
+            //context.push(element)
             visit(ctx.rhs)
             when (val rhs = pop()) {
                 is NumericNode -> {
@@ -306,8 +280,7 @@ class Processor internal constructor(
                     }
                 }
             }
-            register.index = null
-            context.pop()
+            //context.pop()
         }
         return push(exp)
     }
@@ -363,32 +336,29 @@ class Processor internal constructor(
         val lhs = pop()
         when (lhs) {
             is RangeNode -> lhs.forEach { index ->
-                context.push(index)
+                //context.push(index)
                 visit(ctx.rhs)
                 pop()?.let {
                     exp.addAll(functions.array(it))
                 }
-                context.pop()
+                //context.pop()
             }
 
             is RangesNode ->
                 lhs.indexes.forEach { index ->
-                    context.push(index)
+                    //context.push(index)
                     push(index)
                     visit(ctx.rhs)
                     pop()?.let {
                         exp.addAll(functions.array(it))
                     }
-                    context.pop()
+                    //context.pop()
                 }
 
             else -> functions.array(lhs).forEachIndexed { index, element ->
-                context.push(element)
-
+                push(element)
                 visit(ctx.rhs)
                 pop()?.let { exp.addAll(functions.array(it)) }
-
-                context.pop()
             }
         }
         return push(exp)
@@ -400,40 +370,16 @@ class Processor internal constructor(
         visit(ctx.lhs)
         val lhs = functions.array(functions.flatten(pop()))
         lhs.forEach { node ->
-            when (node) {
-                is RangeNode -> node.forEach { index ->
-                    context.push(index)
-                    visit(ctx.rhs)
-                    pop()?.let {
-                        ref.addAll(functions.array(it))
-                    }
-                    context.pop()
-                }
-
-                is RangesNode -> node.indexes.forEach { index ->
-                    context.push(index)
-                    push(index)
-                    visit(ctx.rhs)
-                    pop()?.let {
-                        ref.addAll(functions.array(it))
-                    }
-                    context.pop()
-                }
-
-                else -> {
-                    context.push(node)
-                    visit(ctx.rhs)
-                    pop()?.let {
-                        functions.array(it).forEach {
-                            ref.add(it)
-                            exp.add(node)
-                        }
-                    }
-                    context.pop()
+            //context.push(node)
+            visit(ctx.rhs)
+            pop()?.let {
+                functions.array(it).forEach {
+                    ref.add(it)
+                    exp.add(node)
                 }
             }
+            //context.pop()
         }
-        register.store(ctx.label().text, ref)   // Store ref and...
         return push(exp)
     }
 
@@ -443,33 +389,32 @@ class Processor internal constructor(
         val lhs = pop()
         when (lhs) {
             is RangeNode -> lhs.forEach { index ->
-                context.push(index)
+                //context.push(index)
                 visit(ctx.rhs)
                 pop()?.let {
                     exp.addAll(functions.array(it))
                 }
-                context.pop()
+                //context.pop()
             }
 
             is RangesNode ->
                 lhs.indexes.forEach { index ->
-                    context.push(index)
+                    //context.push(index)
                     push(index)
                     visit(ctx.rhs)
                     pop()?.let {
                         exp.addAll(functions.array(it))
                     }
-                    context.pop()
+                    //context.pop()
                 }
 
             else -> functions.array(lhs).forEach { element ->
-                context.push(element)
+                //context.push(element)
                 visit(ctx.rhs)
                 pop()?.let { exp.addAll(functions.array(it)) }
-                context.pop()
+                //context.pop()
             }
         }
-        register.store(ctx.label().text, exp)
         return push(exp)
     }
 
@@ -699,9 +644,7 @@ class Processor internal constructor(
     }
 
     override fun visitPath(ctx: JSongParser.PathContext): JsonNode? {
-        context.firstOrNull()?.let {
-            push(it)
-        }
+        scope.firstOrNull()?.let { push(it) }
         return push(select(pop(), PathNode(ctx.text)))
     }
 
@@ -734,16 +677,17 @@ class Processor internal constructor(
         return push(functions.reminder(lhs, rhs))
     }
 
-    override fun visitRoot(ctx: JSongParser.RootContext?): JsonNode? {
-        return push(context.lastOrNull())
+   override fun visitRoot(ctx: JSongParser.RootContext?): JsonNode? {
+        return push(context[ROOT])
     }
 
     override fun visitScope(ctx: JSongParser.ScopeContext): JsonNode? {
-        register.push()
+        val pop = pop()
+        pop?.let { scope.push(it) }
         ctx.children.forEach {
             visit(it)
         }
-        register.pop()
+        pop?.let { scope.pop() }
         return stack.firstOrNull()
     }
 
@@ -946,6 +890,7 @@ class Processor internal constructor(
         return push(exp)
     }
 
+    /*
     override fun visitVar(ctx: JSongParser.VarContext): JsonNode? {
         return push(
             when (val exp = register.recall(ctx.label().text)) {
@@ -959,14 +904,15 @@ class Processor internal constructor(
             }
         )
     }
+*/
 
-    override fun visitVarBinding(ctx: JSongParser.VarBindingContext): JsonNode? {
+  /*  override fun visitVarBinding(ctx: JSongParser.VarBindingContext): JsonNode? {
         visit(ctx.exp())
         val exp = pop()
         val ref = mapper.createArrayNode().addAll(functions.array(functions.flatten(exp)))
         register.store(ctx.label().text, ref)
         return push(exp)
-    }
+    }*/
 
     override fun visitWildcardPostfix(ctx: JSongParser.WildcardPostfixContext): JsonNode? {
         val exp = mapper.createArrayNode()

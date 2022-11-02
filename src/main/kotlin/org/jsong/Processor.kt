@@ -33,6 +33,9 @@ class Processor internal constructor(
     @Volatile
     private var isToFlatten = true
 
+    @Volatile
+    private var contextIndex: Int? = null
+
     init {
         context[ROOT] = functions.array(root)
         push(root)
@@ -214,7 +217,7 @@ class Processor internal constructor(
         return push(functions.concatenate(lhs, rhs))
     }
 
-   override fun visitContext(ctx: JSongParser.ContextContext): JsonNode? {
+    override fun visitContext(ctx: JSongParser.ContextContext): JsonNode? {
         return push(context[CONTEXT])
     }
 
@@ -355,10 +358,14 @@ class Processor internal constructor(
                     //context.pop()
                 }
 
-            else -> functions.array(lhs).forEachIndexed { index, element ->
-                push(element)
-                visit(ctx.rhs)
-                pop()?.let { exp.addAll(functions.array(it)) }
+            else -> {
+                functions.array(lhs).forEachIndexed { index, element ->
+                    contextIndex = index
+                    push(element)
+                    visit(ctx.rhs)
+                    pop()?.let { exp.addAll(functions.array(it)) }
+                }
+                contextIndex = null
             }
         }
         return push(exp)
@@ -369,8 +376,9 @@ class Processor internal constructor(
         val ref = mapper.createArrayNode()
         visit(ctx.lhs)
         val lhs = functions.array(functions.flatten(pop()))
-        lhs.forEach { node ->
-            //context.push(node)
+        lhs.forEachIndexed { index, node ->
+            contextIndex = index
+            push(node)
             visit(ctx.rhs)
             pop()?.let {
                 functions.array(it).forEach {
@@ -378,8 +386,9 @@ class Processor internal constructor(
                     exp.add(node)
                 }
             }
-            //context.pop()
         }
+        context[ctx.label().text] = ref
+        contextIndex = null
         return push(exp)
     }
 
@@ -677,7 +686,7 @@ class Processor internal constructor(
         return push(functions.reminder(lhs, rhs))
     }
 
-   override fun visitRoot(ctx: JSongParser.RootContext?): JsonNode? {
+    override fun visitRoot(ctx: JSongParser.RootContext?): JsonNode? {
         return push(context[ROOT])
     }
 
@@ -890,29 +899,25 @@ class Processor internal constructor(
         return push(exp)
     }
 
-    /*
     override fun visitVar(ctx: JSongParser.VarContext): JsonNode? {
+        val exp = context[ctx.label().text] ?: mapper.createArrayNode()
         return push(
-            when (val exp = register.recall(ctx.label().text)) {
-                is List<*> -> {
-                    val index = exp.indexOf(context.firstOrNull())
-                    if (index < 0) null else IntNode(index)
-                }
-
-                is JsonNode -> functions.flatten(exp)
-                else -> null
+            if (contextIndex != null) {
+                exp[contextIndex!! % exp.size()]
+            } else {
+                exp
             }
         )
     }
-*/
 
-  /*  override fun visitVarBinding(ctx: JSongParser.VarBindingContext): JsonNode? {
-        visit(ctx.exp())
-        val exp = pop()
-        val ref = mapper.createArrayNode().addAll(functions.array(functions.flatten(exp)))
-        register.store(ctx.label().text, ref)
-        return push(exp)
-    }*/
+
+    /*  override fun visitVarBinding(ctx: JSongParser.VarBindingContext): JsonNode? {
+          visit(ctx.exp())
+          val exp = pop()
+          val ref = mapper.createArrayNode().addAll(functions.array(functions.flatten(exp)))
+          register.store(ctx.label().text, ref)
+          return push(exp)
+      }*/
 
     override fun visitWildcardPostfix(ctx: JSongParser.WildcardPostfixContext): JsonNode? {
         val exp = mapper.createArrayNode()

@@ -1,5 +1,6 @@
 package org.jsong
 
+import com.fasterxml.jackson.databind.JsonNode
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
@@ -398,27 +399,11 @@ class TestPathOperators {
         println(actual?.size())
     }
 
-    /*@Test
-    fun `Context variable binding - carry on one variable`() {
-        val expression = "library.loans@\$L"
-        val register = Register()
-        val actual = JSong.of(expression, register = register).evaluate(TestResources.library)
-        val library = JSong.of("library").evaluate(TestResources.library)
-        val loans = JSong.of("library.loans").evaluate(TestResources.library)
-        val expected = TestResources.mapper.createArrayNode().let {
-            for (i in 1..loans!!.size()) {
-                it.add(library)
-            }
-            it
-        }
-        assertEquals(expected, actual)
-    }*/
 
-   /* @Test
-    fun `Context variable binding - retrieve on one variable`() {
-        val expression = "library.loans@\$L.{\"loan\": \$L}"
-        val register = Register()
-        val actual = JSong.of(expression, register = register).evaluate(TestResources.library)
+    @Test
+    fun `Context variable binding - carry on once`() {
+        val expression = "library.loans@\$L"
+        val actual = JSong.of(expression).evaluate(TestResources.library)
         val library = JSong.of("library").evaluate(TestResources.library)
         val loans = JSong.of("library.loans").evaluate(TestResources.library)
         val expected = TestResources.mapper.createArrayNode().let {
@@ -428,7 +413,23 @@ class TestPathOperators {
             it
         }
         assertEquals(expected, actual)
-    }*/
+    }
+
+    @Test
+    fun `Context variable binding - carry on once and recall`() {
+        val expression = "library.loans@\$L.{\"loan\": \$L}"
+        val actual = JSong.of(expression).evaluate(TestResources.library)
+        val loans = JSong.of("library.loans").evaluate(TestResources.library)
+        val expected = TestResources.mapper.createArrayNode().let {
+            for (i in 0 until loans!!.size()) {
+                val loan = TestResources.mapper.createObjectNode()
+                loan.set<JsonNode>("loan", loans[i])
+                it.add(loan)
+            }
+            it
+        }
+        assertEquals(expected, actual)
+    }
 
     /*@Test
     fun `Context variable binding - carry on two variable`() {

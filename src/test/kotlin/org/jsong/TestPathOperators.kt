@@ -422,31 +422,44 @@ class TestPathOperators {
         val loans = JSong.of("library.loans").evaluate(TestResources.library)
         val expected = TestResources.mapper.createArrayNode().let {
             for (i in 0 until loans!!.size()) {
-                val loan = TestResources.mapper.createObjectNode()
-                loan.set<JsonNode>("loan", loans[i])
-                it.add(loan)
+                it.addObject().set<JsonNode>("loan", loans[i])
             }
             it
         }
         assertEquals(expected, actual)
     }
 
-    /*@Test
-    fun `Context variable binding - carry on two variable`() {
+    @Test
+    fun `Context variable binding - carry on twice`() {
         val expression = "library.loans@\$L.books@\$B"
-        val register = Register()
-        val actual = JSong.of(expression, register = register).evaluate(TestResources.library)
-        val B = register.recall("B") as ArrayNode
-        val books = JSong.of("library.books").evaluate(TestResources.library)
+        val actual = JSong.of(expression).evaluate(TestResources.library)
         val library = JSong.of("library").evaluate(TestResources.library)
-
+        val loans = JSong.of("library.loans").evaluate(TestResources.library)
+        val books = JSong.of("library.books").evaluate(TestResources.library)
         val expected = TestResources.mapper.createArrayNode().let {
-            for (i in 1..books!!.size()) {
+            for (i in 1..loans!!.size() * books!!.size()) {
                 it.add(library)
             }
             it
         }
         assertEquals(expected, actual)
-    }*/
+    }
+
+    @Test
+    fun `Context variable binding - carry on twice and recall`() {
+        val expression = "library.loans@\$L.books@\$B.{\"title\": \$B.title}"
+        val actual = JSong.of(expression).evaluate(TestResources.library)
+        val loans = JSong.of("library.loans").evaluate(TestResources.library)
+        val titles = JSong.of("library.books.title").evaluate(TestResources.library)
+        val expected = TestResources.mapper.createArrayNode().let {
+            for (i in 1 ..loans!!.size()) {
+                titles!!.forEach { title ->
+                    it.addObject().set<JsonNode>("title", title)
+                }
+            }
+            it
+        }
+        assertEquals(expected, actual)
+    }
 
 } //~ JSonataTestPathOperators

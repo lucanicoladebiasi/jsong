@@ -462,4 +462,11 @@ class TestPathOperators {
         assertEquals(expected, actual)
     }
 
+    @Test
+    fun `Context variable binding - join`() {
+        val expression = "library.loans@\$L.books@\$B[\$L.isbn=\$B.isbn].{\"t\": \$B.title}"
+        val actual = JSong.of(expression).evaluate(TestResources.library)
+        println(actual)
+    }
+
 } //~ JSonataTestPathOperators

@@ -13,7 +13,6 @@ import kotlin.random.Random
 
 
 class JSong private constructor(
-    private val context: MutableMap<String, ArrayNode>,
     private val parser: JSongParser,
     private val mapper: ObjectMapper,
     private val random: Random,
@@ -25,13 +24,11 @@ class JSong private constructor(
 
         fun of(
             exp: String,
-            context: MutableMap<String, ArrayNode> = mutableMapOf(),
             mapper: ObjectMapper = ObjectMapper(),
             random: Random = Random.Default,
             time: Instant = now()
         ): JSong {
             return JSong(
-                context,
                 JSongParser(CommonTokenStream(JSongLexer(CharStreams.fromString(exp)))),
                 mapper,
                 random,
@@ -43,7 +40,7 @@ class JSong private constructor(
 
 
     fun evaluate(node: JsonNode? = null): JsonNode? {
-        return Processor(context, mapper, random, time, node).visit(parser.jsong())
+        return Processor(mapper, random, time, node).visit(parser.jsong())
     }
 
 } //~ JSong

@@ -36,6 +36,7 @@ class TestPathOperators {
      * https://docs.jsonata.org/path-operators
      */
     @Test
+    @Disabled
     fun `map multiplication`() {
         val expected = JSong.of("[ 68.9, 21.67, 137.8, 107.99 ]").evaluate()
         val actual = JSong.of("Account.Order.Product.(Price * Quantity)").evaluate(TestResources.invoice)
@@ -368,36 +369,7 @@ class TestPathOperators {
         assertEquals(expected, actual)
     }
 
-    /**
-     * https://docs.jsonata.org/path-operators#-context-variable-binding
-     */
-    @Test
-    fun `Context variable binding`() {
-        @Language("JSON")
-        val expected = TestResources.mapper.readTree(
-            """
-            [
-              {
-                "title": "Structure and Interpretation of Computer Programs",
-                "customer": "10001"
-              },
-              {
-                "title": "Compilers: Principles, Techniques, and Tools",
-                "customer": "10003"
-              },
-              {
-                "title": "Structure and Interpretation of Computer Programs",
-                "customer": "10003"
-              }
-            ]   
-            """.trimIndent()
-        )
-        // library.loans@$l.books@$b[$l.isbn=$b.isbn].{"title": $b.title}
-        val expression = "library.loans@\$L.books@\$B[\$L.isbn=\$B.isbn].{}"
-        val actual = JSong.of(expression).evaluate(TestResources.library)
-        println(actual)
-        println(actual?.size())
-    }
+
 
 
     @Test
@@ -452,7 +424,7 @@ class TestPathOperators {
         val loans = JSong.of("library.loans").evaluate(TestResources.library)
         val titles = JSong.of("library.books.title").evaluate(TestResources.library)
         val expected = TestResources.mapper.createArrayNode().let {
-            for (i in 1 ..loans!!.size()) {
+            for (i in 1..loans!!.size()) {
                 titles!!.forEach { title ->
                     it.addObject().set<JsonNode>("title", title)
                 }
@@ -462,11 +434,37 @@ class TestPathOperators {
         assertEquals(expected, actual)
     }
 
+    /**
+     * https://docs.jsonata.org/path-operators#-context-variable-binding
+     */
     @Test
     fun `Context variable binding - join`() {
-        val expression = "library.loans@\$L.books@\$B[\$L.isbn=\$B.isbn].{\"t\": \$B.title}"
+        @Language("JSON")
+        val expected = TestResources.mapper.readTree(
+            """
+            [
+              {
+                "title": "Structure and Interpretation of Computer Programs",
+                "customer": "10001"
+              },
+              {
+                "title": "Compilers: Principles, Techniques, and Tools",
+                "customer": "10003"
+              },
+              {
+                "title": "Structure and Interpretation of Computer Programs",
+                "customer": "10003"
+              }
+            ]   
+            """.trimIndent()
+        )
+        // library.loans@$l.books@$b[$l.isbn=$b.isbn].{"title": $b.title}
+        val expression =
+            "library.loans@\$L.books@\$B[\$L.isbn=\$B.isbn].{\"title\": \$B.title, \"customer\": \$L.customer}"
         val actual = JSong.of(expression).evaluate(TestResources.library)
-        println(actual)
+        assertEquals(expected, actual)
     }
 
-} //~ JSonataTestPathOperators
+}
+
+

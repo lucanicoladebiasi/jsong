@@ -666,7 +666,13 @@ class Functions(
             null -> throw NullPointerException("<array> null in ${Syntax.SHUFFLE}")
             is RangeNode -> array.indexes.forEach { list.add(it) }
             is RangesNode -> array.indexes.forEach { list.add(it) }
-            is ArrayNode -> array.forEach { list.add(it) }
+            is ArrayNode -> array.forEach {
+                when (it) {
+                    is RangeNode -> list.addAll(it.indexes)
+                    is RangesNode -> list.addAll(it.indexes)
+                    else -> list.add(it)
+                }
+            }
             else -> list.add(array)
         }
         return mapper.createArrayNode().addAll(list.shuffled(random))

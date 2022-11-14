@@ -17,6 +17,9 @@ class Processor internal constructor(
     private val root: JsonNode?
 ) : JSongBaseVisitor<JsonNode?>() {
 
+    @Volatile
+    private var context: JsonNode? = null
+
     private val contextMap = mutableMapOf<String, ArrayNode>()
 
     private val functions = Functions(mapper, random, time)
@@ -49,6 +52,7 @@ class Processor internal constructor(
 
     private fun push(node: JsonNode?): JsonNode? {
         stack.push(functions.array(functions.flatten(node)))
+        context = node
         return node
     }
 
@@ -221,9 +225,9 @@ class Processor internal constructor(
         return push(functions.concatenate(lhs, rhs))
     }
 
-//    override fun visitContext(ctx: JSongParser.ContextContext): JsonNode? {
-//        return push(context[CONTEXT])
-//    }
+    override fun visitContext(ctx: JSongParser.ContextContext): JsonNode? {
+        return context
+    }
 
     override fun visitDescendants(ctx: JSongParser.DescendantsContext): JsonNode? {
         return push(descendants(pop()))
@@ -439,26 +443,6 @@ class Processor internal constructor(
         return push(exp)
     }
 
-//    override fun visitMapContextBinding(ctx: JSongParser.MapContextBindingContext): JsonNode? {
-//        val exp = mapper.createArrayNode()
-//        val ref = mapper.createArrayNode()
-//        visit(ctx.lhs)
-//        val lhs = functions.array(functions.flatten(pop()))
-//        lhs.forEachIndexed { index, node ->
-//            this.index.push(Pair(index, lhs.size()))
-//            push(node)
-//            visit(ctx.rhs)
-//            pop()?.let {
-//                functions.array(it).forEach {
-//                    ref.add(it)
-//                    exp.add(node)
-//                }
-//            }
-//            this.index.pop()
-//        }
-//        context[ctx.label().text] = ref
-//        return push(exp)
-//    }
 
     override fun visitMapPositionBinding(ctx: JSongParser.MapPositionBindingContext): JsonNode? {
         val exp = mapper.createArrayNode()
@@ -977,7 +961,6 @@ class Processor internal constructor(
     override fun visitWildcardPostfix(ctx: JSongParser.WildcardPostfixContext): JsonNode? {
         val exp = mapper.createArrayNode()
         visit(ctx.exp())
-        //functions.array(pop()).forEach { element ->
         pop().forEach { element ->
             element.fields().forEach { property ->
                 exp.add(property.value)
@@ -988,7 +971,6 @@ class Processor internal constructor(
 
     override fun visitWildcardPrefix(ctx: JSongParser.WildcardPrefixContext): JsonNode? {
         val exp = mapper.createArrayNode()
-        //functions.array(pop()).forEach { element ->
         pop().forEach { element ->
             element.fields().forEach { property ->
                 push(property.value)

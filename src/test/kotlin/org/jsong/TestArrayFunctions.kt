@@ -70,7 +70,7 @@ class TestArrayFunctions {
     @Test
     fun `$sort()`() {
         val expression = """
-            ${'$'}sort(Account.Order.Product, function(${'$'}l, ${'$'}r) {
+            ${'$'}sort(Account.Order.Product, function(${'$'}l, ${'$'}) {
               ${'$'}l.Description.Weight > ${'$'}r.Description.Weight
             })
         """.trimIndent()

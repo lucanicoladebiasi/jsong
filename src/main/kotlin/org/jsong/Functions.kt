@@ -361,7 +361,13 @@ class Functions(
     }
 
     fun include(lhs: JsonNode?, rhs: JsonNode?): BooleanNode {
-        return BooleanNode.valueOf(array(flatten(rhs)).contains(flatten(lhs)))
+        val container = array(flatten(rhs))
+        array(flatten(lhs)).forEach {
+            if (container.contains(it)) {
+                return BooleanNode.TRUE
+            }
+        }
+        return BooleanNode.FALSE
     }
 
     fun join(array: JsonNode?, separator: JsonNode? = null): TextNode {
@@ -553,12 +559,12 @@ class Functions(
 
     fun now(time: Instant, picture: JsonNode? = null, timezone: JsonNode? = null): TextNode {
         val dtf = (
-                picture
-                    ?.let { DateTimeFormatter.ofPattern(picture.asText()) }
+                flatten(picture)
+                    ?.let { DateTimeFormatter.ofPattern(picture?.asText()) }
                     ?: DateTimeFormatter.ISO_INSTANT
                 )
             .withZone(
-                timezone
+                flatten(timezone)
                     ?.let { ZoneId.of(it.asText()) }
                     ?: ZoneId.systemDefault()
             )
@@ -795,14 +801,16 @@ class Functions(
     }
 
     fun toMillis(timestamp: JsonNode?, picture: JsonNode? = null): DecimalNode {
-        return when (timestamp) {
+        val time = flatten(timestamp)
+        val form = flatten(picture)
+        return when (time) {
             null -> throw IllegalArgumentException("timestamp is null in ${Syntax.TO_MILLIS}")
             else -> {
-                val dtf = (picture
-                    ?.let { DateTimeFormatter.ofPattern(picture.asText()) }
+                val dtf = (form
+                    ?.let { DateTimeFormatter.ofPattern(form.asText()) }
                     ?: DateTimeFormatter.ISO_INSTANT)
                     .withZone(ZoneId.systemDefault())
-                DecimalNode(Instant.from(dtf.parse(timestamp.asText())).toEpochMilli().toBigDecimal())
+                DecimalNode(Instant.from(dtf.parse(time.asText())).toEpochMilli().toBigDecimal())
             }
         }
     }

@@ -93,7 +93,6 @@ class TestComparisonOperators {
     @Test
     fun `in (Inclusion) - in singleton`() {
         assertTrue(JSong.of("\"hello\" in \"hello\"").evaluate()?.booleanValue() ?: false)
-
     }
 
     /**

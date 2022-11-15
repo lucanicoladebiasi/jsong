@@ -291,14 +291,14 @@ class Functions(
     }
 
     fun formatBase(number: JsonNode?, radix: JsonNode? = null): TextNode {
-        val base = radix?.asInt(10) ?: 10
+        val base = flatten(radix)?.asInt(10) ?: 10
         when {
             base < 2 -> throw IllegalArgumentException("<radix> < 2 in ${Syntax.FORMAT_BASE}")
             base > 36 -> throw IllegalArgumentException("<radix> > 36 in ${Syntax.FORMAT_BASE}")
             else -> return TextNode(
                 when (number) {
                     null -> throw IllegalArgumentException("<number> is null in ${Syntax.FORMAT_BASE}")
-                    else -> number(number).asInt().toString(radix?.asInt(10) ?: 10)
+                    else -> number(number).asInt().toString(base)
                 }
             )
         }

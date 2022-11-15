@@ -419,29 +419,24 @@ class Processor internal constructor(
         val exp = mapper.createArrayNode()
         visit(ctx.lhs)
         val lhs = pop()
-        when (lhs) {
-//            is RangeNode -> lhs.forEach { index ->
-//                visit(ctx.rhs)
-//                pop().let {
-//                    exp.addAll(functions.array(it))
-//                }
-//            }
+        lhs.forEachIndexed { index, lhe ->
+            loop.push(index)
+            when (lhe) {
+                is RangeNode -> lhe.indexes.forEach { lhi ->
+                    loop.push(lhi.asInt())
+                    push(lhi)
+                    visit(ctx.rhs)
+                    exp.addAll(pop())
+                    loop.pop()
+                }
 
-            is RangesNode -> lhs.indexes.forEach { index ->
-                push(index)
-                visit(ctx.rhs)
-                pop().let {
-                    exp.addAll(functions.array(it))
+                else -> {
+                    push(lhe)
+                    visit(ctx.rhs)
+                    exp.addAll(pop())
                 }
             }
-
-            else -> lhs.forEachIndexed { index, lhe ->
-                loop.push(index)
-                push(lhe)
-                visit(ctx.rhs)
-                exp.addAll(pop())
-                loop.pop()
-            }
+            loop.pop()
         }
         return push(exp)
     }
@@ -460,7 +455,7 @@ class Processor internal constructor(
                 exp.add(lhe)
             }
         }
-        contextMap.forEach { label, ref ->
+        contextMap.forEach { (label, ref) ->
             contextMap[label] = stretch(ref, bnd.size())
         }
         contextMap[ctx.label().text] = bnd

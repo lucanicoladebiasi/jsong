@@ -111,9 +111,9 @@ class Functions(
     }
 
     fun base64decode(str: JsonNode?): TextNode {
-        return when (str) {
+        return when (val exp = flatten(str)) {
             null -> throw java.lang.NullPointerException("<str> null in ${Syntax.BASE64_DECODE}")
-            else -> TextNode(Base64.getDecoder().decode(string(str).asText()).toString(Charsets.UTF_8))
+            else -> TextNode(Base64.getDecoder().decode(string(exp).asText()).toString(Charsets.UTF_8))
         }
     }
 
@@ -151,12 +151,12 @@ class Functions(
 
     fun contains(str: JsonNode?, pattern: JsonNode?): BooleanNode {
         return BooleanNode.valueOf(
-            when (val flt = flatten(str)) {
+            when (val exp = flatten(str)) {
                 null -> throw NullPointerException("<str> null in ${Syntax.CONTAINS}")
-                else -> when (pattern) {
+                else -> when (val _pattern = flatten(pattern)) {
                     null -> throw NullPointerException("<pattern> null in ${Syntax.CONTAINS}")
-                    is RegexNode -> flt.asText().contains(pattern.regex)
-                    else -> flt.asText().contains(string(pattern).asText())
+                    is RegexNode -> exp.asText().contains(_pattern.regex)
+                    else -> exp.asText().contains(string(_pattern).asText())
                 }
             }
         )
@@ -578,12 +578,12 @@ class Functions(
     fun pad(str: JsonNode?, width: JsonNode?, char: JsonNode? = null): TextNode {
         return when (val flt = flatten(str)) {
             null -> throw NullPointerException("<str> is null in ${Syntax.PAD}")
-            else -> when (width) {
+            else -> when (val w = flatten(width)) {
                 null -> throw NullPointerException("<width> is null in ${Syntax.PAD}")
                 else -> {
                     val txt = flt.asText()
-                    val offset = width.asInt(0)
-                    val pad = char?.asText()?.get(0) ?: ' '
+                    val offset = w.asInt(0)
+                    val pad = flatten(char)?.asText()?.get(0) ?: ' '
                     TextNode(
                         when {
                             offset < 0 -> txt.padStart(-offset, pad)
@@ -622,15 +622,13 @@ class Functions(
     }
 
     fun replace(str: JsonNode?, pattern: JsonNode?, replacement: JsonNode?): TextNode {
-        return when (val flt = flatten(str)) {
+        return when (val exp = flatten(str)) {
             null -> throw NullPointerException("<str> is null in ${Syntax.REPLACE}")
-            else -> when (replacement) {
+            else -> when (val _replacement = flatten(replacement)) {
                 null -> throw NullPointerException("<replacement> is null in ${Syntax.REPLACE}")
-                else -> when (pattern) {
-                    is RegexNode -> TextNode(flt.asText().replace(pattern.regex, string(replacement).asText()))
-                    else -> TextNode(
-                        flt.asText().replace(string(pattern).asText(), string(replacement).asText())
-                    )
+                else -> when (val _pattern = flatten(pattern)) {
+                    is RegexNode -> TextNode(exp.asText().replace(_pattern.regex, string(_replacement).asText()))
+                    else -> TextNode(exp.asText().replace(string(_pattern).asText(), string(_replacement).asText()))
                 }
             }
         }
@@ -679,6 +677,7 @@ class Functions(
                     else -> list.add(it)
                 }
             }
+
             else -> list.add(array)
         }
         return mapper.createArrayNode().addAll(list.shuffled(random))
@@ -686,15 +685,15 @@ class Functions(
 
     fun split(str: JsonNode?, separator: JsonNode?, limit: JsonNode? = null): ArrayNode {
         return mapper.nodeFactory.arrayNode().addAll(
-            when (val flt_str = flatten(str)) {
+            when (val exp = flatten(str)) {
                 null -> throw NullPointerException("<str> is null in ${Syntax.SPLIT}")
-                else -> when (separator) {
+                else -> when (val _separator = flatten(separator)) {
                     null -> throw NullPointerException("<separator> is null in ${Syntax.SPLIT}")
-                    is RegexNode -> flt_str.asText().split(separator.regex, limit?.asInt(0) ?: 0)
-                    else -> flt_str.asText().split(
-                        separator.asText(),
+                    is RegexNode -> exp.asText().split(_separator.regex, flatten(limit)?.asInt(0) ?: 0)
+                    else -> exp.asText().split(
+                        _separator.asText(),
                         ignoreCase = false,
-                        limit = limit?.asInt(0) ?: 0
+                        limit = flatten(limit)?.asInt(0) ?: 0
                     )
                 }
             }.map { TextNode(it) }
@@ -750,11 +749,12 @@ class Functions(
         return when (val flt = flatten(str)) {
             null -> throw NullPointerException("<str> is null in ${Syntax.SUBSTRING}")
             else -> {
+                val len = flatten(length)
                 val txt = flt.asText()
-                val offset = start?.asInt() ?: 0
+                val offset = flatten(start)?.asInt() ?: 0
                 val first = 0.coerceAtLeast(if (offset < 0) txt.length + offset else offset)
                     .coerceAtMost(txt.length)
-                val last = 0.coerceAtLeast(length?.let { first + length.asInt() } ?: txt.length)
+                val last = 0.coerceAtLeast(len?.let { first + len.asInt() } ?: txt.length)
                     .coerceAtMost(txt.length)
                 TextNode(txt.substring(first, last))
             }
@@ -765,9 +765,9 @@ class Functions(
         return TextNode(
             when (val flt = flatten(str)) {
                 null -> throw NullPointerException("<str> is null in ${Syntax.SUBSTRING_AFTER}")
-                else -> when (chars) {
+                else -> when (val token = flatten(chars)) {
                     null -> throw NullPointerException("<chars> is null in ${Syntax.SUBSTRING_AFTER}")
-                    else -> flt.asText().substringAfter(string(chars).asText())
+                    else -> flt.asText().substringAfter(string(token).asText())
                 }
             }
         )
@@ -777,9 +777,9 @@ class Functions(
         return TextNode(
             when (val flt = flatten(str)) {
                 null -> throw NullPointerException("<str> is null in ${Syntax.SUBSTRING_BEFORE} ")
-                else -> when (chars) {
+                else -> when (val token = flatten(chars)) {
                     null -> throw NullPointerException("<chars> is null in ${Syntax.SUBSTRING_BEFORE}")
-                    else -> flt.asText().substringBefore(string(chars).asText())
+                    else -> flt.asText().substringBefore(string(token).asText())
                 }
             }
         )

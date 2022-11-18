@@ -233,7 +233,7 @@ class Processor internal constructor(
     }
 
     override fun visitContext(ctx: JSongParser.ContextContext): JsonNode? {
-        return stack.firstOrNull()
+        return push(stack.firstOrNull())
     }
 
     override fun visitDescendants(ctx: JSongParser.DescendantsContext): JsonNode? {

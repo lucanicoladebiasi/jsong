@@ -66,7 +66,7 @@ class TestArrayFunctions {
     /**
      * https://docs.jsonata.org/array-functions#sort
      */
-    @Disabled
+    @Disabled("todo: functions")
     @Test
     fun `$sort()`() {
         val expression = """
@@ -92,7 +92,7 @@ class TestArrayFunctions {
     /**
      * https://docs.jsonata.org/array-functions#reverse
      */
-    @Disabled
+    @Disabled("to do ~> operator")
     @Test
     fun `$reverse() - context`() {
         val expected = JSong.of("[5, 4, 3, 2, 1]").evaluate()
@@ -137,7 +137,7 @@ class TestArrayFunctions {
     /**
      * https://docs.jsonata.org/array-functions#zip
      */
-    @Disabled
+    @Disabled("todo: zip function")
     @Test
     fun `$zip() - pair`() {
         val expected = JSong.of("[[1,4] ,[2,5], [3,6]]").evaluate()
@@ -148,7 +148,7 @@ class TestArrayFunctions {
     /**
      * https://docs.jsonata.org/array-functions#zip
      */
-    @Disabled
+    @Disabled("todo: zip function")
     @Test
     fun `$zip() - triplet`() {
         val expected = JSong.of("[[1,4,7], [2,5,8]]").evaluate()

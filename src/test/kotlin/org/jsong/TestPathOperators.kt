@@ -36,7 +36,6 @@ class TestPathOperators {
      * https://docs.jsonata.org/path-operators
      */
     @Test
-    @Disabled
     fun `map multiplication`() {
         val expected = JSong.of("[ 68.9, 21.67, 137.8, 107.99 ]").evaluate()
         val actual = JSong.of("Account.Order.Product.(Price * Quantity)").evaluate(TestResources.invoice)
@@ -47,7 +46,6 @@ class TestPathOperators {
      * https://docs.jsonata.org/path-operators
      */
     @Test
-    @Disabled
     fun `map function`() {
         val expected = JSong.of("[ \"ORDER103\", \"ORDER104\"]").evaluate()
         val actual = JSong.of("Account.Order.OrderID.\$uppercase()").evaluate(TestResources.invoice)
@@ -347,8 +345,9 @@ class TestPathOperators {
      * https://docs.jsonata.org/path-operators#-positional-variable-binding
      */
     @Test
-    @Disabled
     fun `Positional variable binding`() {
+        val expression = "library.books#\$i[\"Kernighan\" in authors].{\"title\": title, \"index\": \$i }"
+
         @Language("JSON")
         val expected = TestResources.mapper.readTree(
             """
@@ -364,12 +363,9 @@ class TestPathOperators {
             ]
             """.trimIndent()
         )
-        val expression = "library.books#\$i[\"Kernighan\" in authors].{\"title\": title, \"index\": \$i }"
         val actual = JSong.of(expression).evaluate(TestResources.library)
         assertEquals(expected, actual)
     }
-
-
 
 
     @Test
@@ -439,6 +435,10 @@ class TestPathOperators {
      */
     @Test
     fun `Context variable binding - join`() {
+        // library.loans@$l.books@$b[$l.isbn=$b.isbn].{"title": $b.title}
+        val expression =
+            "library.loans@\$L.books@\$B[\$L.isbn=\$B.isbn].{\"title\": \$B.title, \"customer\": \$L.customer}"
+
         @Language("JSON")
         val expected = TestResources.mapper.readTree(
             """
@@ -458,9 +458,6 @@ class TestPathOperators {
             ]   
             """.trimIndent()
         )
-        // library.loans@$l.books@$b[$l.isbn=$b.isbn].{"title": $b.title}
-        val expression =
-            "library.loans@\$L.books@\$B[\$L.isbn=\$B.isbn].{\"title\": \$B.title, \"customer\": \$L.customer}"
         val actual = JSong.of(expression).evaluate(TestResources.library)
         assertEquals(expected, actual)
     }

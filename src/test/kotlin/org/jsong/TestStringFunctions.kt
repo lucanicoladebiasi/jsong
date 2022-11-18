@@ -150,8 +150,8 @@ class TestStringFunctions {
     /**
      * https://docs.jsonata.org/string-functions#trim
      */
-    @Disabled // todo
     @Test
+    @Disabled("new line parsed as \$trim(\"World\"")
     fun `$trim() - new line`() {
         val expression = "\$trim(\" Hello \n World \")"
         val expected = TestResources.mapper.readTree("\"Hello World\"")
@@ -195,8 +195,8 @@ class TestStringFunctions {
     /**
      * https://docs.jsonata.org/string-functions#pad
      */
-    @Disabled // todo
     @Test
+    @Disabled("to do ~> operator")
     fun `$pad() - width and char`() {
         val expression = "\$formatBase(35, 2) ~> \$pad(-8, '0')"
         val expected = TestResources.mapper.readTree("\"00100011\"")
@@ -262,7 +262,6 @@ class TestStringFunctions {
     /**
      * https://docs.jsonata.org/string-functions#contains
      */
-    @Disabled
     @Test
     fun `$contains - regex in filter`() {
         val expression = "Phone[\$contains(number, /^077/)]"
@@ -318,8 +317,9 @@ class TestStringFunctions {
     /**
      * https://docs.jsonata.org/string-functions#join
      */
-    @Disabled
+
     @Test
+    @Disabled("to do ~> operator")
     fun `$join() - chain with separator`() {
         val expression = "\$split(\"too much, punctuation. hard; to read\", /[ ,.;]+/, 3) ~> \$join(', ')"
         val expected = TestResources.mapper.readTree("\"too, much, punctuation\"")
@@ -332,7 +332,6 @@ class TestStringFunctions {
      * https://docs.jsonata.org/string-functions#match
      */
     @Test
-    @Disabled // todo
     fun `$match()`(){
         val expression = "\$match(\"ababbabbcc\",/a(b+)/)"
         @Language("JSON")
@@ -373,8 +372,9 @@ class TestStringFunctions {
     /**
      * https://docs.jsonata.org/string-functions#replace
      */
-    @Disabled // todo
+
     @Test
+    @Disabled("to do limit")
     fun `$replace() - pattern, pattern, replacement, limit`() {
         val expression = "\$replace(\"John Smith and John Jones\", \"John\", \"Mr\", 1)"
         val expected = TestResources.mapper.readTree("\"Mr Smith and John Jones\"")
@@ -407,8 +407,8 @@ class TestStringFunctions {
     /**
      * https://docs.jsonata.org/string-functions#replace
      */
-    @Disabled // todo
     @Test
+    @Disabled("$$$1 throw illegal group reference")
     fun `$replace() - regex pattern, encoded context replacement `() {
         val expression = "\$replace(\"265USD\", /([0-9]+)USD/, \"\$\$\$1\")"
         val expected = TextNode("$265")
@@ -419,8 +419,8 @@ class TestStringFunctions {
     /**
      * https://docs.jsonata.org/string-functions#replace
      */
-    @Disabled
     @Test
+    @Disabled("to do implement functions")
     fun `$replace() - function`() {
         val expression = """
             (
@@ -439,7 +439,6 @@ class TestStringFunctions {
      * https://docs.jsonata.org/string-functions#eval
      */
     @Test
-    @Disabled // todo
     fun `$eval()`() {
         val expression = "\$eval(\"[1,2,3]\")"
         val expected = JSong.of("[1, 2, 3]").evaluate()
@@ -451,10 +450,12 @@ class TestStringFunctions {
      * https://docs.jsonata.org/string-functions#eval
      */
     @Test
-    @Disabled // todo
     fun `$eval() - call function`() {
         val expression = "\$eval(\"[1,\$string(2),3]\")"
-        val expected = TestResources.mapper.readTree("[1,\"2\",3]")
+        val expected = TestResources.mapper.createArrayNode()
+            .add(DecimalNode(BigDecimal(1)))
+            .add("2")
+            .add(DecimalNode(BigDecimal(3)))
         val actual = JSong.of(expression).evaluate()
         assertEquals(expected, actual)
     }

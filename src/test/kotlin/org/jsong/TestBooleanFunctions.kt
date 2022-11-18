@@ -110,7 +110,7 @@ class TestBooleanFunctions {
     /**
      * https://docs.jsonata.org/boolean-functions#boolean
      */
-    @Disabled
+    @Disabled("todo: functions")
     @Test
     fun `$boolean() - function`() {
     }

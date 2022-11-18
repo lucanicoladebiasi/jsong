@@ -9,7 +9,7 @@ jsong:
     ;
 
 array:
-    '[' literal (',' literal)* ']'  |
+    '[' exp (',' exp)* ']'  |
     '[' ']'
     ;
 

@@ -101,7 +101,7 @@ class TestNumericFunctions {
      * https://docs.jsonata.org/numeric-functions#formatnumber
      */
     @Test
-    @Disabled
+    @Disabled("todo: special formats")
     fun `$formatNumber()`() {
         assertEquals(JSong.of("\"12,345.60\"").evaluate(), JSong.of("\$formatNumber(12345.6, '#,###.00')").evaluate())
         assertEquals(
@@ -137,7 +137,7 @@ class TestNumericFunctions {
      * https://docs.jsonata.org/numeric-functions#formatinteger
      */
     @Test
-    @Disabled
+    @Disabled("todo: parse numeric/roman words")
     fun `$formatInteger()`() {
         assertEquals(
             JSong.of("\"two thousand, seven hundred and eighty-nine\"").evaluate(),
@@ -153,7 +153,7 @@ class TestNumericFunctions {
      * https://docs.jsonata.org/numeric-functions#parseinteger
      */
     @Test
-    @Disabled
+    @Disabled("todo: parse numeric/roman words")
     fun `$parseInteger()`() {
         assertEquals(
             JSong.of("12476").evaluate(),

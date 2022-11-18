@@ -317,17 +317,19 @@ class Functions(
     }
 
     fun fromMillis(number: JsonNode?, picture: JsonNode? = null, timezone: JsonNode? = null): String {
-        return when (val value = flatten(number)) {
+        return when (val _number = flatten(number)) {
             null -> throw IllegalArgumentException("number is null in ${Syntax.FROM_MILLIS}")
             else -> {
-                val dtf = (picture
-                    ?.let { DateTimeFormatter.ofPattern(picture.asText()) }
+                val _picture = flatten(picture)
+                val _timezone = flatten(timezone)
+                val dtf = (_picture
+                    ?.let { DateTimeFormatter.ofPattern(_picture.asText()) }
                     ?: DateTimeFormatter.ISO_INSTANT)
-                    .withZone(timezone
+                    .withZone(_timezone
                         ?.let { ZoneId.of(it.asText()) }
                         ?: ZoneId.systemDefault()
                     )
-                dtf.format(Instant.ofEpochMilli(value.longValue()))
+                dtf.format(Instant.ofEpochMilli(_number.longValue()))
             }
         }
     }
@@ -448,18 +450,18 @@ class Functions(
 
     @Suppress("UNUSED_PARAMETER")
     fun match(str: JsonNode?, pattern: JsonNode?, limit: JsonNode? = null): ArrayNode {
-        return when (str) {
+        return when (val _str = flatten(str)) {
             null -> throw NullPointerException("<str> null in ${Syntax.MATCH}")
-            else -> when (pattern) {
+            else -> when (val _pattern = flatten(pattern)) {
                 !is RegexNode -> throw NullPointerException("<pattern> is not regex in ${Syntax.MATCH}")
                 else -> mapper.nodeFactory.arrayNode().addAll(
-                    pattern.regex.findAll(string(str).asText()).map { matchResult ->
+                    _pattern.regex.findAll(string(_str).asText()).map { matchResult ->
                         mapper.nodeFactory.objectNode()
                             .put(TAG_MATCH, matchResult.value)
                             .put(TAG_INDEX, matchResult.range.first)
                             .set<ObjectNode>(
                                 TAG_GROUPS,
-                                mapper.nodeFactory.arrayNode().addAll(matchResult.groupValues.map { TextNode(it) })
+                                mapper.nodeFactory.arrayNode().add(matchResult.groupValues.map { TextNode(it) }.last())
                             )
                     }.toList()
                 )

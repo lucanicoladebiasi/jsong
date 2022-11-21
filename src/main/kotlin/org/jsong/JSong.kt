@@ -2,6 +2,7 @@ package org.jsong
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.node.ArrayNode
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import org.jsong.antlr.JSongLexer
@@ -27,11 +28,16 @@ class JSong private constructor(
             random: Random = Random.Default,
             time: Instant = now()
         ): JSong {
-            return JSong(JSongParser(CommonTokenStream(JSongLexer(CharStreams.fromString(exp)))), mapper, random, time)
+            return JSong(
+                JSongParser(CommonTokenStream(JSongLexer(CharStreams.fromString(exp)))),
+                mapper,
+                random,
+                time
+            )
         }
 
-
     } //~ companion
+
 
     fun evaluate(node: JsonNode? = null): JsonNode? {
         return Processor(mapper, random, time, node).visit(parser.jsong())

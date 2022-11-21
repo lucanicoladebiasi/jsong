@@ -52,8 +52,8 @@ class TestDateTimeFunctions {
     /**
      * https://docs.JSong.org/date-time-functions#frommillis
      */
-    @Disabled
     @Test
+    @Disabled("todo: JS picture format")
     fun `$fromMillis() - picture`() {
         val expression = "\$fromMillis(1510067557121, '[M01]/[D01]/[Y0001] [h#1]:[m01][P]')"
         val processor = JSong.of(expression)
@@ -64,8 +64,8 @@ class TestDateTimeFunctions {
     /**
      * https://docs.JSong.org/date-time-functions#frommillis
      */
-    @Disabled
     @Test
+    @Disabled("todo: JS picture format")
     fun `$fromMillis() - picture and zone`() {
         val expression = "\$fromMillis(1510067557121, '[H01]:[m01]:[s01] [z]', '-0500')"
         val processor = JSong.of(expression)

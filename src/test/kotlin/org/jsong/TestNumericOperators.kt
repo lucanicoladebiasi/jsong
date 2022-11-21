@@ -106,13 +106,14 @@ class TestNumericOperators {
      */
     @Test
     fun `Range context`() {
+        val expression = "[1..5].(\$ * \$)"
         val expected = TestResources.mapper.createArrayNode()
             .add(BigDecimal(1L))
             .add(BigDecimal(4L))
             .add(BigDecimal(9L))
             .add(BigDecimal(16L))
             .add(BigDecimal(25L))
-        val actual = JSong.of("[1..5].(\$ * \$)").evaluate()
+        val actual = JSong.of(expression).evaluate()
         assertEquals(expected, actual)
     }
 

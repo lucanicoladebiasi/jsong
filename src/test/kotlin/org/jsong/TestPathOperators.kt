@@ -1,6 +1,6 @@
 package org.jsong
 
-import com.fasterxml.jackson.databind.node.ArrayNode
+import com.fasterxml.jackson.databind.JsonNode
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
@@ -46,7 +46,6 @@ class TestPathOperators {
      * https://docs.jsonata.org/path-operators
      */
     @Test
-    @Disabled
     fun `map function`() {
         val expected = JSong.of("[ \"ORDER103\", \"ORDER104\"]").evaluate()
         val actual = JSong.of("Account.Order.OrderID.\$uppercase()").evaluate(TestResources.invoice)
@@ -347,6 +346,9 @@ class TestPathOperators {
      */
     @Test
     fun `Positional variable binding`() {
+        val expression = "library.books#\$i[\"Kernighan\" in authors].{\"title\": title, \"index\": \$i }"
+
+
         @Language("JSON")
         val expected = TestResources.mapper.readTree(
             """
@@ -362,8 +364,70 @@ class TestPathOperators {
             ]
             """.trimIndent()
         )
-        val expression = "library.books#\$i[\"Kernighan\" in authors].{\"title\": title, \"index\": \$i }"
         val actual = JSong.of(expression).evaluate(TestResources.library)
+        assertEquals(expected, actual)
+    }
+
+
+    @Test
+    fun `Context variable binding - carry on once`() {
+        val expression = "library.loans@\$L"
+        val actual = JSong.of(expression).evaluate(TestResources.library)
+        val library = JSong.of("library").evaluate(TestResources.library)
+        val loans = JSong.of("library.loans").evaluate(TestResources.library)
+        val expected = TestResources.mapper.createArrayNode().let {
+            for (i in 1..loans!!.size()) {
+                it.add(library)
+            }
+            it
+        }
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun `Context variable binding - carry on once and recall`() {
+        val expression = "library.loans@\$L.{\"loan\": \$L}"
+        val actual = JSong.of(expression).evaluate(TestResources.library)
+        val loans = JSong.of("library.loans").evaluate(TestResources.library)
+        val expected = TestResources.mapper.createArrayNode().let {
+            for (i in 0 until loans!!.size()) {
+                it.addObject().set<JsonNode>("loan", loans[i])
+            }
+            it
+        }
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun `Context variable binding - carry on twice`() {
+        val expression = "library.loans@\$L.books@\$B"
+        val actual = JSong.of(expression).evaluate(TestResources.library)
+        val library = JSong.of("library").evaluate(TestResources.library)
+        val loans = JSong.of("library.loans").evaluate(TestResources.library)
+        val books = JSong.of("library.books").evaluate(TestResources.library)
+        val expected = TestResources.mapper.createArrayNode().let {
+            for (i in 1..loans!!.size() * books!!.size()) {
+                it.add(library)
+            }
+            it
+        }
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun `Context variable binding - carry on twice and recall`() {
+        val expression = "library.loans@\$L.books@\$B.{\"title\": \$B.title}"
+        val actual = JSong.of(expression).evaluate(TestResources.library)
+        val loans = JSong.of("library.loans").evaluate(TestResources.library)
+        val titles = JSong.of("library.books.title").evaluate(TestResources.library)
+        val expected = TestResources.mapper.createArrayNode().let {
+            for (i in 1..loans!!.size()) {
+                titles!!.forEach { title ->
+                    it.addObject().set<JsonNode>("title", title)
+                }
+            }
+            it
+        }
         assertEquals(expected, actual)
     }
 
@@ -371,9 +435,13 @@ class TestPathOperators {
      * https://docs.jsonata.org/path-operators#-context-variable-binding
      */
     @Test
-    fun `Context variable binding`() {
+    fun `Context variable binding - join`() {
+        // library.loans@$l.books@$b[$l.isbn=$b.isbn].{"title": $b.title}
+        val expression =
+            "library.loans@\$L.books@\$B[\$L.isbn=\$B.isbn].{\"title\": \$B.title, \"customer\": \$L.customer}"
+
         @Language("JSON")
-        val expected =
+        val expected = TestResources.mapper.readTree(
             """
             [
               {
@@ -390,12 +458,11 @@ class TestPathOperators {
               }
             ]   
             """.trimIndent()
-        val expression = "library.loans@\$l.books@\$b[\$l.isbn=\$b.isbn].{\"title\": \$b.title, \"customer\": \$l.customer }"
-        //val expression = "library.loans@\$L.books@\$B.{\"t\": \$B.title}"
-        //val expression = "library.loans@\$l.books@\$b[\$b.isbn=\$l.isbn]"
+        )
         val actual = JSong.of(expression).evaluate(TestResources.library)
-        println(actual)
-        println((actual as ArrayNode).size())
+        assertEquals(expected, actual)
     }
 
-} //~ JSonataTestPathOperators
+}
+
+

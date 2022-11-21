@@ -111,9 +111,9 @@ class Functions(
     }
 
     fun base64decode(str: JsonNode?): TextNode {
-        return when (str) {
+        return when (val exp = flatten(str)) {
             null -> throw java.lang.NullPointerException("<str> null in ${Syntax.BASE64_DECODE}")
-            else -> TextNode(Base64.getDecoder().decode(string(str).asText()).toString(Charsets.UTF_8))
+            else -> TextNode(Base64.getDecoder().decode(string(exp).asText()).toString(Charsets.UTF_8))
         }
     }
 
@@ -151,12 +151,12 @@ class Functions(
 
     fun contains(str: JsonNode?, pattern: JsonNode?): BooleanNode {
         return BooleanNode.valueOf(
-            when (val flt = flatten(str)) {
+            when (val exp = flatten(str)) {
                 null -> throw NullPointerException("<str> null in ${Syntax.CONTAINS}")
-                else -> when (pattern) {
+                else -> when (val _pattern = flatten(pattern)) {
                     null -> throw NullPointerException("<pattern> null in ${Syntax.CONTAINS}")
-                    is RegexNode -> flt.asText().contains(pattern.regex)
-                    else -> flt.asText().contains(string(pattern).asText())
+                    is RegexNode -> exp.asText().contains(_pattern.regex)
+                    else -> exp.asText().contains(string(_pattern).asText())
                 }
             }
         )
@@ -291,14 +291,14 @@ class Functions(
     }
 
     fun formatBase(number: JsonNode?, radix: JsonNode? = null): TextNode {
-        val base = radix?.asInt(10) ?: 10
+        val base = flatten(radix)?.asInt(10) ?: 10
         when {
             base < 2 -> throw IllegalArgumentException("<radix> < 2 in ${Syntax.FORMAT_BASE}")
             base > 36 -> throw IllegalArgumentException("<radix> > 36 in ${Syntax.FORMAT_BASE}")
             else -> return TextNode(
                 when (number) {
                     null -> throw IllegalArgumentException("<number> is null in ${Syntax.FORMAT_BASE}")
-                    else -> number(number).asInt().toString(radix?.asInt(10) ?: 10)
+                    else -> number(number).asInt().toString(base)
                 }
             )
         }
@@ -317,17 +317,19 @@ class Functions(
     }
 
     fun fromMillis(number: JsonNode?, picture: JsonNode? = null, timezone: JsonNode? = null): String {
-        return when (val value = flatten(number)) {
+        return when (val _number = flatten(number)) {
             null -> throw IllegalArgumentException("number is null in ${Syntax.FROM_MILLIS}")
             else -> {
-                val dtf = (picture
-                    ?.let { DateTimeFormatter.ofPattern(picture.asText()) }
+                val _picture = flatten(picture)
+                val _timezone = flatten(timezone)
+                val dtf = (_picture
+                    ?.let { DateTimeFormatter.ofPattern(_picture.asText()) }
                     ?: DateTimeFormatter.ISO_INSTANT)
-                    .withZone(timezone
+                    .withZone(_timezone
                         ?.let { ZoneId.of(it.asText()) }
                         ?: ZoneId.systemDefault()
                     )
-                dtf.format(Instant.ofEpochMilli(value.longValue()))
+                dtf.format(Instant.ofEpochMilli(_number.longValue()))
             }
         }
     }
@@ -361,7 +363,13 @@ class Functions(
     }
 
     fun include(lhs: JsonNode?, rhs: JsonNode?): BooleanNode {
-        return BooleanNode.valueOf(array(flatten(rhs)).contains(flatten(lhs)))
+        val container = array(flatten(rhs))
+        array(flatten(lhs)).forEach {
+            if (container.contains(it)) {
+                return BooleanNode.TRUE
+            }
+        }
+        return BooleanNode.FALSE
     }
 
     fun join(array: JsonNode?, separator: JsonNode? = null): TextNode {
@@ -442,18 +450,18 @@ class Functions(
 
     @Suppress("UNUSED_PARAMETER")
     fun match(str: JsonNode?, pattern: JsonNode?, limit: JsonNode? = null): ArrayNode {
-        return when (str) {
+        return when (val _str = flatten(str)) {
             null -> throw NullPointerException("<str> null in ${Syntax.MATCH}")
-            else -> when (pattern) {
+            else -> when (val _pattern = flatten(pattern)) {
                 !is RegexNode -> throw NullPointerException("<pattern> is not regex in ${Syntax.MATCH}")
                 else -> mapper.nodeFactory.arrayNode().addAll(
-                    pattern.regex.findAll(string(str).asText()).map { matchResult ->
+                    _pattern.regex.findAll(string(_str).asText()).map { matchResult ->
                         mapper.nodeFactory.objectNode()
                             .put(TAG_MATCH, matchResult.value)
                             .put(TAG_INDEX, matchResult.range.first)
                             .set<ObjectNode>(
                                 TAG_GROUPS,
-                                mapper.nodeFactory.arrayNode().addAll(matchResult.groupValues.map { TextNode(it) })
+                                mapper.nodeFactory.arrayNode().add(matchResult.groupValues.map { TextNode(it) }.last())
                             )
                     }.toList()
                 )
@@ -553,12 +561,12 @@ class Functions(
 
     fun now(time: Instant, picture: JsonNode? = null, timezone: JsonNode? = null): TextNode {
         val dtf = (
-                picture
-                    ?.let { DateTimeFormatter.ofPattern(picture.asText()) }
+                flatten(picture)
+                    ?.let { DateTimeFormatter.ofPattern(picture?.asText()) }
                     ?: DateTimeFormatter.ISO_INSTANT
                 )
             .withZone(
-                timezone
+                flatten(timezone)
                     ?.let { ZoneId.of(it.asText()) }
                     ?: ZoneId.systemDefault()
             )
@@ -572,12 +580,12 @@ class Functions(
     fun pad(str: JsonNode?, width: JsonNode?, char: JsonNode? = null): TextNode {
         return when (val flt = flatten(str)) {
             null -> throw NullPointerException("<str> is null in ${Syntax.PAD}")
-            else -> when (width) {
+            else -> when (val w = flatten(width)) {
                 null -> throw NullPointerException("<width> is null in ${Syntax.PAD}")
                 else -> {
                     val txt = flt.asText()
-                    val offset = width.asInt(0)
-                    val pad = char?.asText()?.get(0) ?: ' '
+                    val offset = w.asInt(0)
+                    val pad = flatten(char)?.asText()?.get(0) ?: ' '
                     TextNode(
                         when {
                             offset < 0 -> txt.padStart(-offset, pad)
@@ -616,15 +624,13 @@ class Functions(
     }
 
     fun replace(str: JsonNode?, pattern: JsonNode?, replacement: JsonNode?): TextNode {
-        return when (val flt = flatten(str)) {
+        return when (val exp = flatten(str)) {
             null -> throw NullPointerException("<str> is null in ${Syntax.REPLACE}")
-            else -> when (replacement) {
+            else -> when (val _replacement = flatten(replacement)) {
                 null -> throw NullPointerException("<replacement> is null in ${Syntax.REPLACE}")
-                else -> when (pattern) {
-                    is RegexNode -> TextNode(flt.asText().replace(pattern.regex, string(replacement).asText()))
-                    else -> TextNode(
-                        flt.asText().replace(string(pattern).asText(), string(replacement).asText())
-                    )
+                else -> when (val _pattern = flatten(pattern)) {
+                    is RegexNode -> TextNode(exp.asText().replace(_pattern.regex, string(_replacement).asText()))
+                    else -> TextNode(exp.asText().replace(string(_pattern).asText(), string(_replacement).asText()))
                 }
             }
         }
@@ -666,7 +672,14 @@ class Functions(
             null -> throw NullPointerException("<array> null in ${Syntax.SHUFFLE}")
             is RangeNode -> array.indexes.forEach { list.add(it) }
             is RangesNode -> array.indexes.forEach { list.add(it) }
-            is ArrayNode -> array.forEach { list.add(it) }
+            is ArrayNode -> array.forEach {
+                when (it) {
+                    is RangeNode -> list.addAll(it.indexes)
+                    is RangesNode -> list.addAll(it.indexes)
+                    else -> list.add(it)
+                }
+            }
+
             else -> list.add(array)
         }
         return mapper.createArrayNode().addAll(list.shuffled(random))
@@ -674,15 +687,15 @@ class Functions(
 
     fun split(str: JsonNode?, separator: JsonNode?, limit: JsonNode? = null): ArrayNode {
         return mapper.nodeFactory.arrayNode().addAll(
-            when (val flt_str = flatten(str)) {
+            when (val exp = flatten(str)) {
                 null -> throw NullPointerException("<str> is null in ${Syntax.SPLIT}")
-                else -> when (separator) {
+                else -> when (val _separator = flatten(separator)) {
                     null -> throw NullPointerException("<separator> is null in ${Syntax.SPLIT}")
-                    is RegexNode -> flt_str.asText().split(separator.regex, limit?.asInt(0) ?: 0)
-                    else -> flt_str.asText().split(
-                        separator.asText(),
+                    is RegexNode -> exp.asText().split(_separator.regex, flatten(limit)?.asInt(0) ?: 0)
+                    else -> exp.asText().split(
+                        _separator.asText(),
                         ignoreCase = false,
-                        limit = limit?.asInt(0) ?: 0
+                        limit = flatten(limit)?.asInt(0) ?: 0
                     )
                 }
             }.map { TextNode(it) }
@@ -738,11 +751,12 @@ class Functions(
         return when (val flt = flatten(str)) {
             null -> throw NullPointerException("<str> is null in ${Syntax.SUBSTRING}")
             else -> {
+                val len = flatten(length)
                 val txt = flt.asText()
-                val offset = start?.asInt() ?: 0
+                val offset = flatten(start)?.asInt() ?: 0
                 val first = 0.coerceAtLeast(if (offset < 0) txt.length + offset else offset)
                     .coerceAtMost(txt.length)
-                val last = 0.coerceAtLeast(length?.let { first + length.asInt() } ?: txt.length)
+                val last = 0.coerceAtLeast(len?.let { first + len.asInt() } ?: txt.length)
                     .coerceAtMost(txt.length)
                 TextNode(txt.substring(first, last))
             }
@@ -753,9 +767,9 @@ class Functions(
         return TextNode(
             when (val flt = flatten(str)) {
                 null -> throw NullPointerException("<str> is null in ${Syntax.SUBSTRING_AFTER}")
-                else -> when (chars) {
+                else -> when (val token = flatten(chars)) {
                     null -> throw NullPointerException("<chars> is null in ${Syntax.SUBSTRING_AFTER}")
-                    else -> flt.asText().substringAfter(string(chars).asText())
+                    else -> flt.asText().substringAfter(string(token).asText())
                 }
             }
         )
@@ -765,9 +779,9 @@ class Functions(
         return TextNode(
             when (val flt = flatten(str)) {
                 null -> throw NullPointerException("<str> is null in ${Syntax.SUBSTRING_BEFORE} ")
-                else -> when (chars) {
+                else -> when (val token = flatten(chars)) {
                     null -> throw NullPointerException("<chars> is null in ${Syntax.SUBSTRING_BEFORE}")
-                    else -> flt.asText().substringBefore(string(chars).asText())
+                    else -> flt.asText().substringBefore(string(token).asText())
                 }
             }
         )
@@ -789,14 +803,16 @@ class Functions(
     }
 
     fun toMillis(timestamp: JsonNode?, picture: JsonNode? = null): DecimalNode {
-        return when (timestamp) {
+        val time = flatten(timestamp)
+        val form = flatten(picture)
+        return when (time) {
             null -> throw IllegalArgumentException("timestamp is null in ${Syntax.TO_MILLIS}")
             else -> {
-                val dtf = (picture
-                    ?.let { DateTimeFormatter.ofPattern(picture.asText()) }
+                val dtf = (form
+                    ?.let { DateTimeFormatter.ofPattern(form.asText()) }
                     ?: DateTimeFormatter.ISO_INSTANT)
                     .withZone(ZoneId.systemDefault())
-                DecimalNode(Instant.from(dtf.parse(timestamp.asText())).toEpochMilli().toBigDecimal())
+                DecimalNode(Instant.from(dtf.parse(time.asText())).toEpochMilli().toBigDecimal())
             }
         }
     }

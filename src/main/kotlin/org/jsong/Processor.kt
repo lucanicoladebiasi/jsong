@@ -23,8 +23,6 @@ class Processor internal constructor(
 
     private val functions = Functions(mapper, random, time)
 
-    private val global = mutableMapOf<String, ArrayNode>()
-
     @Volatile
     private var isToFlatten = true
 
@@ -35,6 +33,8 @@ class Processor internal constructor(
     private val scope = ArrayDeque<JsonNode>() // todo: apply to maps?
 
     private val stack = ArrayDeque<ArrayNode>()
+
+    private val variables = mutableMapOf<String, VarNode>()
 
     init {
         push(root)
@@ -238,6 +238,12 @@ class Processor internal constructor(
 
     override fun visitContext(ctx: JSongParser.ContextContext): JsonNode? {
         return push(stack.firstOrNull())
+    }
+
+    override fun visitDefineFunction(ctx: JSongParser.DefineFunctionContext): JsonNode? {
+        ctx.label().forEach { label -> }
+
+        return null
     }
 
     override fun visitDescendants(ctx: JSongParser.DescendantsContext): JsonNode? {
@@ -950,8 +956,8 @@ class Processor internal constructor(
                 true -> contextual[label]
                 else -> contextual[label]?.get(loop.peek())
             }
-        } else if (global.contains(label)) {
-            global[label]
+        } else if (variables.contains(label)) {
+            variables[label]?.value
         } else null
         return push(value ?: mapper.createArrayNode())
     }
@@ -960,7 +966,8 @@ class Processor internal constructor(
         val exp = mapper.createArrayNode()
         visit(ctx.exp())
         exp.addAll(pop())
-        global[ctx.label().text] = exp
+        val name = ctx.label().text
+        variables[name] = VarNode(name, exp, mapper.nodeFactory)
         return push(exp)
     }
 

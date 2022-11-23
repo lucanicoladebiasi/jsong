@@ -36,45 +36,46 @@ bool_fun:
     ;
 
 exp:
-      '(' exp (';'? exp)* ')'                   #scope
-    | lhs = exp '[' rhs = exp ']'               #filter             // Filter must preceed map to
-    | lhs = exp '.' rhs = exp CTX_BND label     #mapContextBinding
-    | lhs = exp '.' rhs = exp POS_BND label     #mapPositionBinding
-    | lhs = exp '.' rhs = exp                   #map
-    | lhs = exp '*' rhs = exp                   #mul
-    | lhs = exp '/' rhs = exp                   #div
-    | lhs = exp '%' rhs = exp                   #reminder
-    | lhs = exp '+' rhs = exp                   #add
-    | lhs = exp '-' rhs = exp                   #sub
-    | lhs = exp '&' rhs = exp                   #concatenate
-    | lhs = exp '=' rhs = exp                   #eq
-    | lhs = exp '!=' rhs = exp                  #ne
-    | lhs = exp '>' rhs = exp                   #gt
-    | lhs = exp '<' rhs = exp                   #lt
-    | lhs = exp '>=' rhs = exp                  #gte
-    | lhs = exp '<='rhs = exp                   #lte
-    | lhs = exp 'in' rhs = exp                  #in
-    | lhs = exp 'and' rhs = exp                 #and
-    | lhs = exp 'or' rhs = exp                  #or
-    | '$' label ':=' exp                        #varBinding
-    | '$' label                                 #var
-    | label                                     #path
-    | '[' range (',' range)* ']'                #ranges
-    | REGEX                                     #regex
-    | literal                                   #json
-    | exp '[]'                                  #arrayConstructor
-    | exp '.*'                                  #wildcardPostfix
-    | '*.' exp                                  #wildcardPrefix
-    | '**'                                      #descendants
-    | '$$'                                      #root
-    | '$'                                       #context
-    | array_fun '(' exp? (',' exp)* ')'         #arrayFunction
-    | bool_fun '(' exp? (',' exp)* ')'          #booleanFunction
-    | num_aggregate_fun '(' exp? (',' exp)* ')' #numericAggregateFunction
-    | num_fun '(' exp? (',' exp)* ')'           #numericFunction
-    | obj_fun '(' exp? (',' exp)* ')'           #objectFunction
-    | text_fun '(' exp? (',' exp)* ')'          #textFunction
-    | time_fun '(' exp? (',' exp)* ')'          #timeFunction
+      '(' exp (';'? exp)* ')'                       #scope
+    | lhs = exp '[' rhs = exp ']'                   #filter             // Filter must preceed map to
+    | lhs = exp '.' rhs = exp CTX_BND label         #mapContextBinding
+    | lhs = exp '.' rhs = exp POS_BND label         #mapPositionBinding
+    | lhs = exp '.' rhs = exp                       #map
+    | lhs = exp '*' rhs = exp                       #mul
+    | lhs = exp '/' rhs = exp                       #div
+    | lhs = exp '%' rhs = exp                       #reminder
+    | lhs = exp '+' rhs = exp                       #add
+    | lhs = exp '-' rhs = exp                       #sub
+    | lhs = exp '&' rhs = exp                       #concatenate
+    | lhs = exp '=' rhs = exp                       #eq
+    | lhs = exp '!=' rhs = exp                      #ne
+    | lhs = exp '>' rhs = exp                       #gt
+    | lhs = exp '<' rhs = exp                       #lt
+    | lhs = exp '>=' rhs = exp                      #gte
+    | lhs = exp '<='rhs = exp                       #lte
+    | lhs = exp 'in' rhs = exp                      #in
+    | lhs = exp 'and' rhs = exp                     #and
+    | lhs = exp 'or' rhs = exp                      #or
+    | '$' label ':=' exp                            #varBinding
+    | '$' label                                     #var
+    | label                                         #path
+    | '[' range (',' range)* ']'                    #ranges
+    | REGEX                                         #regex
+    | literal                                       #json
+    | exp '[]'                                      #arrayConstructor
+    | exp '.*'                                      #wildcardPostfix
+    | '*.' exp                                      #wildcardPrefix
+    | '**'                                          #descendants
+    | '$$'                                          #root
+    | '$'                                           #context
+    | array_fun '(' exp? (',' exp)* ')'             #arrayFunction
+    | bool_fun '(' exp? (',' exp)* ')'              #booleanFunction
+    | num_aggregate_fun '(' exp? (',' exp)* ')'     #numericAggregateFunction
+    | num_fun '(' exp? (',' exp)* ')'               #numericFunction
+    | obj_fun '(' exp? (',' exp)* ')'               #objectFunction
+    | text_fun '(' exp? (',' exp)* ')'              #textFunction
+    | time_fun '(' exp? (',' exp)* ')'              #timeFunction
+    | 'function' '(' ('$' label )* ')''{' exp? '}'  #defineFunction
     ;
 
 
@@ -90,7 +91,6 @@ literal
     | number
     | text
     ;
-
 
 nihil
     : NULL

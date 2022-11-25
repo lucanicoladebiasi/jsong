@@ -28,7 +28,7 @@ class Processor internal constructor(
 
     private val loop = ArrayDeque<Int>()
 
-    private val positional = mutableMapOf<String, ArrayNode>()
+    //private val positional = mutableMapOf<String, ArrayNode>()
 
     private val scope = ArrayDeque<JsonNode>() // todo: apply to maps?
 
@@ -94,6 +94,7 @@ class Processor internal constructor(
         }
         return exp
     }
+
 
     override fun visitAdd(ctx: JSongParser.AddContext): JsonNode? {
         val context = pop()
@@ -280,9 +281,9 @@ class Processor internal constructor(
         contextual.keys.forEach { key ->
             _contextual[key] = mapper.createArrayNode()
         }
-        val _positional = mutableMapOf<String, ArrayNode>()
-        positional.keys.forEach { key ->
-            _positional[key] = mapper.createArrayNode()
+        val _positional = mutableMapOf<String, VarNode>()
+        variables.filter { it.value is PositionalVarNode }.keys.forEach { key ->
+            _positional[key] = PositionalVarNode(key)
         }
         val lhs = pop()
         lhs.forEachIndexed { index, lhe -> // left hand element
@@ -314,8 +315,8 @@ class Processor internal constructor(
                             contextual.forEach { (key, ref) ->
                                 _contextual[key]?.add(ref[index])
                             }
-                            positional.forEach { (key, ref) ->
-                                _positional[key]?.add(ref[index])
+                            variables.filter { it.value is PositionalVarNode }.forEach { (key, ref) ->
+                                _positional[key]?.value?.add(ref.value[index])
                             }
                             exp.add(lhe)
                         }
@@ -326,7 +327,7 @@ class Processor internal constructor(
             context.pop()
         }
         this.contextual.putAll(_contextual)
-        this.positional.putAll(_positional)
+        variables.putAll(_positional)
         return push(exp)
     }
 
@@ -419,43 +420,40 @@ class Processor internal constructor(
     }
 
     override fun visitMapContextBinding(ctx: JSongParser.MapContextBindingContext): JsonNode? {
-        val bnd = mapper.createArrayNode()
         val exp = mapper.createArrayNode()
+        val value = mapper.createArrayNode()
         visit(ctx.lhs)
-        val lhs = pop()
-        lhs.forEach { lhe ->
+        pop().forEach { lhe ->
             push(lhe)
             visit(ctx.rhs)
-            val rhs = pop()
-            rhs.forEach { rhe ->
-                bnd.add(rhe)
+            pop().forEach { rhe ->
+                value.add(rhe)
                 exp.add(lhe)
             }
         }
         contextual.forEach { (label, ref) ->
-            contextual[label] = stretch(ref, bnd.size())
+            contextual[label] = stretch(ref, value.size())
         }
-        contextual[ctx.label().text] = bnd
+        contextual[ctx.label().text] = value
         return push(exp)
     }
 
     override fun visitMapPositionBinding(ctx: JSongParser.MapPositionBindingContext): JsonNode? {
-        val bnd = mapper.createArrayNode()
+        val value = mapper.createArrayNode()
         visit(ctx.lhs)
-        val lhs = pop()
-        lhs.forEach { lhe ->
+        pop().forEach { lhe ->
             push(lhe)
             visit(ctx.rhs)
-            val rhs = pop()
-            rhs.forEach { rhe ->
-                bnd.add(rhe)
+            pop().forEach { rhe ->
+                value.add(rhe)
             }
         }
-        positional.forEach { (label, ref) ->
-            positional[label] = stretch(ref, bnd.size())
+        variables.filter { it.value is PositionalVarNode }.forEach {
+            it.value.stretch(value.size())
         }
-        positional[ctx.label().text] = bnd
-        return push(bnd)
+        val name = ctx.label().text
+        variables[name] = PositionalVarNode(name, value, mapper.nodeFactory)
+        return push(value)
     }
 
     override fun visitMul(ctx: JSongParser.MulContext): JsonNode? {
@@ -947,20 +945,36 @@ class Processor internal constructor(
     }
 
     override fun visitVar(ctx: JSongParser.VarContext): JsonNode? {
-        val label = ctx.label().text
-        val value: JsonNode? = if (positional.contains(label)) {
-            val index = positional[label]?.indexOf(context.peek()) ?: -1
-            if (index > -1) IntNode(index + 1) else null
-        } else if (contextual.contains(label)) {
-            when (loop.isEmpty()) {
-                true -> contextual[label]
-                else -> contextual[label]?.get(loop.peek())
+        val exp = variables[ctx.label().text]?.let {
+            when(it) {
+                is PositionalVarNode -> {
+                    val index = it.value.indexOf(context.peek())
+                    if (index > -1) IntNode(index + 1) else null
+                }
+                else -> {
+                    it.value
+                }
             }
-        } else if (variables.contains(label)) {
-            variables[label]?.value
-        } else null
-        return push(value ?: mapper.createArrayNode())
+        } ?: mapper.createArrayNode()
+        return push(exp)
     }
+
+//    override fun visitVar(ctx: JSongParser.VarContext): JsonNode? {
+//        val label = ctx.label().text
+//        val value: JsonNode? = if (positional.contains(label)) {
+//            val index = positional[label]?.indexOf(context.peek()) ?: -1
+//            if (index > -1) IntNode(index + 1) else null
+//        } else if (contextual.contains(label)) {
+//            when (loop.isEmpty()) {
+//                true -> contextual[label]
+//                else -> contextual[label]?.get(loop.peek())
+//            }
+//        } else if (variables.contains(label)) {
+//            variables[label]?.value
+//        } else null
+//        return push(value ?: mapper.createArrayNode())
+//    }
+
 
     override fun visitVarBinding(ctx: JSongParser.VarBindingContext): JsonNode? {
         val exp = mapper.createArrayNode()

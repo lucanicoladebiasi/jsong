@@ -38,8 +38,15 @@ open class VarNode(
 
 } //~ VarNode
 
+class ContextualVarNode(
+    name: String,
+    value: ArrayNode = ObjectMapper().createArrayNode(),
+    nodeFactory: JsonNodeFactory = ObjectMapper().nodeFactory
+): VarNode(name, value, nodeFactory)
+
 class PositionalVarNode(
     name: String,
     value: ArrayNode = ObjectMapper().createArrayNode(),
     nodeFactory: JsonNodeFactory = ObjectMapper().nodeFactory
 ): VarNode(name, value, nodeFactory)
+

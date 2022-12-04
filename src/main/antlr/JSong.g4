@@ -75,7 +75,9 @@ exp:
     | obj_fun '(' exp? (',' exp)* ')'               #objectFunction
     | text_fun '(' exp? (',' exp)* ')'              #textFunction
     | time_fun '(' exp? (',' exp)* ')'              #timeFunction
-    | 'function' '(' ('$' label )* ')''{' exp? '}'  #defineFunction
+    | 'function' '(' ('$' label (',' '$' label)*)? ')' '{' exp? '}' '(' (exp (',' exp)*)? ')'   #lambdaFunction
+    | '$' label ':=' 'function' '(' ('$' label (',' '$' label)*)? ')' '{' exp? '}'              #defineFunction
+    | '$' label '(' (exp (',' exp)*)? ')'                                                       #recallFunction
     ;
 
 

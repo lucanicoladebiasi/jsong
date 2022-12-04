@@ -225,12 +225,6 @@ class Processor internal constructor(
         return push(stack.firstOrNull())
     }
 
-    override fun visitDefineFunction(ctx: JSongParser.DefineFunctionContext): JsonNode? {
-        ctx.label().forEach { label -> }
-
-        return null
-    }
-
     override fun visitDescendants(ctx: JSongParser.DescendantsContext): JsonNode? {
         return push(descendants(pop()))
     }
@@ -297,7 +291,7 @@ class Processor internal constructor(
                     else -> {
                         if (functions.boolean(rhe).asBoolean()) {
                             variables.filter {
-                               it.value is ContextualVarNode
+                                it.value is ContextualVarNode
                             }.forEach { (key, ref) ->
                                 _contextual[key]?.value?.add(ref.value[index])
                             }
@@ -355,6 +349,25 @@ class Processor internal constructor(
     override fun visitJsong(ctx: JSongParser.JsongContext): JsonNode? {
         ctx.exp()?.let { visit(it) }
         return stack.firstOrNull()?.let { if (isToFlatten) functions.flatten(it) else it }
+    }
+
+    override fun visitLambdaFunction(ctx: JSongParser.LambdaFunctionContext): JsonNode? {
+        val labs = ctx.label().map { it.text }
+        val exps = ctx.exp()
+        val args = mutableMapOf<String, VarNode>()
+        // exp.size = labs.size + 1
+        val pop = pop()
+        for (i in labs.indices) {
+            push(pop)
+            visit(exps[i + 1])
+            args.put(labs[i], VarNode(labs[i], pop()))
+        }
+
+        variables.putAll(args)
+        push(pop)
+        visit(exps[0])
+        val exp = pop()
+        return push(exp)
     }
 
     override fun visitLt(ctx: JSongParser.LtContext): JsonNode? {
@@ -942,6 +955,7 @@ class Processor internal constructor(
                         else -> it.value[loop.peek()]
                     }
                 }
+
                 is PositionalVarNode -> {
                     val index = it.value.indexOf(context.peek())
                     if (index > -1) IntNode(index + 1) else null

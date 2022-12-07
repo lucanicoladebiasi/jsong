@@ -226,6 +226,17 @@ class Processor internal constructor(
         return push(library.concatenate(library.flatten(lhs), library.flatten(rhs)))
     }
 
+    override fun visitCondition(ctx: JSongParser.ConditionContext): JsonNode? {
+        visit(ctx.predicate)
+        val predicate = library.boolean(pop())
+        when(predicate.asBoolean()) {
+            true -> visit(ctx.yes)
+            else -> visit(ctx.no)
+        }
+        val res = pop()
+        return push(res)
+    }
+
     override fun visitContext(ctx: JSongParser.ContextContext): JsonNode? {
         return push(stack.firstOrNull())
     }

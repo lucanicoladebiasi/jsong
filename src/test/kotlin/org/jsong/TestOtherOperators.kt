@@ -16,4 +16,27 @@ class TestOtherOperators {
         assertEquals(expected, actual)
     }
 
+    /**
+     * https://docs.jsonata.org/other-operators#--conditional
+     */
+    @Test
+    fun  `Conditional - positive`() {
+        val expression = "45 < 50 ? \"Cheap\" : \"Expensive\""
+        val expected = TextNode("Cheap")
+        val actual = JSong.of(expression).evaluate()
+        assertEquals(expected, actual)
+
+    }
+
+    /**
+     * https://docs.jsonata.org/other-operators#--conditional
+     */
+    @Test
+    fun `Conditional - negative`() {
+        val expression = "55 < 50 ? \"Cheap\" : \"Expensive\""
+        val expected = TextNode("Expensive")
+        val actual = JSong.of(expression).evaluate()
+        assertEquals(expected, actual)
+    }
+
 }

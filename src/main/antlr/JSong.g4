@@ -78,6 +78,7 @@ exp:
     | 'function' '(' ('$' label (',' '$' label)*)? ')' '{' exp? '}' '(' (exp (',' exp)*)? ')'   #lambdaFunction
     | '$' label ':=' 'function' '(' ('$' label (',' '$' label)*)? ')' '{' exp? '}'              #defineFunction
     | '$' label '(' (exp (',' exp)*)? ')'                                                       #recallFunction
+    | predicate = exp '?' yes = exp ':' no = exp    #condition
     ;
 
 

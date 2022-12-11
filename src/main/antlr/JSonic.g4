@@ -1,8 +1,12 @@
 grammar JSonic;
 
 @header {
-    package org.jsonic.antlr;
+    package org.jsong.antlr;
 }
+
+jsong
+    : exp* EOF
+    ;
 
 array
     : '[' exp (',' exp)* ']'
@@ -30,27 +34,30 @@ comp_op
     ;
 
 exp
-    : '?' yes = exp ':' no = exp                            #condition
-    | '|' loc = exp ('|' upd = exp (',' del = exp)?)? '|'   #transform
-    | '~>' exp                                              #chain
-    | bool_op exp                                           #judge
-    | math_op exp                                           #compute
-    | comp_op exp                                           #compare
-    | '&' exp                                               #concatenate
-    | '^(' sort (',' sort)* ')'                             #orderby
-    | '[' exp ']'                                           #filter
-    | '$' label ':=' exp                                    #bind
-    | '$$'                                                  #root
-    | '$'                                                   #context
-    | '%'                                                   #parent
-    | label (obj)?                                          #select
-    | json                                                  #literal
-    | REGEX                                                 #regex
+    : '(' exp (';' exp)* ')'                                            #scope
+    | '?' yes = exp ':' no = exp                                        #condition
+    | '~>' exp                                                          #chain
+    | '|' loc = exp ('|' upd = exp (',' del = exp)?)? '|'               #transform
+    | '$' label ':=' exp                                                #define
+    | '$' label ( '(' (exp (',' exp)*)? ')')?                           #call
+    | 'fun'('ction')? '(' ('$' label (',' '$' label)*)? ')' '{' exp '}' #function
+    | '^(' sort (',' sort)* ')'                                         #orderby
+    | '.' '[' exp ']'                                                   #mapArray
+    | '[' exp+ ']'                                                      #filter
+    | '.' exp                                                           #map
+    | '&' exp                                                           #concatenate
+    | math_op exp                                                       #compute
+    | comp_op exp                                                       #compare
+    | bool_op exp                                                       #judge
+    | '[' range (',' range)* ']'                                        #ranges
+    | path                                                              #select
+    | json                                                              #literal
+    | REGEX                                                             #regex
+    | '$$'                                                              #root
+    | '$'                                                               #context
     ;
 
-jsong
-    : exp? EOF
-    ;
+
 
 json
     : array
@@ -88,6 +95,13 @@ obj
 
 pair
     : key = exp ':' value = exp
+    ;
+
+path
+    : '%'   #parent
+    | '*'   #all
+    | '**'  #descendants
+    | label #field
     ;
 
 range

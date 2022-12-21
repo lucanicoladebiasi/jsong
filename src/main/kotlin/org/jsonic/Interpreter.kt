@@ -3,6 +3,7 @@ package org.jsonic
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
+import com.fasterxml.jackson.databind.node.DecimalNode
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.fasterxml.jackson.databind.node.ObjectNode
 import org.antlr.v4.runtime.CharStreams
@@ -27,7 +28,18 @@ class Interpreter(
             }
         }
 
-    }
+        fun reduce(node: JsonNode?): JsonNode? {
+            return when(node) {
+                is ArrayNode -> when(node.size()) {
+                    0 -> null
+                    1 -> reduce(node[0])
+                    else -> node
+                }
+                else -> node
+            }
+        }
+
+    } //~ companion
 
     private val stack = ArrayDeque<JsonNode>()
 
@@ -39,8 +51,8 @@ class Interpreter(
         return visit(JSonicParser(CommonTokenStream(JSonicLexer(CharStreams.fromString(exp)))).jsong())
     }
 
-    private fun pop(): SequenceNode {
-        val seq = SequenceNode(nf)
+    private fun pop(): SeqNode {
+        val seq = SeqNode(nf)
         if (stack.isNotEmpty()) {
             seq.add(stack.removeFirst())
         }
@@ -77,7 +89,8 @@ class Interpreter(
 
     override fun visitField(ctx: JSonicParser.FieldContext): JsonNode? {
         val res = ArrayNode(nf)
-        pop().forEach { e ->
+        val rhs = pop()
+        rhs.forEach { e ->
             when (e) {
                 is ObjectNode -> e[normalizeFieldName(ctx.text)]?.let { node ->
                     res.add(node)
@@ -87,22 +100,42 @@ class Interpreter(
         return push(res)
     }
 
+    override fun visitFilter(ctx: JSonicParser.FilterContext): JsonNode? {
+        val res = ArrayNode(nf)
+        val lhs = pop()
+        var rhs = SeqNode(nf)
+        ctx.exp().forEach { exp ->
+            visit(exp)
+            rhs = pop()
+        }
+        val predicate = reduce(rhs)
+        if (predicate?.isNumber == true) {
+            lhs.get(predicate.asInt())?.let { res.add(it) }
+        }
+        return push(res)
+    }
+
     override fun visitJsong(ctx: JSonicParser.JsongContext): JsonNode? {
         var res: JsonNode? = null
         ctx.exp().forEach { exp ->
             res = visit(exp)
         }
-        return res
+        return reduce(res)
     }
 
     override fun visitMap(ctx: JSonicParser.MapContext): JsonNode? {
         val res = ArrayNode(nf)
-        pop().forEach { e ->
+        val pop = pop()
+        pop.forEach { e ->
             push(e)
             visit(ctx.exp())
-            res.addAll(pop())
+            res.add(pop())
         }
         return push(res)
+    }
+
+    override fun visitNumber(ctx: JSonicParser.NumberContext): JsonNode? {
+        return push(DecimalNode(ctx.text.toBigDecimal()))
     }
 
 }

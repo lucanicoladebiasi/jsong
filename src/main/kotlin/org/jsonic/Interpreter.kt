@@ -97,15 +97,22 @@ class Interpreter(
 
     override fun visitFilter(ctx: JSonicParser.FilterContext): ArrayNode {
         val seq = ArrayNode(nf)
-        val lhs = flatten(pop())
-        lhs.forEach { n ->
-            val e = expand(n)
-            seq.add(e[0])
+        visit(ctx.exp())
+        val rhs = pop()
+        flatten(pop()).forEach { n ->
+            val lhs = expand(n)
+            rhs.forEachIndexed { i, p ->
+                when (p) {
+                    is NumericNode -> if (i == rhs.asInt()) {
+                        seq.add(lhs[i])
+                    }
+                    else -> {}
+                }
+            }
         }
         println("${ctx.exp().text} -> $seq")
         return push(seq)
     }
-
 
     override fun visitJsong(ctx: JSonicParser.JsongContext): JsonNode? {
         var res: JsonNode? = null

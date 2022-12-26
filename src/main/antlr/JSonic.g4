@@ -43,7 +43,7 @@ exp
     | 'fun'('ction')? '(' ('$' label (',' '$' label)*)? ')' '{' exp '}' #function
     | '^(' sort (',' sort)* ')'                                         #orderby
 //    | '.' '[' exp ']'                                                   #mapArray
-    | '[' exp+ ']'                                                      #filter
+    | '[' exp ']'                                                       #filter
     | '.' exp                                                           #map
     | '&' exp                                                           #concatenate
     | math_op exp                                                       #compute

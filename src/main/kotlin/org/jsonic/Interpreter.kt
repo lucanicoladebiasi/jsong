@@ -2,10 +2,7 @@ package org.jsonic
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.node.ArrayNode
-import com.fasterxml.jackson.databind.node.DecimalNode
-import com.fasterxml.jackson.databind.node.JsonNodeFactory
-import com.fasterxml.jackson.databind.node.ObjectNode
+import com.fasterxml.jackson.databind.node.*
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import org.jsong.antlr.JSonicBaseVisitor
@@ -13,7 +10,7 @@ import org.jsong.antlr.JSonicLexer
 import org.jsong.antlr.JSonicParser
 
 class Interpreter(
-    private val root: JsonNode?= null,
+    private val root: JsonNode? = null,
     private val nf: JsonNodeFactory = ObjectMapper().nodeFactory
 ) : JSonicBaseVisitor<JsonNode?>() {
 
@@ -28,114 +25,111 @@ class Interpreter(
             }
         }
 
-        fun reduce(node: JsonNode?): JsonNode? {
-            return when(node) {
-                is ArrayNode -> when(node.size()) {
-                    0 -> null
-                    1 -> reduce(node[0])
-                    else -> node
-                }
-                else -> node
-            }
-        }
+//        fun reduce(node: JsonNode?): JsonNode? {
+//            return when (node) {
+//                is ArrayNode -> when (node.size()) {
+//                    0 -> null
+//                    1 -> reduce(node[0])
+//                    else -> node
+//                }
+//
+//                else -> node
+//            }
+//        }
 
     } //~ companion
 
-    private val stack = ArrayDeque<JsonNode>()
+    private val stack = ArrayDeque<ArrayNode>()
 
     init {
-        push(root)
+        push(ArrayNode(nf).add(root))
     }
 
     fun evaluate(exp: String): JsonNode? {
         return visit(JSonicParser(CommonTokenStream(JSonicLexer(CharStreams.fromString(exp)))).jsong())
     }
 
-    private fun pop(): SeqNode {
-        val seq = SeqNode(nf)
-        if (stack.isNotEmpty()) {
-            seq.add(stack.removeFirst())
+    private fun expand(node: JsonNode?): ArrayNode {
+        return when (node) {
+            null -> ArrayNode(nf)
+            is ArrayNode -> node
+            else -> ArrayNode(nf).add(node)
+        }
+    }
+
+    private fun flatten(node: ArrayNode): ArrayNode {
+        val seq = ArrayNode(nf)
+        node.forEach { n ->
+            when (n) {
+                is ArrayNode -> seq.addAll(n)
+                else -> seq.add(n)
+            }
         }
         return seq
     }
 
-    private fun push(node: JsonNode?): JsonNode? {
-        return when (node) {
-            is ArrayNode -> when (node.size()) {
-                0 -> {
-                    stack.addFirst(ArrayNode(nf))
-                    null
-                }
-                1 -> {
-                    stack.addFirst(node[0])
-                    node[0]
-                }
-                else -> {
-                    stack.addFirst(node)
-                    node
-                }
-            }
-            null -> {
-                stack.addFirst(ArrayNode(nf))
-                null
-            }
-            else -> {
-                stack.addFirst(node)
-                node
-            }
+    private fun pop(): ArrayNode {
+        val seq = ArrayNode(nf)
+        if (stack.isNotEmpty()) {
+            seq.addAll(stack.removeFirst())
         }
+        return seq
+    }
+
+    private fun push(node: ArrayNode): ArrayNode {
+        stack.addFirst(node)
+        return node
     }
 
 
-    override fun visitField(ctx: JSonicParser.FieldContext): JsonNode? {
-        val res = ArrayNode(nf)
-        val rhs = pop()
-        rhs.forEach { e ->
-            when (e) {
-                is ObjectNode -> e[normalizeFieldName(ctx.text)]?.let { node ->
-                    res.add(node)
+    override fun visitField(ctx: JSonicParser.FieldContext): ArrayNode {
+        val seq = ArrayNode(nf)
+        flatten(pop()).forEach { n ->
+            when (n) {
+                is ObjectNode -> n[normalizeFieldName(ctx.text)]?.let { node ->
+                    seq.add(node)
                 }
             }
         }
-        return push(res)
+        println("${ctx.text} -> $seq")
+        return push(seq)
     }
 
-    override fun visitFilter(ctx: JSonicParser.FilterContext): JsonNode? {
-        val res = ArrayNode(nf)
-        val lhs = pop()
-        var rhs = SeqNode(nf)
-        ctx.exp().forEach { exp ->
-            visit(exp)
-            rhs = pop()
+    override fun visitFilter(ctx: JSonicParser.FilterContext): ArrayNode {
+        val seq = ArrayNode(nf)
+        val lhs = flatten(pop())
+        lhs.forEach { n ->
+            val e = expand(n)
+            seq.add(e[0])
         }
-        val predicate = reduce(rhs)
-        if (predicate?.isNumber == true) {
-            lhs.get(predicate.asInt())?.let { res.add(it) }
-        }
-        return push(res)
+        println("${ctx.exp().text} -> $seq")
+        return push(seq)
     }
+
 
     override fun visitJsong(ctx: JSonicParser.JsongContext): JsonNode? {
         var res: JsonNode? = null
         ctx.exp().forEach { exp ->
             res = visit(exp)
         }
-        return reduce(res)
+        return res
     }
 
-    override fun visitMap(ctx: JSonicParser.MapContext): JsonNode? {
-        val res = ArrayNode(nf)
-        val pop = pop()
-        pop.forEach { e ->
-            push(e)
+    override fun visitMap(ctx: JSonicParser.MapContext): ArrayNode {
+        val seq = ArrayNode(nf)
+        val lhs = flatten(pop())
+        lhs.forEach { n ->
+            push(expand(n))
             visit(ctx.exp())
-            res.add(pop())
+            seq.add(pop())
         }
-        return push(res)
+        return push(seq)
     }
 
-    override fun visitNumber(ctx: JSonicParser.NumberContext): JsonNode? {
-        return push(DecimalNode(ctx.text.toBigDecimal()))
+    override fun visitNumber(ctx: JSonicParser.NumberContext): ArrayNode {
+        val seq = expand(DecimalNode(ctx.text.toBigDecimal()))
+        return push(seq)
     }
 
 }
+

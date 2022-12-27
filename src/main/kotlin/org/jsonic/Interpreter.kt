@@ -25,18 +25,6 @@ class Interpreter(
             }
         }
 
-//        fun reduce(node: JsonNode?): JsonNode? {
-//            return when (node) {
-//                is ArrayNode -> when (node.size()) {
-//                    0 -> null
-//                    1 -> reduce(node[0])
-//                    else -> node
-//                }
-//
-//                else -> node
-//            }
-//        }
-
     } //~ companion
 
     private val stack = ArrayDeque<ArrayNode>()
@@ -81,6 +69,16 @@ class Interpreter(
         return node
     }
 
+    private fun reduce(node: JsonNode?): JsonNode? {
+        return when (node) {
+            is ArrayNode -> when (node.size()) {
+                0 -> null
+                1 -> reduce(node[0])
+                else -> ArrayNode(nf).addAll(node.map { reduce(it) })
+            }
+            else -> node
+        }
+    }
 
     override fun visitField(ctx: JSonicParser.FieldContext): ArrayNode {
         val seq = ArrayNode(nf)
@@ -99,13 +97,16 @@ class Interpreter(
         val seq = ArrayNode(nf)
         visit(ctx.exp())
         val rhs = pop()
-        flatten(pop()).forEach { n ->
+        val LHS = pop()
+        LHS.forEach { n ->
             val lhs = expand(n)
-            rhs.forEachIndexed { i, p ->
+            rhs.forEach { p ->
                 when (p) {
-                    is NumericNode -> if (i == rhs.asInt()) {
-                        seq.add(lhs[i])
+                    is NumericNode -> {
+                        val i = p.asInt()
+                        lhs[if (i < 0) LHS.size() + i else i]?.let { seq.add(it) }
                     }
+
                     else -> {}
                 }
             }
@@ -115,11 +116,11 @@ class Interpreter(
     }
 
     override fun visitJsong(ctx: JSonicParser.JsongContext): JsonNode? {
-        var res: JsonNode? = null
+        var seq: JsonNode? = null
         ctx.exp().forEach { exp ->
-            res = visit(exp)
+            seq = visit(exp)
         }
-        return res
+        return reduce(seq)
     }
 
     override fun visitMap(ctx: JSonicParser.MapContext): ArrayNode {

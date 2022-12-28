@@ -34,7 +34,7 @@ comp_op
     ;
 
 exp
-    : '(' exp (';' exp)* ')'                                            #scope
+    : '(' exp (';'? exp)*')'                                            #scope
     | '?' yes = exp ':' no = exp                                        #condition
     | '~>' exp                                                          #chain
     | '|' loc = exp ('|' upd = exp (',' del = exp)?)? '|'               #transform
@@ -42,8 +42,7 @@ exp
     | '$' label ( '(' (exp (',' exp)*)? ')')?                           #call
     | 'fun'('ction')? '(' ('$' label (',' '$' label)*)? ')' '{' exp '}' #function
     | '^(' sort (',' sort)* ')'                                         #orderby
-//    | '.' '[' exp ']'                                                   #mapArray
-    | '[' exp ']'                                                       #filter
+    | lhs = exp'[' rhs = exp ']'                                        #filter
     | '.' exp                                                           #map
     | '&' exp                                                           #concatenate
     | math_op exp                                                       #compute

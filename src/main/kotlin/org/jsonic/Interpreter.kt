@@ -27,10 +27,10 @@ class Interpreter(
 
     } //~ companion
 
-    private val stack = ArrayDeque<ArrayNode>()
+    private val stack = ArrayDeque<JsonNode>()
 
     init {
-        push(ArrayNode(nf).add(root))
+        push(root)
     }
 
     fun evaluate(exp: String): JsonNode? {
@@ -56,16 +56,14 @@ class Interpreter(
         return seq
     }
 
-    private fun pop(): ArrayNode {
-        val seq = ArrayNode(nf)
-        if (stack.isNotEmpty()) {
-            seq.addAll(stack.removeFirst())
-        }
-        return seq
+    private fun pop(): JsonNode? {
+        return stack.removeFirstOrNull()
     }
 
-    private fun push(node: ArrayNode): ArrayNode {
-        stack.addFirst(node)
+    private fun push(node: JsonNode?): JsonNode? {
+        if (node != null) {
+            stack.addFirst(node)
+        }
         return node
     }
 
@@ -76,42 +74,30 @@ class Interpreter(
                 1 -> reduce(node[0])
                 else -> ArrayNode(nf).addAll(node.map { reduce(it) })
             }
+
             else -> node
         }
     }
 
-    override fun visitField(ctx: JSonicParser.FieldContext): ArrayNode {
-        val seq = ArrayNode(nf)
-        flatten(pop()).forEach { n ->
-            when (n) {
-                is ObjectNode -> n[normalizeFieldName(ctx.text)]?.let { node ->
-                    seq.add(node)
-                }
+    override fun visitField(ctx: JSonicParser.FieldContext): JsonNode? {
+        return push(
+            when (val lhs = pop()) {
+                is ObjectNode -> lhs[normalizeFieldName(ctx.text)]
+                else -> null
             }
-        }
-        println("${ctx.text} -> $seq")
-        return push(seq)
+        )
     }
 
-    override fun visitFilter(ctx: JSonicParser.FilterContext): ArrayNode {
+    override fun visitFilter(ctx: JSonicParser.FilterContext): JsonNode? {
         val seq = ArrayNode(nf)
-        visit(ctx.exp())
-        val rhs = pop()
-        val LHS = pop()
-        LHS.forEach { n ->
-            val lhs = expand(n)
-            rhs.forEach { p ->
-                when (p) {
-                    is NumericNode -> {
-                        val i = p.asInt()
-                        lhs[if (i < 0) LHS.size() + i else i]?.let { seq.add(it) }
-                    }
-
-                    else -> {}
-                }
+        visit(ctx.lhs)
+        val lhs = expand(pop())
+        visit(ctx.rhs)
+        when(val rhs = pop()) {
+            is NumericNode -> {
+                seq.add(lhs[rhs.asInt()])
             }
         }
-        println("${ctx.exp().text} -> $seq")
         return push(seq)
     }
 
@@ -120,22 +106,31 @@ class Interpreter(
         ctx.exp().forEach { exp ->
             seq = visit(exp)
         }
-        return reduce(seq)
+        return seq
     }
 
-    override fun visitMap(ctx: JSonicParser.MapContext): ArrayNode {
+    override fun visitMap(ctx: JSonicParser.MapContext): JsonNode? {
         val seq = ArrayNode(nf)
-        val lhs = flatten(pop())
-        lhs.forEach { n ->
-            push(expand(n))
+        expand(pop()).forEach { lhs ->
+            push(lhs)
             visit(ctx.exp())
-            seq.add(pop())
+            pop()?.let { rhs ->
+                seq.add(rhs)
+            }
         }
         return push(seq)
     }
 
-    override fun visitNumber(ctx: JSonicParser.NumberContext): ArrayNode {
-        val seq = expand(DecimalNode(ctx.text.toBigDecimal()))
+    override fun visitNumber(ctx: JSonicParser.NumberContext): JsonNode? {
+        return push(DecimalNode(ctx.text.toBigDecimal()))
+    }
+
+    override fun visitScope(ctx: JSonicParser.ScopeContext): JsonNode? {
+        var seq: JsonNode? = null
+        ctx.exp().forEach { exp ->
+            visit(exp)
+            seq = pop()
+        }
         return push(seq)
     }
 

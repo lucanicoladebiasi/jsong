@@ -45,17 +45,6 @@ class Interpreter(
         }
     }
 
-    private fun flatten(node: ArrayNode): ArrayNode {
-        val seq = ArrayNode(nf)
-        node.forEach { n ->
-            when (n) {
-                is ArrayNode -> seq.addAll(n)
-                else -> seq.add(n)
-            }
-        }
-        return seq
-    }
-
     private fun pop(): JsonNode? {
         return stack.removeFirstOrNull()
     }
@@ -71,12 +60,16 @@ class Interpreter(
         return when (node) {
             is ArrayNode -> when (node.size()) {
                 0 -> null
-                1 -> reduce(node[0])
-                else -> ArrayNode(nf).addAll(node.map { reduce(it) })
+                1 -> node[0]
+                else -> node
             }
 
             else -> node
         }
+    }
+
+    override fun visitContext(ctx: JSonicParser.ContextContext): JsonNode? {
+        return stack.firstOrNull()
     }
 
     override fun visitField(ctx: JSonicParser.FieldContext): JsonNode? {
@@ -89,49 +82,79 @@ class Interpreter(
     }
 
     override fun visitFilter(ctx: JSonicParser.FilterContext): JsonNode? {
-        val seq = ArrayNode(nf)
+        val res = ArrayNode(nf)
         visit(ctx.lhs)
         val lhs = expand(pop())
         visit(ctx.rhs)
-        when(val rhs = pop()) {
+        when (val rhs = pop()) {
             is NumericNode -> {
-                seq.add(lhs[rhs.asInt()])
+                val i = rhs.asInt()
+                res.add(lhs[if (i < 0) lhs.size() + i else i])
+            }
+            is RangesNode -> {
+                rhs.indexes.forEach { index ->
+                    val i = index.asInt()
+                    res.add(lhs[if (i < 0) lhs.size() + i else i])
+                }
             }
         }
-        return push(seq)
+        return push(reduce(res))
     }
 
     override fun visitJsong(ctx: JSonicParser.JsongContext): JsonNode? {
-        var seq: JsonNode? = null
+        var res: JsonNode? = null
         ctx.exp().forEach { exp ->
-            seq = visit(exp)
+            res = visit(exp)
         }
-        return seq
+        return res
     }
 
     override fun visitMap(ctx: JSonicParser.MapContext): JsonNode? {
-        val seq = ArrayNode(nf)
+        val res = ArrayNode(nf)
         expand(pop()).forEach { lhs ->
             push(lhs)
             visit(ctx.exp())
             pop()?.let { rhs ->
-                seq.add(rhs)
+                when (rhs) {
+                    is ArrayNode -> res.addAll(rhs)
+                    else -> res.add(rhs)
+                }
             }
         }
-        return push(seq)
+        return push(reduce(res))
     }
 
     override fun visitNumber(ctx: JSonicParser.NumberContext): JsonNode? {
         return push(DecimalNode(ctx.text.toBigDecimal()))
     }
 
+    override fun visitRange(ctx: JSonicParser.RangeContext): JsonNode? {
+        return push(RangeNode.of(
+            ctx.min.text.toBigDecimal(),
+            ctx.max.text.toBigDecimal(),
+            nf
+        ))
+    }
+
+    override fun visitRanges(ctx: JSonicParser.RangesContext): JsonNode? {
+        val res = RangesNode(nf)
+        ctx.range().forEach {
+            visit(it)
+            res.add(pop())
+        }
+        return push(res)
+    }
+
+    override fun visitRoot(ctx: JSonicParser.RootContext): JsonNode? {
+        return push(root)
+    }
+
     override fun visitScope(ctx: JSonicParser.ScopeContext): JsonNode? {
-        var seq: JsonNode? = null
         ctx.exp().forEach { exp ->
             visit(exp)
-            seq = pop()
         }
-        return push(seq)
+        val res = pop()
+        return push(reduce(res))
     }
 
 }

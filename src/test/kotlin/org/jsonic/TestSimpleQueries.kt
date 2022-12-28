@@ -161,7 +161,8 @@ class TestSimpleQueries {
     fun `Doesn't exist - returns nothing`() {
         val expression = "Phone[8]"
         val actual = Interpreter(TestResources.address).evaluate(expression)
-        assertNull(actual)
+        assertEquals(NullNode.instance, actual
+        )
     }
 
     /**
@@ -267,7 +268,7 @@ class TestSimpleQueries {
         val expected = TestResources.mapper.readTree("""
             { "ref": [ 1,2 ] }
         """.trimIndent())
-        val actual = Interpreter(TestResources.address).evaluate(expression)
+        val actual = Interpreter(TestResources.array).evaluate(expression)
         assertEquals(expected, actual)
     }
 
@@ -278,7 +279,7 @@ class TestSimpleQueries {
     fun `Dot ref here returns the entire internal array`() {
         val expression = "$[0].ref"
         val expected = TestResources.mapper.readTree("[1, 2]")
-        val actual = Interpreter(TestResources.address).evaluate(expression)
+        val actual = Interpreter(TestResources.array).evaluate(expression)
         assertEquals(expected, actual)
     }
 
@@ -289,7 +290,7 @@ class TestSimpleQueries {
     fun `Returns element on first position of the internal array`() {
         val expression = "$[0].ref[0]"
         val expected = TestResources.mapper.readTree("1")
-        val actual = Interpreter(TestResources.address).evaluate(expression)
+        val actual = Interpreter(TestResources.array).evaluate(expression)
         assertEquals(expected, actual)
     }
 
@@ -300,7 +301,7 @@ class TestSimpleQueries {
     fun `Despite the structure of the nested array, the resultant selection is flattened into a single flat array`() {
         val expression = "$.ref"
         val expected = TestResources.mapper.readTree("[1, 2, 3, 4]")
-        val actual = Interpreter(TestResources.address).evaluate(expression)
+        val actual = Interpreter(TestResources.array).evaluate(expression)
         assertEquals(expected, actual)
     }
 

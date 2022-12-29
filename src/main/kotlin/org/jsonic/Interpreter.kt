@@ -71,8 +71,8 @@ class Interpreter(
 
     override fun visitArray(ctx: JSonicParser.ArrayContext): JsonNode? {
         val res = ArrayNode(nf)
-        ctx.children.forEach { child ->
-            visit(child)
+        ctx.exp().forEach { exp ->
+            visit(exp)
             pop().let { res.add(it) }
         }
         return push(res)
@@ -151,6 +151,18 @@ class Interpreter(
 
     override fun visitNumber(ctx: JSonicParser.NumberContext): JsonNode? {
         return push(DecimalNode(ctx.text.toBigDecimal()))
+    }
+
+    override fun visitObj(ctx: JSonicParser.ObjContext): JsonNode? {
+        val exp = ObjectNode(nf)
+        ctx.pair().forEachIndexed { index, pair ->
+            visit(pair.key)
+            val key = pop()?.asText() ?: index.toString()
+            visit(pair.value)
+            val value = pop() ?: NullNode.instance
+            exp.set<JsonNode>(key, value)
+        }
+        return push(exp)
     }
 
     override fun visitRange(ctx: JSonicParser.RangeContext): JsonNode? {

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.*
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
+import org.jsong.RegexNode
 import org.jsong.antlr.JSonicBaseVisitor
 import org.jsong.antlr.JSonicLexer
 import org.jsong.antlr.JSonicParser
@@ -68,6 +69,25 @@ class Interpreter(
         }
     }
 
+    override fun visitArray(ctx: JSonicParser.ArrayContext): JsonNode? {
+        val res = ArrayNode(nf)
+        ctx.children.forEach { child ->
+            visit(child)
+            pop().let { res.add(it) }
+        }
+        return push(res)
+    }
+
+    override fun visitBool(ctx: JSonicParser.BoolContext): JsonNode? {
+        return push(
+            when {
+                ctx.FALSE() != null -> BooleanNode.FALSE
+                ctx.TRUE() != null -> BooleanNode.TRUE
+                else -> throw IllegalArgumentException("$ctx not recognized")
+            }
+        )
+    }
+
     override fun visitContext(ctx: JSonicParser.ContextContext): JsonNode? {
         return stack.firstOrNull()
     }
@@ -91,6 +111,7 @@ class Interpreter(
                 val i = rhs.asInt()
                 res.add(lhs[if (i < 0) lhs.size() + i else i])
             }
+
             is RangesNode -> {
                 rhs.indexes.forEach { index ->
                     val i = index.asInt()
@@ -124,16 +145,22 @@ class Interpreter(
         return push(reduce(res))
     }
 
+    override fun visitNihil(ctx: JSonicParser.NihilContext): JsonNode? {
+        return push(NullNode.instance)
+    }
+
     override fun visitNumber(ctx: JSonicParser.NumberContext): JsonNode? {
         return push(DecimalNode(ctx.text.toBigDecimal()))
     }
 
     override fun visitRange(ctx: JSonicParser.RangeContext): JsonNode? {
-        return push(RangeNode.of(
-            ctx.min.text.toBigDecimal(),
-            ctx.max.text.toBigDecimal(),
-            nf
-        ))
+        return push(
+            RangeNode.of(
+                ctx.min.text.toBigDecimal(),
+                ctx.max.text.toBigDecimal(),
+                nf
+            )
+        )
     }
 
     override fun visitRanges(ctx: JSonicParser.RangesContext): JsonNode? {
@@ -143,6 +170,10 @@ class Interpreter(
             res.add(pop())
         }
         return push(res)
+    }
+
+    override fun visitRegex(ctx: JSonicParser.RegexContext): JsonNode? {
+        return push(RegexNode(ctx.REGEX().text))
     }
 
     override fun visitRoot(ctx: JSonicParser.RootContext): JsonNode? {
@@ -155,6 +186,10 @@ class Interpreter(
         }
         val res = pop()
         return push(reduce(res))
+    }
+
+    override fun visitText(ctx: JSonicParser.TextContext): JsonNode? {
+        return push(TextNode(ctx.text.substring(1, ctx.text.length - 1)))
     }
 
 }

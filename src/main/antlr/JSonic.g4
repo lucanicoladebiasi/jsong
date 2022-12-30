@@ -18,42 +18,37 @@ bool
     | FALSE
     ;
 
-bool_op
-    : AND
-    | OR
-    ;
-
-comp_op
-    : '='       #eq
-    | '!='      #ne
-    | '>'       #gt
-    | '<'       #lt
-    | '>='      #gte
-    | '<='      #lte
-    | 'in'      #in
-    ;
 
 exp
-    : '(' exp (';'? exp)*')'                                            #scope
-    | '?' yes = exp ':' no = exp                                        #condition
-    | '~>' exp                                                          #chain
+    : '(' exp (';' exp)*')'                                             #scope
+    | prd = exp '?' pos = exp ':' neg = exp                             #condition
+    | lhs = exp '~>' rhs = exp                                          #chain
     | '|' loc = exp ('|' upd = exp (',' del = exp)?)? '|'               #transform
     | '$' label ':=' exp                                                #define
     | '$' label ( '(' (exp (',' exp)*)? ')')?                           #call
     | 'fun'('ction')? '(' ('$' label (',' '$' label)*)? ')' '{' exp '}' #function
     | '^(' sort (',' sort)* ')'                                         #orderby
-    | lhs = exp'[' rhs = exp ']'                                        #filter
-    | '.' exp                                                           #map
-    | '&' exp                                                           #concatenate
-    | math_op exp                                                       #compute
-    | comp_op exp                                                       #compare
-    | bool_op exp                                                       #judge
+    | lhs = exp'['  rhs = exp ']'                                       #filter
+    | lhs = exp '.' rhs = exp                                           #map
+    | lhs = exp '&' rhs = exp                                           #concatenate
+    | lhs = exp '*' rhs = exp                                           #mul
+    | lhs = exp '/' rhs = exp                                           #div
+    | lhs = exp '%' rhs = exp                                           #mod
+    | lhs = exp '+' rhs = exp                                           #add
+    | lhs = exp '-' rhs = exp                                           #sub
+    | lhs = exp '='  rhs = exp                                          #eql
+    | lhs = exp '!=' rhs = exp                                          #ne
+    | lhs = exp '>'  rhs = exp                                          #gt
+    | lhs = exp '<'  rhs = exp                                          #lt
+    | lhs = exp '>=' rhs = exp                                          #gte
+    | lhs = exp '<=' rhs = exp                                          #lte
+    | lhs = exp 'in' rhs = exp                                          #in
+    | lhs = exp AND  rhs = exp                                          #and
+    | lhs = exp OR   rhs = exp                                          #or
     | '[' range (',' range)* ']'                                        #ranges
     | path                                                              #select
     | json                                                              #literal
     | REGEX                                                             #regex
-    | '$$'                                                              #root
-    | '$'                                                               #context
     ;
 
 
@@ -69,14 +64,6 @@ json
 
 label
     : LABEL
-    ;
-
-math_op
-    : '*'   #mul
-    | '/'   #div
-    | '%'   #mod
-    | '+'   #add
-    | '-'   #sub
     ;
 
 nihil
@@ -97,7 +84,9 @@ pair
     ;
 
 path
-    : '%'   #parent
+    : '$$'  #root
+    | '$'   #context
+    | '%'   #parent
     | '*'   #all
     | '**'  #descendants
     | label #field

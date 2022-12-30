@@ -28,11 +28,17 @@ class Interpreter(
 
     } //~ companion
 
-    private val stack = ArrayDeque<JsonNode>()
+    private var context: JsonNode? = null
 
     init {
-        push(root)
+        context = root
     }
+
+    private fun context(node: JsonNode?): JsonNode? {
+        context = node
+        return context
+    }
+
 
     fun evaluate(exp: String): JsonNode? {
         return visit(JSonicParser(CommonTokenStream(JSonicLexer(CharStreams.fromString(exp)))).jsong())
@@ -46,21 +52,11 @@ class Interpreter(
         }
     }
 
-    private fun pop(): JsonNode? {
-        return stack.removeFirstOrNull()
-    }
-
-    private fun push(node: JsonNode?): JsonNode? {
-        if (node != null) {
-            stack.addFirst(node)
-        }
-        return node
-    }
-
     private fun reduce(node: JsonNode?): JsonNode? {
         return when (node) {
             is ArrayNode -> when (node.size()) {
                 0 -> null
+
                 1 -> node[0]
                 else -> node
             }
@@ -72,14 +68,13 @@ class Interpreter(
     override fun visitArray(ctx: JSonicParser.ArrayContext): JsonNode? {
         val res = ArrayNode(nf)
         ctx.exp().forEach { exp ->
-            visit(exp)
-            pop().let { res.add(it) }
+            res.add(visit(exp))
         }
-        return push(res)
+        return context(res)
     }
 
     override fun visitBool(ctx: JSonicParser.BoolContext): JsonNode? {
-        return push(
+        return context(
             when {
                 ctx.FALSE() != null -> BooleanNode.FALSE
                 ctx.TRUE() != null -> BooleanNode.TRUE
@@ -89,24 +84,30 @@ class Interpreter(
     }
 
     override fun visitContext(ctx: JSonicParser.ContextContext): JsonNode? {
-        return stack.firstOrNull()
+        return context
     }
 
     override fun visitField(ctx: JSonicParser.FieldContext): JsonNode? {
-        return push(
-            when (val lhs = pop()) {
-                is ObjectNode -> lhs[normalizeFieldName(ctx.text)]
-                else -> null
+        val res = when (context) {
+            is ObjectNode -> {
+                val node = context as ObjectNode
+                val field = normalizeFieldName(ctx.text)
+                when (node.has(field)) {
+                    true -> node[field]
+                    else -> null
+                }
             }
-        )
+
+            else -> null
+        }
+        return context(res)
     }
 
     override fun visitFilter(ctx: JSonicParser.FilterContext): JsonNode? {
         val res = ArrayNode(nf)
-        visit(ctx.lhs)
-        val lhs = expand(pop())
-        visit(ctx.rhs)
-        when (val rhs = pop()) {
+        val lhs = expand(visit(ctx.lhs))
+        context(lhs)
+        when (val rhs = visit(ctx.rhs)) {
             is NumericNode -> {
                 val i = rhs.asInt()
                 res.add(lhs[if (i < 0) lhs.size() + i else i])
@@ -119,7 +120,7 @@ class Interpreter(
                 }
             }
         }
-        return push(reduce(res))
+        return reduce(res)
     }
 
     override fun visitJsong(ctx: JSonicParser.JsongContext): JsonNode? {
@@ -132,41 +133,36 @@ class Interpreter(
 
     override fun visitMap(ctx: JSonicParser.MapContext): JsonNode? {
         val res = ArrayNode(nf)
-        expand(pop()).forEach { lhs ->
-            push(lhs)
-            visit(ctx.exp())
-            pop()?.let { rhs ->
-                when (rhs) {
-                    is ArrayNode -> res.addAll(rhs)
-                    else -> res.add(rhs)
-                }
+        expand(visit(ctx.lhs)).forEach { lhs ->
+            context(lhs)
+            when (val rhs = visit(ctx.rhs)) {
+                is ArrayNode -> res.addAll(rhs)
+                else -> rhs?.let { res.add(it) }
             }
         }
-        return push(reduce(res))
+        return context(reduce(res))
     }
 
     override fun visitNihil(ctx: JSonicParser.NihilContext): JsonNode? {
-        return push(NullNode.instance)
+        return context(NullNode.instance)
     }
 
     override fun visitNumber(ctx: JSonicParser.NumberContext): JsonNode? {
-        return push(DecimalNode(ctx.text.toBigDecimal()))
+        return context(DecimalNode(ctx.text.toBigDecimal()))
     }
 
     override fun visitObj(ctx: JSonicParser.ObjContext): JsonNode? {
-        val exp = ObjectNode(nf)
+        val res = ObjectNode(nf)
         ctx.pair().forEachIndexed { index, pair ->
-            visit(pair.key)
-            val key = pop()?.asText() ?: index.toString()
-            visit(pair.value)
-            val value = pop() ?: NullNode.instance
-            exp.set<JsonNode>(key, value)
+            val key = visit(pair.key)?.asText() ?: index.toString()
+            val value = visit(pair.value) ?: NullNode.instance
+            res.set<JsonNode>(key, value)
         }
-        return push(exp)
+        return context(res)
     }
 
     override fun visitRange(ctx: JSonicParser.RangeContext): JsonNode? {
-        return push(
+        return context(
             RangeNode.of(
                 ctx.min.text.toBigDecimal(),
                 ctx.max.text.toBigDecimal(),
@@ -178,30 +174,28 @@ class Interpreter(
     override fun visitRanges(ctx: JSonicParser.RangesContext): JsonNode? {
         val res = RangesNode(nf)
         ctx.range().forEach {
-            visit(it)
-            res.add(pop())
+            res.add(visit(it))
         }
-        return push(res)
+        return context(res)
     }
 
     override fun visitRegex(ctx: JSonicParser.RegexContext): JsonNode? {
-        return push(RegexNode(ctx.REGEX().text))
+        return context(RegexNode(ctx.REGEX().text))
     }
 
     override fun visitRoot(ctx: JSonicParser.RootContext): JsonNode? {
-        return push(root)
+        return context(root)
     }
 
     override fun visitScope(ctx: JSonicParser.ScopeContext): JsonNode? {
         ctx.exp().forEach { exp ->
-            visit(exp)
+            context(visit(exp))
         }
-        val res = pop()
-        return push(reduce(res))
+        return context
     }
 
     override fun visitText(ctx: JSonicParser.TextContext): JsonNode? {
-        return push(TextNode(ctx.text.substring(1, ctx.text.length - 1)))
+        return context(TextNode(ctx.text.substring(1, ctx.text.length - 1)))
     }
 
 }

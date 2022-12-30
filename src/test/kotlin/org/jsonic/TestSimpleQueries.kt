@@ -37,7 +37,7 @@ class TestSimpleQueries {
     }
 
     /**
-     * https://docs.jsonata.org/simple#navigating-json-objects
+     * https://docs.jsonata\.org/simple#navigating-json-objects
      */
     @Test
     fun `Field references are separated by dot`() {

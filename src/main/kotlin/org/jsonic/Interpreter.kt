@@ -87,6 +87,13 @@ class Interpreter(
         return context
     }
 
+    override fun visitEq(ctx: JSonicParser.EqContext): JsonNode? {
+        val lhs = visit(ctx.lhs)
+        val rhs = visit(ctx.rhs)
+        val res = BooleanNode.valueOf(lhs == rhs)
+        return res
+    }
+
     override fun visitField(ctx: JSonicParser.FieldContext): JsonNode? {
         val res = when (context) {
             is ObjectNode -> {
@@ -105,19 +112,30 @@ class Interpreter(
 
     override fun visitFilter(ctx: JSonicParser.FilterContext): JsonNode? {
         val res = ArrayNode(nf)
-        val lhs = expand(visit(ctx.lhs))
-        context(lhs)
-        when (val rhs = visit(ctx.rhs)) {
-            is NumericNode -> {
-                val i = rhs.asInt()
-                res.add(lhs[if (i < 0) lhs.size() + i else i])
-            }
-
-            is RangesNode -> {
-                rhs.indexes.forEach { index ->
-                    val i = index.asInt()
-                    res.add(lhs[if (i < 0) lhs.size() + i else i])
+        expand(visit(ctx.lhs)).forEachIndexed { index, lhs ->
+            context(lhs)
+            when (val rhs = visit(ctx.rhs)) {
+                is NumericNode -> {
+                    val value = rhs.asInt()
+                    val offset = if (value < 0) lhs.size() + value else value
+                    if (index == offset) {
+                        res.add(lhs)
+                    }
                 }
+
+                is RangesNode -> {
+                    if (rhs.indexes.map { it.asInt() }.contains(index)) {
+                        res.add(lhs)
+                    }
+                }
+
+                else -> {
+                    val predicate = rhs?.asBoolean() ?: false
+                    if (predicate) {
+                        res.add(lhs)
+                    }
+                }
+
             }
         }
         return reduce(res)

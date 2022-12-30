@@ -36,7 +36,7 @@ exp
     | lhs = exp '%' rhs = exp                                           #mod
     | lhs = exp '+' rhs = exp                                           #add
     | lhs = exp '-' rhs = exp                                           #sub
-    | lhs = exp '='  rhs = exp                                          #eql
+    | lhs = exp '='  rhs = exp                                          #eq
     | lhs = exp '!=' rhs = exp                                          #ne
     | lhs = exp '>'  rhs = exp                                          #gt
     | lhs = exp '<'  rhs = exp                                          #lt

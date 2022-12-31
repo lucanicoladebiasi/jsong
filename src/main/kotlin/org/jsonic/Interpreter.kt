@@ -67,6 +67,16 @@ class Interpreter(
         } else node
     }
 
+    override fun visitAll(ctx: JSonicParser.AllContext): JsonNode? {
+        val res = ArrayNode(nf)
+        if (context is ObjectNode) {
+            (context as ObjectNode).fields().forEach { field ->
+                res.add(field.value)
+            }
+        }
+        return context(reduce(res))
+    }
+
     override fun visitArray(ctx: JSonicParser.ArrayContext): JsonNode? {
         val res = ArrayNode(nf)
         ctx.exp().forEach { exp ->

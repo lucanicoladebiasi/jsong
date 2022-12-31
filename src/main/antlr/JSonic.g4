@@ -28,6 +28,7 @@ exp
     | '$' label ( '(' (exp (',' exp)*)? ')')?                           #call
     | 'fun'('ction')? '(' ('$' label (',' '$' label)*)? ')' '{' exp '}' #function
     | '^(' sort (',' sort)* ')'                                         #orderby
+    | exp'[' ']'                                                        #expand
     | lhs = exp'['  rhs = exp ']'                                       #filter
     | lhs = exp '.' rhs = exp                                           #map
     | lhs = exp '&' rhs = exp                                           #concatenate

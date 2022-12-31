@@ -30,6 +30,8 @@ class Interpreter(
 
     private var context: JsonNode? = null
 
+    private var isToReduce: Boolean = true
+
     init {
         context = root
     }
@@ -53,7 +55,7 @@ class Interpreter(
     }
 
     private fun reduce(node: JsonNode?): JsonNode? {
-        return when (node) {
+        return if (isToReduce) when (node) {
             is ArrayNode -> when (node.size()) {
                 0 -> null
 
@@ -62,7 +64,7 @@ class Interpreter(
             }
 
             else -> node
-        }
+        } else node
     }
 
     override fun visitArray(ctx: JSonicParser.ArrayContext): JsonNode? {
@@ -94,6 +96,12 @@ class Interpreter(
         return res
     }
 
+    override fun visitExpand(ctx: JSonicParser.ExpandContext): JsonNode? {
+        val res = expand(visit(ctx.exp()))
+        isToReduce = false
+        return context(res)
+    }
+
     override fun visitField(ctx: JSonicParser.FieldContext): JsonNode? {
         val res = when (context) {
             is ObjectNode -> {
@@ -114,7 +122,7 @@ class Interpreter(
         val res = ArrayNode(nf)
         val lhs = expand(visit(ctx.lhs))
         lhs.forEachIndexed { index, node ->
-            context(lhs)
+            context(node)
             when (val rhs = visit(ctx.rhs)) {
                 is NumericNode -> {
                     val value = rhs.asInt()

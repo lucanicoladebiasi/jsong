@@ -112,27 +112,28 @@ class Interpreter(
 
     override fun visitFilter(ctx: JSonicParser.FilterContext): JsonNode? {
         val res = ArrayNode(nf)
-        expand(visit(ctx.lhs)).forEachIndexed { index, lhs ->
+        val lhs = expand(visit(ctx.lhs))
+        lhs.forEachIndexed { index, node ->
             context(lhs)
             when (val rhs = visit(ctx.rhs)) {
                 is NumericNode -> {
                     val value = rhs.asInt()
                     val offset = if (value < 0) lhs.size() + value else value
                     if (index == offset) {
-                        res.add(lhs)
+                        res.add(node)
                     }
                 }
 
                 is RangesNode -> {
                     if (rhs.indexes.map { it.asInt() }.contains(index)) {
-                        res.add(lhs)
+                        res.add(node)
                     }
                 }
 
                 else -> {
                     val predicate = rhs?.asBoolean() ?: false
                     if (predicate) {
-                        res.add(lhs)
+                        res.add(node)
                     }
                 }
 

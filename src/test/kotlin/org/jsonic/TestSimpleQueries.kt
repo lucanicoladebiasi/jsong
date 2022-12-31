@@ -161,8 +161,7 @@ class TestSimpleQueries {
     fun `Doesn't exist - returns nothing`() {
         val expression = "Phone[8]"
         val actual = Interpreter(TestResources.address).evaluate(expression)
-        assertEquals(NullNode.instance, actual
-        )
+        assertNull(actual)
     }
 
     /**

@@ -41,6 +41,17 @@ class Interpreter(
         return context
     }
 
+    private fun descendants(node: JsonNode?): ArrayNode {
+        val res = ArrayNode(nf)
+        node?.fields()?.forEach { field ->
+            if (field.value != null) {
+                res.addAll(descendants(field.value))
+                res.add(field.value)
+            }
+        }
+        return res
+    }
+
 
     fun evaluate(exp: String): JsonNode? {
         return visit(JSonicParser(CommonTokenStream(JSonicLexer(CharStreams.fromString(exp)))).jsong())
@@ -97,6 +108,14 @@ class Interpreter(
 
     override fun visitContext(ctx: JSonicParser.ContextContext): JsonNode? {
         return context
+    }
+
+    override fun visitDescendants(ctx: JSonicParser.DescendantsContext): JsonNode? {
+        val res = ArrayNode(nf)
+        if (context is ObjectNode) {
+            res.addAll(descendants(context))
+        }
+        return context(reduce(res))
     }
 
     override fun visitEq(ctx: JSonicParser.EqContext): JsonNode? {

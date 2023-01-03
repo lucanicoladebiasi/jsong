@@ -107,29 +107,65 @@ interface JSonataLFunctions {
 
     // https://docs.jsonata.org/numeric-functions
 
-//    fun abs(number: JsonNode?): DecimalNode
-//
-//    fun ceil(number: JsonNode?): DecimalNode
-//
-//    fun floor(number: JsonNode?): DecimalNode
-//
-//    fun formatBase(number: JsonNode?, radix: DecimalNode?): TextNode
-//
-//    fun formatInteger(number: JsonNode?, picture: TextNode): TextNode
-//
-//    fun formatNumber(number: JsonNode?, picture: TextNode, options: TextNode?): TextNode
-//
-//    fun number(arg: JsonNode?): DecimalNode
-//
-//    fun parseInteger(string: JsonNode?, picture: TextNode): DecimalNode
-//
-//    fun power(base: JsonNode?, exponent: JsonNode?): DecimalNode
-//
-//    fun random(): DecimalNode
-//
-//    fun round(number: JsonNode?, precision: DecimalNode?): DecimalNode
-//
-//    fun sqrt(number: JsonNode?): DecimalNode
+    /**
+     * https://docs.jsonata.org/numeric-functions#abs
+     */
+    fun abs(number: DecimalNode): DecimalNode
+
+    /**
+     * https://docs.jsonata.org/numeric-functions#ceil
+     */
+    fun ceil(number: DecimalNode): DecimalNode
+
+    /**
+     * https://docs.jsonata.org/numeric-functions#floor
+     */
+    fun floor(number: DecimalNode): DecimalNode
+
+    /**
+     * https://docs.jsonata.org/numeric-functions#formatbase
+     */
+    fun formatBase(number: DecimalNode, radix: DecimalNode? = null): TextNode
+
+    /**
+     * https://docs.jsonata.org/numeric-functions#formatinteger
+     */
+    fun formatInteger(number: DecimalNode, picture: TextNode): TextNode
+
+    /**
+     * https://docs.jsonata.org/numeric-functions#formatnumber
+     */
+    fun formatNumber(number: DecimalNode, picture: TextNode, options: TextNode?): TextNode
+
+    /**
+     * https://docs.jsonata.org/numeric-functions#number
+     */
+    fun number(arg: JsonNode): DecimalNode
+
+    /**
+     * https://docs.jsonata.org/numeric-functions#random
+     */
+    fun parseInteger(string: TextNode, picture: TextNode): DecimalNode
+
+    /**
+     * https://docs.jsonata.org/numeric-functions#power
+     */
+    fun power(base: DecimalNode, exponent: DecimalNode): DecimalNode
+
+    /**
+     * https://docs.jsonata.org/numeric-functions#random
+     */
+    fun random(): DecimalNode
+
+    /**
+     * https://docs.jsonata.org/numeric-functions#round
+     */
+    fun round(number: DecimalNode, precision: DecimalNode? = null): DecimalNode
+
+    /**
+     * https://docs.jsonata.org/numeric-functions#sqrt
+     */
+    fun sqrt(number: DecimalNode): DecimalNode
 
     // https://docs.jsonata.org/object-functions
 

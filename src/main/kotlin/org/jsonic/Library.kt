@@ -5,13 +5,14 @@ import com.fasterxml.jackson.databind.node.*
 import java.lang.Error
 import java.lang.Integer.min
 import java.math.BigDecimal
+import java.math.RoundingMode
 import java.net.URLDecoder
 import java.net.URLEncoder
 import java.util.*
 
 
 class Library(
-    val interpreter: Interpreter
+    val processor: Interpreter
 ) : JSonataLFunctions {
 
     companion object {
@@ -48,10 +49,14 @@ class Library(
 
     }
 
+    override fun abs(number: DecimalNode): DecimalNode {
+        return DecimalNode(number.decimalValue().abs())
+    }
+
     override fun append(array1: JsonNode, array2: JsonNode): ArrayNode {
-        return interpreter.nf.arrayNode()
-            .addAll(interpreter.expand(array1))
-            .addAll(interpreter.expand(array2))
+        return processor.nf.arrayNode()
+            .addAll(processor.expand(array1))
+            .addAll(processor.expand(array2))
     }
 
     override fun assert(condition: JsonNode, message: JsonNode) {
@@ -91,6 +96,10 @@ class Library(
         })
     }
 
+    override fun ceil(number: DecimalNode): DecimalNode {
+        return DecimalNode(kotlin.math.ceil(number.asDouble()).toBigDecimal())
+    }
+
     override fun contains(str: TextNode, pattern: RegexNode): BooleanNode {
         return BooleanNode.valueOf(str.textValue().contains(pattern.regex))
     }
@@ -117,7 +126,7 @@ class Library(
     }
 
     override fun distinct(array: ArrayNode): ArrayNode {
-        return interpreter.nf.arrayNode().addAll(array.toSet())
+        return processor.nf.arrayNode().addAll(array.toSet())
     }
 
     override fun each(obj: ObjectNode, function: FunNode): ArrayNode {
@@ -130,7 +139,7 @@ class Library(
 
     override fun exists(arg: TextNode): BooleanNode {
         val exp = arg.textValue()
-        val res = Interpreter(interpreter.root).evaluate(exp)
+        val res = Interpreter(processor.root).evaluate(exp)
         return BooleanNode.valueOf(res != null)
     }
 
@@ -144,6 +153,27 @@ class Library(
 
     override fun eval(expr: TextNode, context: JsonNode?): JsonNode? {
         return Interpreter(context).evaluate(expr.textValue())
+    }
+
+    override fun floor(number: DecimalNode): DecimalNode {
+        return DecimalNode(kotlin.math.floor(number.asDouble()).toBigDecimal())
+    }
+
+    override fun formatBase(number: DecimalNode, radix: DecimalNode?): TextNode {
+        val base = radix?.asInt() ?: 10
+        return TextNode(when {
+            base < 2 -> throw IllegalArgumentException("<radix> < 2")
+            base > 36 -> throw IllegalArgumentException("<radix> > 36")
+            else -> number.asInt().toString(base)
+        })
+    }
+
+    override fun formatInteger(number: DecimalNode, picture: TextNode): TextNode {
+        TODO("Not yet implemented")
+    }
+
+    override fun formatNumber(number: DecimalNode, picture: TextNode, options: TextNode?): TextNode {
+        TODO("Not yet implemented")
     }
 
     override fun join(array: ArrayNode, separator: TextNode): TextNode {
@@ -166,7 +196,7 @@ class Library(
                 is ObjectNode -> keys.addAll(keys(node).map { it.textValue() })
             }
         }
-        return interpreter.nf.arrayNode().addAll(keys.map { TextNode(it) })
+        return processor.nf.arrayNode().addAll(keys.map { TextNode(it) })
     }
 
     override fun keys(obj: ObjectNode): ArrayNode {
@@ -174,11 +204,11 @@ class Library(
         obj.fieldNames().forEach { fieldName ->
             keys.add(fieldName)
         }
-        return interpreter.nf.arrayNode().addAll(keys.map { TextNode(it) })
+        return processor.nf.arrayNode().addAll(keys.map { TextNode(it) })
     }
 
     override fun lookup(array: ArrayNode, key: TextNode): JsonNode? {
-        val res = interpreter.nf.arrayNode()
+        val res = processor.nf.arrayNode()
         array.forEach { node ->
             if (node is ObjectNode) {
                 lookup(node, key)?.let { res.add(it) }
@@ -197,12 +227,12 @@ class Library(
     override fun match(str: JsonNode, pattern: RegexNode, limit: DecimalNode?) {
         pattern.regex.findAll(str.textValue()).forEachIndexed { index, matchResult ->
             if (index < (limit?.asInt() ?: Int.MAX_VALUE)) {
-                interpreter.nf.objectNode()
+                processor.nf.objectNode()
                     .put(TAG_MATCH, matchResult.value)
                     .put(TAG_INDEX, matchResult.range.first)
                     .set<ObjectNode>(
                         TAG_GROUPS,
-                        interpreter.nf.arrayNode().add(matchResult.groupValues.map { TextNode(it) }.last())
+                        processor.nf.arrayNode().add(matchResult.groupValues.map { TextNode(it) }.last())
                     )
             }
         }
@@ -213,7 +243,7 @@ class Library(
     }
 
     override fun merge(array: ArrayNode): ObjectNode {
-        val res = interpreter.nf.objectNode()
+        val res = processor.nf.objectNode()
         array.filterIsInstance<ObjectNode>().forEach { obj ->
             obj.fieldNames().forEach { fieldName ->
                 res.set<JsonNode>(fieldName, obj[fieldName])
@@ -230,6 +260,18 @@ class Library(
         return BooleanNode.valueOf(!arg.booleanValue())
     }
 
+    override fun number(arg: JsonNode): DecimalNode {
+        return DecimalNode(when(arg) {
+            is BooleanNode -> when(arg.booleanValue()) {
+                true -> BigDecimal.ONE
+                else -> BigDecimal.ZERO
+            }
+            is NumericNode -> arg.decimalValue()
+            is TextNode -> BigDecimal(arg.textValue())
+            else -> throw IllegalArgumentException("$arg can't cast to number")
+        })
+    }
+
     override fun pad(str: TextNode, width: DecimalNode, char: TextNode): TextNode {
         val w = width.asInt()
         return TextNode(
@@ -238,6 +280,18 @@ class Library(
                 else -> str.textValue().padEnd(w, char.textValue()[0])
             }
         )
+    }
+
+    override fun parseInteger(string: TextNode, picture: TextNode): DecimalNode {
+        TODO("Not yet implemented")
+    }
+
+    override fun power(base: DecimalNode, exponent: DecimalNode): DecimalNode {
+       return DecimalNode(base.decimalValue().pow(exponent.asInt()))
+    }
+
+    override fun random(): DecimalNode {
+        return DecimalNode(processor.random.nextDouble().toBigDecimal())
     }
 
     // todo: implement limit
@@ -251,11 +305,16 @@ class Library(
     }
 
     override fun reverse(array: ArrayNode): ArrayNode {
-        return interpreter.nf.arrayNode().addAll(array.reversed())
+        return processor.nf.arrayNode().addAll(array.reversed())
+    }
+
+    override fun round(number: DecimalNode, precision: DecimalNode?): DecimalNode {
+        val scale = precision?.asInt() ?: 0
+        return DecimalNode(number.decimalValue().setScale(scale, RoundingMode.HALF_EVEN))
     }
 
     override fun shuffle(array: ArrayNode): ArrayNode {
-        return interpreter.nf.arrayNode().addAll(array.shuffled(interpreter.random))
+        return processor.nf.arrayNode().addAll(array.shuffled(processor.random))
     }
 
     override fun sort(array: ArrayNode, function: FunNode?): ArrayNode {
@@ -263,7 +322,7 @@ class Library(
     }
 
     override fun split(str: TextNode, separator: RegexNode, limit: DecimalNode?): ArrayNode {
-        return interpreter.nf.arrayNode().addAll(
+        return processor.nf.arrayNode().addAll(
             str.textValue()
                 .split(separator.regex, limit?.asInt() ?: 0)
                 .map { TextNode(it) }
@@ -271,7 +330,7 @@ class Library(
     }
 
     override fun split(str: TextNode, separator: TextNode, limit: DecimalNode?): ArrayNode {
-        return interpreter.nf.arrayNode().addAll(
+        return processor.nf.arrayNode().addAll(
             str.textValue()
                 .split(separator.asText(), ignoreCase = false, limit = limit?.asInt() ?: 0)
                 .map { TextNode(it) }
@@ -279,7 +338,7 @@ class Library(
     }
 
     override fun spread(array: ArrayNode): ArrayNode {
-        val res = interpreter.nf.arrayNode()
+        val res = processor.nf.arrayNode()
         array.filterIsInstance<ObjectNode>().forEach { obj ->
             res.addAll(spread(obj))
         }
@@ -287,11 +346,15 @@ class Library(
     }
 
     override fun spread(obj: ObjectNode): ArrayNode {
-        val res = interpreter.nf.arrayNode()
+        val res = processor.nf.arrayNode()
         obj.fieldNames().forEach { fieldName ->
-            res.add(interpreter.nf.objectNode().set<JsonNode>(fieldName, obj[fieldName]))
+            res.add(processor.nf.objectNode().set<JsonNode>(fieldName, obj[fieldName]))
         }
         return res
+    }
+
+    override fun sqrt(number: DecimalNode): DecimalNode {
+        return DecimalNode(kotlin.math.sqrt(number.asDouble()).toBigDecimal())
     }
 
     override fun string(arg: JsonNode?, prettify: BooleanNode?): TextNode {
@@ -299,8 +362,8 @@ class Library(
             is TextNode -> arg
             else -> TextNode(
                 when (prettify?.asBoolean() ?: false) {
-                    true -> interpreter.om.writerWithDefaultPrettyPrinter().writeValueAsString(arg)
-                    else -> interpreter.om.writeValueAsString(arg)
+                    true -> processor.om.writerWithDefaultPrettyPrinter().writeValueAsString(arg)
+                    else -> processor.om.writeValueAsString(arg)
                 }
             )
         }
@@ -357,9 +420,9 @@ class Library(
         arrays.forEach { array ->
             len = min(len, array.size())
         }
-        val res = interpreter.nf.arrayNode()
+        val res = processor.nf.arrayNode()
         for(i in 0 until len) {
-            res.add(interpreter.nf.arrayNode())
+            res.add(processor.nf.arrayNode())
             for(j in arrays.indices) {
                 if (i < arrays[j].size()) {
                     (res[i] as ArrayNode).add(arrays[j][i])

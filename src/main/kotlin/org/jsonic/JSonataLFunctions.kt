@@ -72,15 +72,30 @@ interface JSonataLFunctions {
 
     // https://docs.jsonata.org/higher-order-functions
 
-//    fun filter(array: JsonNode, function: FunNode): ArrayNode
-//
-//    fun map(array: JsonNode, function: FunNode): ArrayNode
-//
-//    fun reduce(array: JsonNode, function: FunNode, init: FunNode): JsonNode
-//
-//    fun sift(obj: JsonNode, function: FunNode): JsonNode
-//
-//    fun single(array: JsonNode, function: FunNode): JsonNode
+    /**
+     * https://docs.jsonata.org/higher-order-functions#filter
+     */
+    fun filter(array: ArrayNode, function: FunNode): ArrayNode
+
+    /**
+     * https://docs.jsonata.org/higher-order-functions#map
+     */
+    fun map(array: ArrayNode, function: FunNode): ArrayNode
+
+    /**
+     * https://docs.jsonata.org/higher-order-functions#reduce
+     */
+    fun reduce(array: ArrayNode, function: FunNode, init: FunNode): JsonNode
+
+    /**
+     * https://docs.jsonata.org/higher-order-functions#reduce
+     */
+    fun sift(obj: ObjectNode, function: FunNode): JsonNode
+
+    /**
+     * https://docs.jsonata.org/higher-order-functions#single
+     */
+    fun single(array: ArrayNode, function: FunNode): JsonNode
 
     // https://docs.jsonata.org/aggregation-functions
 

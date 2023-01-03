@@ -155,6 +155,10 @@ class Library(
         return Interpreter(context).evaluate(expr.textValue())
     }
 
+    override fun filter(array: ArrayNode, function: FunNode): ArrayNode {
+        TODO("Not yet implemented")
+    }
+
     override fun floor(number: DecimalNode): DecimalNode {
         return DecimalNode(kotlin.math.floor(number.asDouble()).toBigDecimal())
     }
@@ -180,14 +184,6 @@ class Library(
         return TextNode(array.joinToString(separator.textValue()))
     }
 
-    override fun length(str: TextNode): DecimalNode {
-        return DecimalNode(string(str).textValue().length.toBigDecimal())
-    }
-
-    override fun lowercase(str: TextNode): TextNode {
-        return TextNode(str.textValue().lowercase())
-    }
-
     override fun keys(arr: ArrayNode): ArrayNode {
         val keys = mutableSetOf<String>()
         arr.forEach { node ->
@@ -207,6 +203,14 @@ class Library(
         return processor.nf.arrayNode().addAll(keys.map { TextNode(it) })
     }
 
+    override fun length(str: TextNode): DecimalNode {
+        return DecimalNode(string(str).textValue().length.toBigDecimal())
+    }
+
+    override fun lowercase(str: TextNode): TextNode {
+        return TextNode(str.textValue().lowercase())
+    }
+
     override fun lookup(array: ArrayNode, key: TextNode): JsonNode? {
         val res = processor.nf.arrayNode()
         array.forEach { node ->
@@ -222,6 +226,10 @@ class Library(
             true -> obj[key.textValue()]
             else -> null
         }
+    }
+
+    override fun map(array: ArrayNode, function: FunNode): ArrayNode {
+        TODO("Not yet implemented")
     }
 
     override fun match(str: JsonNode, pattern: RegexNode, limit: DecimalNode?) {
@@ -294,6 +302,10 @@ class Library(
         return DecimalNode(processor.random.nextDouble().toBigDecimal())
     }
 
+    override fun reduce(array: ArrayNode, function: FunNode, init: FunNode): JsonNode {
+        TODO("Not yet implemented")
+    }
+
     // todo: implement limit
     override fun replace(str: TextNode, pattern: RegexNode, replacement: TextNode, limit: DecimalNode?): TextNode {
         return TextNode(str.textValue().replace(pattern.regex, replacement.textValue()))
@@ -315,6 +327,14 @@ class Library(
 
     override fun shuffle(array: ArrayNode): ArrayNode {
         return processor.nf.arrayNode().addAll(array.shuffled(processor.random))
+    }
+
+    override fun sift(obj: ObjectNode, function: FunNode): JsonNode {
+        TODO("Not yet implemented")
+    }
+
+    override fun single(array: ArrayNode, function: FunNode): JsonNode {
+        TODO("Not yet implemented")
     }
 
     override fun sort(array: ArrayNode, function: FunNode?): ArrayNode {

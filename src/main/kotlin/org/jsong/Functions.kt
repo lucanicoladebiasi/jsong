@@ -603,6 +603,8 @@ class Functions(
         throw UnsupportedOperationException("Not implemented yet")
     }
 
+
+
     fun power(base: JsonNode?, exponent: JsonNode?): DecimalNode {
         return DecimalNode(
             when (base) {

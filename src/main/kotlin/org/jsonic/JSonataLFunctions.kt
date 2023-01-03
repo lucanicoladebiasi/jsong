@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.node.*
 
 interface JSonataLFunctions {
 
+
+
     // https://docs.jsonata.org/array-functions
 
 //    fun append(array1: JsonNode?, array2: JsonNode?): ArrayNode
@@ -100,21 +102,59 @@ interface JSonataLFunctions {
 
     // https://docs.jsonata.org/object-functions
 
-//    fun assert(condition: JsonNode, message: JsonNode)
-//
-//    fun each(obj: ObjectNode, function: FunNode): ArrayNode
-//
-//    fun error(message: JsonNode)
-//
-//    fun keys(obj: ObjectNode): ArrayNode
-//
-//    fun lookup(obj: ObjectNode, key: JsonNode): JsonNode?
-//
-//    fun merge(array: ArrayNode): ObjectNode
-//
-//    fun spread(obj: ObjectNode): ArrayNode
-//
-//    fun type(value: JsonNode): TextNode
+    /**
+     * https://docs.jsonata.org/object-functions#assert
+     */
+    @Throws(AssertionError::class)
+    fun assert(condition: JsonNode, message: JsonNode)
+
+    /**
+     * https://docs.jsonata.org/object-functions#each
+     */
+    fun each(obj: ObjectNode, function: FunNode): ArrayNode
+
+    /**
+     * https://docs.jsonata.org/object-functions#error
+     */
+    @Throws(Error::class)
+    fun error(message: JsonNode)
+
+    /**
+     * https://docs.jsonata.org/object-functions#keys
+     */
+    fun keys(arr: ArrayNode): ArrayNode
+
+    /**
+     * https://docs.jsonata.org/object-functions#keys
+     */
+    fun keys(obj: ObjectNode): ArrayNode
+
+    /**
+     * https://docs.jsonata.org/object-functions#lookup
+     */
+    fun lookup(array: ArrayNode, key: TextNode): JsonNode?
+
+    /**
+     * https://docs.jsonata.org/object-functions#lookup
+     */
+    fun lookup(obj: ObjectNode, key: TextNode): JsonNode?
+
+    fun merge(array: ArrayNode): ObjectNode
+
+    /**
+     * https://docs.jsonata.org/object-functions#spread
+     */
+    fun spread(array: ArrayNode): ArrayNode
+
+    /**
+     * https://docs.jsonata.org/object-functions#spread
+     */
+    fun spread(obj: ObjectNode): ArrayNode
+
+    /**
+     * https://docs.jsonata.org/object-functions#type
+     */
+    fun type(value: JsonNode?): TextNode
 
     // https://docs.jsonata.org/string-functions
 

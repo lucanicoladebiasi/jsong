@@ -11,8 +11,8 @@ import org.jsong.antlr.JSonicLexer
 import org.jsong.antlr.JSonicParser
 
 class Interpreter(
-    private val root: JsonNode? = null,
-    private val nf: JsonNodeFactory = ObjectMapper().nodeFactory
+    val root: JsonNode? = null,
+    val om: ObjectMapper = ObjectMapper()
 ) : JSonicBaseVisitor<JsonNode?>() {
 
     companion object {
@@ -31,6 +31,8 @@ class Interpreter(
     private var context: JsonNode? = null
 
     private var isToReduce: Boolean = true
+
+    val nf = om.nodeFactory
 
     init {
         context = root
@@ -122,7 +124,7 @@ class Interpreter(
         val lhs = visit(ctx.lhs)
         val rhs = visit(ctx.rhs)
         val res = BooleanNode.valueOf(lhs == rhs)
-        return res
+        return context(res)
     }
 
     override fun visitExpand(ctx: JSonicParser.ExpandContext): JsonNode? {

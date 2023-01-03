@@ -60,6 +60,10 @@ class Library(
         }
     }
 
+    override fun average(array: ArrayNode): DecimalNode {
+        return DecimalNode(sum(array).decimalValue().divide(array.size().toBigDecimal()))
+    }
+
     override fun base64decode(str: TextNode): TextNode {
         return TextNode(Base64.getDecoder().decode(str.textValue()).toString())
     }
@@ -204,6 +208,10 @@ class Library(
         }
     }
 
+    override fun max(array: ArrayNode): DecimalNode {
+        return DecimalNode(array.filterIsInstance<NumericNode>().maxOf { it.asDouble() }.toBigDecimal())
+    }
+
     override fun merge(array: ArrayNode): ObjectNode {
         val res = interpreter.nf.objectNode()
         array.filterIsInstance<ObjectNode>().forEach { obj ->
@@ -212,6 +220,10 @@ class Library(
             }
         }
         return res
+    }
+
+    override fun min(array: ArrayNode): DecimalNode {
+        return DecimalNode(array.filterIsInstance<NumericNode>().minOf { it.asDouble() }.toBigDecimal())
     }
 
     override fun not(arg: BooleanNode): BooleanNode {
@@ -311,6 +323,10 @@ class Library(
 
     override fun substringBefore(str: TextNode, chars: TextNode): TextNode {
         return TextNode(str.textValue().substringBefore(chars.textValue()))
+    }
+
+    override fun sum(array: ArrayNode): DecimalNode {
+        return DecimalNode(array.filterIsInstance<NumericNode>().sumOf { it.decimalValue() })
     }
 
     override fun trim(str: TextNode): TextNode {

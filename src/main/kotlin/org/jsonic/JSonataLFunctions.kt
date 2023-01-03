@@ -5,23 +5,42 @@ import com.fasterxml.jackson.databind.node.*
 
 interface JSonataLFunctions {
 
-
-
     // https://docs.jsonata.org/array-functions
 
-//    fun append(array1: JsonNode?, array2: JsonNode?): ArrayNode
-//
-//    fun count(array: JsonNode?): DecimalNode
-//
-//    fun distinct(array: ArrayNode): ArrayNode
-//
-//    fun reverse(array: JsonNode): ArrayNode
-//
-//    fun shuffle(array: JsonNode): ArrayNode
-//
-//    fun sort(array: JsonNode?, function: FunNode?): ArrayNode
-//
-//    fun zip(vararg arrays: JsonNode): ArrayNode
+    /**
+     * https://docs.jsonata.org/array-functions#append
+     */
+    fun append(array1: JsonNode, array2: JsonNode): ArrayNode
+
+    /**
+     * https://docs.jsonata.org/array-functions#count
+     */
+    fun count(array: JsonNode): DecimalNode
+
+    /**
+     * https://docs.jsonata.org/array-functions#distinct
+     */
+    fun distinct(array: ArrayNode): ArrayNode
+
+    /**
+     * https://docs.jsonata.org/array-functions#reverse
+     */
+    fun reverse(array: ArrayNode): ArrayNode
+
+    /**
+     * https://docs.jsonata.org/array-functions#shuffle
+     */
+    fun shuffle(array: ArrayNode): ArrayNode
+
+    /**
+     * https://docs.jsonata.org/array-functions#sort
+     */
+    fun sort(array: ArrayNode, function: FunNode?): ArrayNode
+
+    /**
+     * https://docs.jsonata.org/array-functions#zip
+     */
+    fun zip(vararg arrays: ArrayNode): ArrayNode
 
     // https://docs.jsonata.org/boolean-functions
 

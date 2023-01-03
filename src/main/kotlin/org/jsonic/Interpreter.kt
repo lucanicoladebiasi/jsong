@@ -9,10 +9,12 @@ import org.jsong.RegexNode
 import org.jsong.antlr.JSonicBaseVisitor
 import org.jsong.antlr.JSonicLexer
 import org.jsong.antlr.JSonicParser
+import kotlin.random.Random
 
 class Interpreter(
     val root: JsonNode? = null,
-    val om: ObjectMapper = ObjectMapper()
+    val om: ObjectMapper = ObjectMapper(),
+    val random: Random = Random.Default
 ) : JSonicBaseVisitor<JsonNode?>() {
 
     companion object {
@@ -59,7 +61,7 @@ class Interpreter(
         return visit(JSonicParser(CommonTokenStream(JSonicLexer(CharStreams.fromString(exp)))).jsong())
     }
 
-    private fun expand(node: JsonNode?): ArrayNode {
+    internal fun expand(node: JsonNode?): ArrayNode {
         return when (node) {
             null -> ArrayNode(nf)
             is ArrayNode -> node

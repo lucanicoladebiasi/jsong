@@ -3,10 +3,12 @@ package org.jsonic
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.*
 import java.lang.Error
+import java.lang.Integer.min
 import java.math.BigDecimal
 import java.net.URLDecoder
 import java.net.URLEncoder
 import java.util.*
+
 
 class Library(
     val interpreter: Interpreter
@@ -44,6 +46,12 @@ class Library(
          */
         private val whitespaceRegex = "\\s+".toRegex()
 
+    }
+
+    override fun append(array1: JsonNode, array2: JsonNode): ArrayNode {
+        return interpreter.nf.arrayNode()
+            .addAll(interpreter.expand(array1))
+            .addAll(interpreter.expand(array2))
     }
 
     override fun assert(condition: JsonNode, message: JsonNode) {
@@ -87,12 +95,25 @@ class Library(
         return BooleanNode.valueOf(str.textValue().contains(pattern.textValue()))
     }
 
+    override fun count(array: JsonNode): DecimalNode {
+        return DecimalNode(
+            when (array) {
+                is ArrayNode -> array.size().toBigDecimal()
+                else -> BigDecimal.ONE
+            }
+        )
+    }
+
     override fun decodeUrl(str: TextNode): TextNode {
         return TextNode(URLDecoder.decode(str.textValue(), Charsets.UTF_8.toString()))
     }
 
     override fun decodeUrlComponent(str: TextNode): TextNode {
         return TextNode(URLDecoder.decode(str.textValue(), Charsets.UTF_8.toString()))
+    }
+
+    override fun distinct(array: ArrayNode): ArrayNode {
+        return interpreter.nf.arrayNode().addAll(array.toSet())
     }
 
     override fun each(obj: ObjectNode, function: FunNode): ArrayNode {
@@ -217,6 +238,18 @@ class Library(
         return TextNode(str.textValue().replace(pattern.textValue(), replacement.textValue()))
     }
 
+    override fun reverse(array: ArrayNode): ArrayNode {
+        return interpreter.nf.arrayNode().addAll(array.reversed())
+    }
+
+    override fun shuffle(array: ArrayNode): ArrayNode {
+        return interpreter.nf.arrayNode().addAll(array.shuffled(interpreter.random))
+    }
+
+    override fun sort(array: ArrayNode, function: FunNode?): ArrayNode {
+        TODO("Not yet implemented")
+    }
+
     override fun split(str: TextNode, separator: RegexNode, limit: DecimalNode?): ArrayNode {
         return interpreter.nf.arrayNode().addAll(
             str.textValue()
@@ -301,6 +334,23 @@ class Library(
 
     override fun uppercase(str: TextNode): TextNode {
         return TextNode(str.textValue().uppercase())
+    }
+
+    override fun zip(vararg arrays: ArrayNode): ArrayNode {
+        var len = Int.MAX_VALUE
+        arrays.forEach { array ->
+            len = min(len, array.size())
+        }
+        val res = interpreter.nf.arrayNode()
+        for(i in 0 until len) {
+            res.add(interpreter.nf.arrayNode())
+            for(j in arrays.indices) {
+                if (i < arrays[j].size()) {
+                    (res[i] as ArrayNode).add(arrays[j][i])
+                }
+            }
+        }
+        return res
     }
 
 }

@@ -8,8 +8,12 @@ class Test {
     @Test
     fun `Returns a JSON string`() {
         val expression = "Phone.number[0]"
-        val actual = Interpreter(TestResources.address).evaluate(expression)
-        println(actual)
+        val processor = Processor(TestResources.address)
+
+        val l = processor.lib::class
+        l.members.forEach { k ->
+
+        }
     }
 
 }

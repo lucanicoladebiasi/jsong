@@ -13,7 +13,7 @@ import java.time.Instant
 import java.util.*
 import kotlin.random.Random
 
-class Processor internal constructor(
+class _Processor internal constructor(
     private val mapper: ObjectMapper,
     private val random: Random,
     private val time: Instant,
@@ -748,7 +748,7 @@ class Processor internal constructor(
         val name = ctx.label().text
         val function = functions[name]
         if (function != null) {
-            val pro = Processor(mapper, random, time, null)
+            val pro = _Processor(mapper, random, time, null)
             val pop = pop()
             for(i in function.args.indices) {
                 push(pop)

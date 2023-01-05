@@ -12,7 +12,7 @@ import java.util.*
 
 
 class Library(
-    val processor: Interpreter
+    val processor: Processor
 ) : JSonataLFunctions {
 
     companion object {
@@ -139,7 +139,7 @@ class Library(
 
     override fun exists(arg: TextNode): BooleanNode {
         val exp = arg.textValue()
-        val res = Interpreter(processor.root).evaluate(exp)
+        val res = Processor(processor.root).evaluate(exp)
         return BooleanNode.valueOf(res != null)
     }
 
@@ -152,7 +152,7 @@ class Library(
     }
 
     override fun eval(expr: TextNode, context: JsonNode?): JsonNode? {
-        return Interpreter(context).evaluate(expr.textValue())
+        return Processor(context).evaluate(expr.textValue())
     }
 
     override fun filter(array: ArrayNode, function: FunNode): ArrayNode {
@@ -453,3 +453,4 @@ class Library(
     }
 
 }
+

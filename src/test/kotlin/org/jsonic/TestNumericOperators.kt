@@ -19,7 +19,7 @@ class TestNumericOperators {
     fun Addition() {
         val expression = "5 + 2"
         val expected = DecimalNode(BigDecimal.valueOf(7L))
-        val actual = Interpreter().evaluate(expression)
+        val actual = Processor().evaluate(expression)
         assertEquals(expected, actual)
     }
 
@@ -30,7 +30,7 @@ class TestNumericOperators {
     fun Subtraction() {
         val expression = "5 - 2"
         val expected = DecimalNode(BigDecimal(3L))
-        val actual = Interpreter().evaluate(expression)
+        val actual = Processor().evaluate(expression)
         assertEquals(expected, actual)
     }
 
@@ -41,7 +41,7 @@ class TestNumericOperators {
     fun Negation() {
         val expression = "-42"
         val expected = DecimalNode(BigDecimal(-42))
-        val actual = Interpreter().evaluate(expression)
+        val actual = Processor().evaluate(expression)
         assertEquals(expected, actual)
     }
 
@@ -52,7 +52,7 @@ class TestNumericOperators {
     fun Multiplication() {
         val expression = "5 * 2"
         val expected = DecimalNode(BigDecimal(10L))
-        val actual = Interpreter().evaluate(expression)
+        val actual = Processor().evaluate(expression)
         assertEquals(expected, actual)
     }
 
@@ -63,7 +63,7 @@ class TestNumericOperators {
     fun Division() {
         val expression = "5 / 2"
         val expected = DecimalNode(BigDecimal(2.5))
-        val actual = Interpreter().evaluate(expression)
+        val actual = Processor().evaluate(expression)
         assertEquals(expected, actual)
     }
 
@@ -74,7 +74,7 @@ class TestNumericOperators {
     fun Reminder() {
         val expression = "5 % 2"
         val expected = DecimalNode(BigDecimal.ONE)
-        val actual = Interpreter().evaluate(expression)
+        val actual = Processor().evaluate(expression)
         assertEquals(expected, actual)
     }
 
@@ -85,7 +85,7 @@ class TestNumericOperators {
     fun Range() {
         val expression = "[1..5]"
         val expected = TestResources.mapper.readTree("[1, 2, 3, 4, 5]")
-        val actual = (Interpreter().evaluate(expression) as RangeNode).indexes
+        val actual = (Processor().evaluate(expression) as RangeNode).indexes
         assertEquals(expected, actual)
     }
 
@@ -96,7 +96,7 @@ class TestNumericOperators {
     fun `Range gap`() {
         val expression = "[1..3, 7..9]"
         val expected = TestResources.mapper.readTree("[1, 2, 3, 7, 8, 9]")
-        val actual = (Interpreter().evaluate(expression) as RangesNode).indexes
+        val actual = (Processor().evaluate(expression) as RangesNode).indexes
         assertEquals(expected, actual)
     }
 
@@ -107,7 +107,7 @@ class TestNumericOperators {
     fun `Range expression`() {
         val expression = "[1..\$count(Items)].(\"Item \" & \$)"
         val expected = TestResources.mapper.readTree("[\"Item 1\",\"Item 2\",\"Item 3\"]")
-        val actual = Interpreter().evaluate(expression)
+        val actual = Processor().evaluate(expression)
         assertEquals(expected, actual)
     }
 
@@ -123,7 +123,7 @@ class TestNumericOperators {
             .add(BigDecimal(9L))
             .add(BigDecimal(16L))
             .add(BigDecimal(25L))
-        val actual = Interpreter().evaluate(expression)
+        val actual = Processor().evaluate(expression)
         assertEquals(expected, actual)
     }
 

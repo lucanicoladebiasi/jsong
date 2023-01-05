@@ -11,7 +11,7 @@ import org.jsong.antlr.JSonicLexer
 import org.jsong.antlr.JSonicParser
 import kotlin.random.Random
 
-class Interpreter(
+class Processor(
     val root: JsonNode? = null,
     val om: ObjectMapper = ObjectMapper(),
     val random: Random = Random.Default
@@ -33,6 +33,8 @@ class Interpreter(
     private var context: JsonNode? = null
 
     private var isToReduce: Boolean = true
+
+    val lib: JSonataLFunctions = Library(this)
 
     val nf = om.nodeFactory
 

@@ -21,7 +21,7 @@ class TestSimpleQueries {
     fun `Returns a JSON string`() {
         val expression = "Surname"
         val expected = TextNode("Smith")
-        val actual = Interpreter(TestResources.address).evaluate(expression)
+        val actual = Processor(TestResources.address).evaluate(expression)
         assertEquals(expected, actual)
     }
 
@@ -32,7 +32,7 @@ class TestSimpleQueries {
     fun `Returns a JSON number`() {
         val expression = "Age"
         val expected = 28
-        val actual = Interpreter(TestResources.address).evaluate(expression)
+        val actual = Processor(TestResources.address).evaluate(expression)
         assertEquals(expected, actual?.asInt())
     }
 
@@ -43,7 +43,7 @@ class TestSimpleQueries {
     fun `Field references are separated by dot`() {
         val expression = "Address.City"
         val expected = TextNode("Winchester")
-        val actual = Interpreter(TestResources.address).evaluate(expression)
+        val actual = Processor(TestResources.address).evaluate(expression)
         assertEquals(expected, actual)
     }
 
@@ -54,7 +54,7 @@ class TestSimpleQueries {
     fun `Matched the path and returns the null value`() {
         val expression = "Other.Misc"
         val expected = NullNode.instance
-        val actual = Interpreter(TestResources.address).evaluate(expression)
+        val actual = Processor(TestResources.address).evaluate(expression)
         assertEquals(expected, actual)
     }
 
@@ -64,7 +64,7 @@ class TestSimpleQueries {
     @Test
     fun `Path not found`() {
         val expression = "Other.Nothing"
-        val actual = Interpreter(TestResources.address).evaluate(expression)
+        val actual = Processor(TestResources.address).evaluate(expression)
         assertNull(actual)
     }
 
@@ -75,7 +75,7 @@ class TestSimpleQueries {
     fun `Field references containing whitespace or reserved tokens can be enclosed in backticks`() {
         val expression = "Other.`Over 18 ?`"
         val expected = BooleanNode.TRUE
-        val actual = Interpreter(TestResources.address).evaluate(expression)
+        val actual = Processor(TestResources.address).evaluate(expression)
         assertEquals(expected, actual)
     }
 
@@ -94,7 +94,7 @@ class TestSimpleQueries {
             }
         """.trimIndent()
         )
-        val actual = Interpreter(TestResources.address).evaluate(expression)
+        val actual = Processor(TestResources.address).evaluate(expression)
         assertEquals(expected, actual)
     }
 
@@ -112,7 +112,7 @@ class TestSimpleQueries {
               "number": "01962 001234" }
         """.trimIndent()
         )
-        val actual = Interpreter(TestResources.address).evaluate(expression)
+        val actual = Processor(TestResources.address).evaluate(expression)
         assertEquals(expected, actual)
     }
 
@@ -131,7 +131,7 @@ class TestSimpleQueries {
             }
         """.trimIndent()
         )
-        val actual = Interpreter(TestResources.address).evaluate(expression)
+        val actual = Processor(TestResources.address).evaluate(expression)
         assertEquals(expected, actual)
     }
 
@@ -150,7 +150,7 @@ class TestSimpleQueries {
             }
         """.trimIndent()
         )
-        val actual = Interpreter(TestResources.address).evaluate(expression)
+        val actual = Processor(TestResources.address).evaluate(expression)
         assertEquals(expected, actual)
     }
 
@@ -160,7 +160,7 @@ class TestSimpleQueries {
     @Test
     fun `Doesn't exist - returns nothing`() {
         val expression = "Phone[8]"
-        val actual = Interpreter(TestResources.address).evaluate(expression)
+        val actual = Processor(TestResources.address).evaluate(expression)
         assertNull(actual)
     }
 
@@ -176,7 +176,7 @@ class TestSimpleQueries {
             "0203 544 1234"
         """.trimIndent()
         )
-        val actual = Interpreter(TestResources.address).evaluate(expression)
+        val actual = Processor(TestResources.address).evaluate(expression)
         assertEquals(expected, actual)
     }
 
@@ -197,7 +197,7 @@ class TestSimpleQueries {
             ]
             """.trimIndent()
         )
-        val actual = Interpreter(TestResources.address).evaluate(expression)
+        val actual = Processor(TestResources.address).evaluate(expression)
         assertEquals(expected, actual)
     }
 
@@ -218,7 +218,7 @@ class TestSimpleQueries {
             ]
             """.trimIndent()
         )
-        val actual = Interpreter(TestResources.address).evaluate(expression)
+        val actual = Processor(TestResources.address).evaluate(expression)
         assertEquals(expected, actual)
     }
 
@@ -234,7 +234,7 @@ class TestSimpleQueries {
             "0203 544 1234"
             """.trimIndent()
         )
-        val actual = Interpreter(TestResources.address).evaluate(expression)
+        val actual = Processor(TestResources.address).evaluate(expression)
         assertEquals(expected, actual)
     }
 
@@ -253,7 +253,7 @@ class TestSimpleQueries {
             ]
         """.trimIndent()
         )
-        val actual = Interpreter(TestResources.address).evaluate(expression)
+        val actual = Processor(TestResources.address).evaluate(expression)
         assertEquals(expected, actual)
     }
 
@@ -267,7 +267,7 @@ class TestSimpleQueries {
         val expected = TestResources.mapper.readTree("""
             { "ref": [ 1,2 ] }
         """.trimIndent())
-        val actual = Interpreter(TestResources.array).evaluate(expression)
+        val actual = Processor(TestResources.array).evaluate(expression)
         assertEquals(expected, actual)
     }
 
@@ -278,7 +278,7 @@ class TestSimpleQueries {
     fun `Dot ref here returns the entire internal array`() {
         val expression = "$[0].ref"
         val expected = TestResources.mapper.readTree("[1, 2]")
-        val actual = Interpreter(TestResources.array).evaluate(expression)
+        val actual = Processor(TestResources.array).evaluate(expression)
         assertEquals(expected, actual)
     }
 
@@ -289,7 +289,7 @@ class TestSimpleQueries {
     fun `Returns element on first position of the internal array`() {
         val expression = "$[0].ref[0]"
         val expected = TestResources.mapper.readTree("1")
-        val actual = Interpreter(TestResources.array).evaluate(expression)
+        val actual = Processor(TestResources.array).evaluate(expression)
         assertEquals(expected, actual)
     }
 
@@ -300,7 +300,7 @@ class TestSimpleQueries {
     fun `Despite the structure of the nested array, the resultant selection is flattened into a single flat array`() {
         val expression = "$.ref"
         val expected = TestResources.mapper.readTree("[1, 2, 3, 4]")
-        val actual = Interpreter(TestResources.array).evaluate(expression)
+        val actual = Processor(TestResources.array).evaluate(expression)
         assertEquals(expected, actual)
     }
 

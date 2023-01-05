@@ -22,7 +22,7 @@ class TestPredicateQueries {
                 { "type": "mobile",  "number": "077 7700 1234" }
                 """.trimIndent()
         )
-        val actual = Interpreter(TestResources.address).evaluate(expression)
+        val actual = Processor(TestResources.address).evaluate(expression)
         assertEquals(expected, actual)
     }
 
@@ -38,7 +38,7 @@ class TestPredicateQueries {
                 "077 7700 1234"
                 """.trimIndent()
         )
-        val actual = Interpreter(TestResources.address).evaluate(expression)
+        val actual = Processor(TestResources.address).evaluate(expression)
         assertEquals(expected, actual)
     }
 
@@ -54,7 +54,7 @@ class TestPredicateQueries {
             [ "01962 001234",  "01962 001235" ]
             """.trimIndent()
         )
-        val actual = Interpreter(TestResources.address).evaluate(expression)
+        val actual = Processor(TestResources.address).evaluate(expression)
         assertEquals(expected, actual)
     }
 
@@ -70,7 +70,7 @@ class TestPredicateQueries {
             ["Winchester"]
             """.trimIndent()
         )
-        val actual = Interpreter(TestResources.address).evaluate(expression)
+        val actual = Processor(TestResources.address).evaluate(expression)
         assertEquals(expected, actual)
     }
 
@@ -86,7 +86,7 @@ class TestPredicateQueries {
             [ "0203 544 1234" ]
             """.trimIndent()
         )
-        val actual = Interpreter(TestResources.address).evaluate(expression)
+        val actual = Processor(TestResources.address).evaluate(expression)
         assertEquals(expected, actual)
     }
 
@@ -102,7 +102,7 @@ class TestPredicateQueries {
              [ "0203 544 1234" ]
             """.trimIndent()
         )
-        val actual = Interpreter(TestResources.address).evaluate(expression)
+        val actual = Processor(TestResources.address).evaluate(expression)
         assertEquals(expected, actual)
     }
 
@@ -118,7 +118,7 @@ class TestPredicateQueries {
             [ "01962 001234", "01962 001235" ]
             """.trimIndent()
         )
-        val actual = Interpreter(TestResources.address).evaluate(expression)
+        val actual = Processor(TestResources.address).evaluate(expression)
         assertEquals(expected, actual)
     }
 
@@ -134,7 +134,7 @@ class TestPredicateQueries {
             [ "Hursley Park", "Winchester", "SO21 2JN" ]
             """.trimIndent()
         )
-        val actual = Interpreter(TestResources.address).evaluate(expression)
+        val actual = Processor(TestResources.address).evaluate(expression)
         assertEquals(expected, actual)
     }
 
@@ -150,7 +150,7 @@ class TestPredicateQueries {
             "SO21 2JN"
             """.trimIndent()
         )
-        val actual = Interpreter(TestResources.address).evaluate(expresssion)
+        val actual = Processor(TestResources.address).evaluate(expresssion)
         assertEquals(expected, actual)
     }
 
@@ -166,7 +166,7 @@ class TestPredicateQueries {
             [ "SO21 2JN", "E1 6RF" ]
             """.trimIndent()
         )
-        val actual = Interpreter(TestResources.address).evaluate(expression)
+        val actual = Processor(TestResources.address).evaluate(expression)
         assertEquals(expected, actual)
     }
 

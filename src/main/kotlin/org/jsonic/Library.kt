@@ -302,7 +302,7 @@ class Library(
         return TextNode(dtf.format(processor.time))
     }
 
-    override fun number(arg: JsonNode): DecimalNode {
+    override fun number(arg: JsonNode?): DecimalNode {
         return DecimalNode(
             when (arg) {
                 is BooleanNode -> when (arg.booleanValue()) {

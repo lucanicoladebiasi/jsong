@@ -114,6 +114,13 @@ class Processor(
         )
     }
 
+    override fun visitConcatenate(ctx: JSonicParser.ConcatenateContext): JsonNode? {
+        val sb = StringBuilder()
+        visit(ctx.lhs)?.let { lhs -> sb.append(lhs) }
+        visit(ctx.rhs)?.let { rhs -> sb.append(rhs) }
+        return TextNode(sb.toString())
+    }
+
     override fun visitContext(ctx: JSonicParser.ContextContext): JsonNode? {
         return context
     }
@@ -124,6 +131,12 @@ class Processor(
             res.addAll(descendants(context))
         }
         return context(reduce(res))
+    }
+
+    override fun visitDiv(ctx: JSonicParser.DivContext): JsonNode? {
+        val lhs = lib.number(visit(ctx.lhs))
+        val rhs = lib.number(visit(ctx.rhs))
+        return DecimalNode(lhs.decimalValue().divide(rhs.decimalValue()))
     }
 
     override fun visitEq(ctx: JSonicParser.EqContext): JsonNode? {
@@ -205,6 +218,18 @@ class Processor(
             }
         }
         return context(reduce(res))
+    }
+
+    override fun visitMod(ctx: JSonicParser.ModContext): JsonNode? {
+        val lhs = lib.number(visit(ctx.lhs))
+        val rhs = lib.number(visit(ctx.rhs))
+        return DecimalNode(lhs.decimalValue().remainder(rhs.decimalValue()))
+    }
+
+    override fun visitMul(ctx: JSonicParser.MulContext): JsonNode? {
+        val lhs = lib.number(visit(ctx.lhs))
+        val rhs = lib.number(visit(ctx.rhs))
+        return DecimalNode(lhs.decimalValue().multiply(rhs.decimalValue()))
     }
 
     override fun visitNihil(ctx: JSonicParser.NihilContext): JsonNode? {

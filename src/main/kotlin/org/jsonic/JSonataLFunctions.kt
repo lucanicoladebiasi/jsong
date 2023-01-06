@@ -167,7 +167,7 @@ interface JSonataLFunctions {
     /**
      * https://docs.jsonata.org/numeric-functions#number
      */
-    fun number(arg: JsonNode): DecimalNode
+    fun number(arg: JsonNode?): DecimalNode
 
     /**
      * https://docs.jsonata.org/numeric-functions#random

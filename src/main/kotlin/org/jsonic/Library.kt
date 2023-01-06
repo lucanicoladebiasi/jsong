@@ -2,17 +2,19 @@ package org.jsonic
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.*
-import java.lang.Error
 import java.lang.Integer.min
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.net.URLDecoder
 import java.net.URLEncoder
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 
 class Library(
-    val processor: Processor
+    private val processor: Processor
 ) : JSonataLFunctions {
 
     companion object {
@@ -165,11 +167,13 @@ class Library(
 
     override fun formatBase(number: DecimalNode, radix: DecimalNode?): TextNode {
         val base = radix?.asInt() ?: 10
-        return TextNode(when {
-            base < 2 -> throw IllegalArgumentException("<radix> < 2")
-            base > 36 -> throw IllegalArgumentException("<radix> > 36")
-            else -> number.asInt().toString(base)
-        })
+        return TextNode(
+            when {
+                base < 2 -> throw IllegalArgumentException("<radix> < 2")
+                base > 36 -> throw IllegalArgumentException("<radix> > 36")
+                else -> number.asInt().toString(base)
+            }
+        )
     }
 
     override fun formatInteger(number: DecimalNode, picture: TextNode): TextNode {
@@ -179,6 +183,18 @@ class Library(
     override fun formatNumber(number: DecimalNode, picture: TextNode, options: TextNode?): TextNode {
         TODO("Not yet implemented")
     }
+
+    override fun fromMillis(number: DecimalNode, picture: TextNode?, timezone: TextNode?): TextNode {
+        val dtf = (picture
+            ?.let { DateTimeFormatter.ofPattern(picture.asText()) }
+            ?: DateTimeFormatter.ISO_INSTANT)
+            .withZone(timezone
+                ?.let { ZoneId.of(it.asText()) }
+                ?: ZoneId.systemDefault()
+            )
+        return TextNode(dtf.format(Instant.ofEpochMilli(number.longValue())))
+    }
+
 
     override fun join(array: ArrayNode, separator: TextNode): TextNode {
         return TextNode(array.joinToString(separator.textValue()))
@@ -260,6 +276,10 @@ class Library(
         return res
     }
 
+    override fun millis(): DecimalNode {
+        return DecimalNode(processor.time.toEpochMilli().toBigDecimal())
+    }
+
     override fun min(array: ArrayNode): DecimalNode {
         return DecimalNode(array.filterIsInstance<NumericNode>().minOf { it.asDouble() }.toBigDecimal())
     }
@@ -268,16 +288,33 @@ class Library(
         return BooleanNode.valueOf(!arg.booleanValue())
     }
 
+    override fun now(picture: TextNode?, timezone: TextNode?): TextNode {
+        val dtf = (
+                picture
+                    ?.let { DateTimeFormatter.ofPattern(picture.asText()) }
+                    ?: DateTimeFormatter.ISO_INSTANT
+                )
+            .withZone(
+                timezone
+                    ?.let { ZoneId.of(it.asText()) }
+                    ?: ZoneId.systemDefault()
+            )
+        return TextNode(dtf.format(processor.time))
+    }
+
     override fun number(arg: JsonNode): DecimalNode {
-        return DecimalNode(when(arg) {
-            is BooleanNode -> when(arg.booleanValue()) {
-                true -> BigDecimal.ONE
-                else -> BigDecimal.ZERO
+        return DecimalNode(
+            when (arg) {
+                is BooleanNode -> when (arg.booleanValue()) {
+                    true -> BigDecimal.ONE
+                    else -> BigDecimal.ZERO
+                }
+
+                is NumericNode -> arg.decimalValue()
+                is TextNode -> BigDecimal(arg.textValue())
+                else -> throw IllegalArgumentException("$arg can't cast to number")
             }
-            is NumericNode -> arg.decimalValue()
-            is TextNode -> BigDecimal(arg.textValue())
-            else -> throw IllegalArgumentException("$arg can't cast to number")
-        })
+        )
     }
 
     override fun pad(str: TextNode, width: DecimalNode, char: TextNode): TextNode {
@@ -295,7 +332,7 @@ class Library(
     }
 
     override fun power(base: DecimalNode, exponent: DecimalNode): DecimalNode {
-       return DecimalNode(base.decimalValue().pow(exponent.asInt()))
+        return DecimalNode(base.decimalValue().pow(exponent.asInt()))
     }
 
     override fun random(): DecimalNode {
@@ -412,6 +449,14 @@ class Library(
         return DecimalNode(array.filterIsInstance<NumericNode>().sumOf { it.decimalValue() })
     }
 
+    override fun toMillis(timestamp: TextNode, picture: TextNode?): DecimalNode {
+        val dtf = (picture
+            ?.let { DateTimeFormatter.ofPattern(picture.asText()) }
+            ?: DateTimeFormatter.ISO_INSTANT)
+            .withZone(ZoneId.systemDefault())
+        return DecimalNode(Instant.from(dtf.parse(timestamp.asText())).toEpochMilli().toBigDecimal())
+    }
+
     override fun trim(str: TextNode): TextNode {
         return TextNode(str.textValue().replace(whitespaceRegex, " ").trim())
     }
@@ -441,9 +486,9 @@ class Library(
             len = min(len, array.size())
         }
         val res = processor.nf.arrayNode()
-        for(i in 0 until len) {
+        for (i in 0 until len) {
             res.add(processor.nf.arrayNode())
-            for(j in arrays.indices) {
+            for (j in arrays.indices) {
                 if (i < arrays[j].size()) {
                     (res[i] as ArrayNode).add(arrays[j][i])
                 }

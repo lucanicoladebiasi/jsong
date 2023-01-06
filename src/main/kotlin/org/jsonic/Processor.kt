@@ -9,12 +9,14 @@ import org.jsong.RegexNode
 import org.jsong.antlr.JSonicBaseVisitor
 import org.jsong.antlr.JSonicLexer
 import org.jsong.antlr.JSonicParser
+import java.time.Instant
 import kotlin.random.Random
 
 class Processor(
     val root: JsonNode? = null,
     val om: ObjectMapper = ObjectMapper(),
-    val random: Random = Random.Default
+    val random: Random = Random.Default,
+    val time: Instant = Instant.now()
 ) : JSonicBaseVisitor<JsonNode?>() {
 
     companion object {

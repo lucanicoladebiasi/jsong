@@ -61,13 +61,25 @@ interface JSonataLFunctions {
 
     // https://docs.jsonata.org/date-time-functions
 
-//    fun fromMillis(number: JsonNode, picture: JsonNode?, timezone: JsonNode?)
-//
-//    fun millis(): DecimalNode
-//
-//    fun now(picture: JsonNode?, timezone: JsonNode?): TextNode
-//
-//    fun toMillis(timestamp: JsonNode, picture: JsonNode?)
+    /**
+     * https://docs.jsonata.org/date-time-functions#frommillis
+     */
+    fun fromMillis(number: DecimalNode, picture: TextNode? = null, timezone: TextNode? = null): TextNode
+
+    /**
+     * https://docs.jsonata.org/date-time-functions#millis
+     */
+    fun millis(): DecimalNode
+
+    /**
+     * https://docs.jsonata.org/date-time-functions#now
+     */
+    fun now(picture: TextNode? = null, timezone: TextNode? = null): TextNode
+
+    /**
+     * https://docs.jsonata.org/date-time-functions#tomillis
+     */
+    fun toMillis(timestamp: TextNode, picture: TextNode? = null): DecimalNode
 
 
     // https://docs.jsonata.org/higher-order-functions

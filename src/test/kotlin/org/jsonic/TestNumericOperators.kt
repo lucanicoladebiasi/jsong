@@ -85,7 +85,7 @@ class TestNumericOperators {
     fun Range() {
         val expression = "[1..5]"
         val expected = TestResources.mapper.readTree("[1, 2, 3, 4, 5]")
-        val actual = (Processor().evaluate(expression) as RangeNode).indexes
+        val actual = (Processor().evaluate(expression) as RangesNode).indexes
         assertEquals(expected, actual)
     }
 

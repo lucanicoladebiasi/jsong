@@ -102,6 +102,12 @@ class Processor(
         return context(reduce(res))
     }
 
+    override fun visitAnd(ctx: JSonicParser.AndContext): JsonNode? {
+        val lhs = lib.boolean(visit(ctx.lhs))
+        val rhs = lib.boolean(visit(ctx.rhs))
+        return context(BooleanNode.valueOf(lhs.booleanValue() && rhs.booleanValue()))
+    }
+
     override fun visitArray(ctx: JSonicParser.ArrayContext): JsonNode? {
         val res = ArrayNode(nf)
         ctx.exp().forEach { exp ->
@@ -307,6 +313,12 @@ class Processor(
             res.set<JsonNode>(key, value)
         }
         return context(res)
+    }
+
+    override fun visitOr(ctx: JSonicParser.OrContext): JsonNode? {
+        val lhs = lib.boolean(visit(ctx.lhs))
+        val rhs = lib.boolean(visit(ctx.rhs))
+        return context(BooleanNode.valueOf(lhs.booleanValue() || rhs.booleanValue()))
     }
 
     override fun visitRange(ctx: JSonicParser.RangeContext): JsonNode? {

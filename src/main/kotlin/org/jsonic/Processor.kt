@@ -226,7 +226,11 @@ class Processor(
         return reduce(res)
     }
 
-
+    override fun visitIn(ctx: JSonicParser.InContext): JsonNode? {
+        val lhs = reduce(visit(ctx.lhs))
+        val rhs = expand(visit(ctx.rhs))
+        return BooleanNode.valueOf(rhs.contains(lhs))
+    }
 
     override fun visitJsong(ctx: JSonicParser.JsongContext): JsonNode? {
         var res: JsonNode? = null

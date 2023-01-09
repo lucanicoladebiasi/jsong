@@ -128,8 +128,8 @@ class Processor(
 
     override fun visitConcatenate(ctx: JSonicParser.ConcatenateContext): JsonNode? {
         val sb = StringBuilder()
-        visit(ctx.lhs)?.let { lhs -> sb.append(lhs) }
-        visit(ctx.rhs)?.let { rhs -> sb.append(rhs) }
+        visit(ctx.lhs)?.let { lhs -> sb.append(lib.string(lhs)) }
+        visit(ctx.rhs)?.let { rhs -> sb.append(lib.string(rhs)) }
         return context(TextNode(sb.toString()))
     }
 
@@ -268,11 +268,20 @@ class Processor(
 
     override fun visitMap(ctx: JSonicParser.MapContext): JsonNode? {
         val res = ArrayNode(nf)
-        expand(visit(ctx.lhs)).forEach { lhs ->
-            context(lhs)
-            when (val rhs = visit(ctx.rhs)) {
-                is ArrayNode -> res.addAll(rhs)
-                else -> rhs?.let { res.add(it) }
+        when(val lhs = expand(visit(ctx.lhs))) {
+            is RangesNode -> lhs.indexes.forEach { context ->
+                context(context)
+                when (val rhs = visit(ctx.rhs)) {
+                    is ArrayNode -> res.addAll(rhs)
+                    else -> rhs?.let { res.add(it) }
+                }
+            }
+            else -> lhs.forEach { context ->
+                context(context)
+                when (val rhs = visit(ctx.rhs)) {
+                    is ArrayNode -> res.addAll(rhs)
+                    else -> rhs?.let { res.add(it) }
+                }
             }
         }
         return context(reduce(res))

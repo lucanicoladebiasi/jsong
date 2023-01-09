@@ -20,8 +20,7 @@ bool
 
 
 exp
-    : '(' exp (';' exp)*')'                                             #scope
-    | prd = exp '?' pos = exp ':' neg = exp                             #condition
+    : prd = exp '?' pos = exp ':' neg = exp                             #condition
     | lhs = exp '~>' rhs = exp                                          #chain
     | '|' loc = exp ('|' upd = exp (',' del = exp)?)? '|'               #transform
     | '$' label ':=' exp                                                #define
@@ -49,6 +48,7 @@ exp
     | '[' range (',' range)* ']'                                        #ranges
     | path                                                              #select
     | json                                                              #literal
+    | '(' exp (';' exp)*')'                                             #scope
     | REGEX                                                             #regex
     ;
 

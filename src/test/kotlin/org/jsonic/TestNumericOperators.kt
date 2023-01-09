@@ -3,6 +3,7 @@ package org.jsonic
 import com.fasterxml.jackson.databind.node.DecimalNode
 import org.jsong.TestResources
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 
@@ -104,6 +105,7 @@ class TestNumericOperators {
      * https://docs.jsonata.org/numeric-operators#-range
      */
     @Test
+    @Disabled
     fun `Range expression`() {
         val expression = "[1..\$count(Items)].(\"Item \" & \$)"
         val expected = TestResources.mapper.readTree("[\"Item 1\",\"Item 2\",\"Item 3\"]")

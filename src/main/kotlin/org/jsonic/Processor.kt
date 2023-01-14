@@ -9,11 +9,13 @@ import org.jsong.RegexNode
 import org.jsong.antlr.JSonicBaseVisitor
 import org.jsong.antlr.JSonicLexer
 import org.jsong.antlr.JSonicParser
+import java.math.MathContext
 import java.time.Instant
 import kotlin.random.Random
 
 class Processor(
     val root: JsonNode? = null,
+    val mc: MathContext = MathContext.DECIMAL128,
     val om: ObjectMapper = ObjectMapper(),
     val random: Random = Random.Default,
     val time: Instant = Instant.now()
@@ -128,8 +130,12 @@ class Processor(
 
     override fun visitConcatenate(ctx: JSonicParser.ConcatenateContext): JsonNode? {
         val sb = StringBuilder()
-        visit(ctx.lhs)?.let { lhs -> sb.append(lib.string(lhs)) }
-        visit(ctx.rhs)?.let { rhs -> sb.append(lib.string(rhs)) }
+        visit(ctx.lhs)?.let { lhs ->
+            sb.append(lib.string(lhs).textValue())
+        }
+        visit(ctx.rhs)?.let { rhs ->
+            sb.append(lib.string(rhs).textValue())
+        }
         return context(TextNode(sb.toString()))
     }
 
@@ -148,7 +154,7 @@ class Processor(
     override fun visitDiv(ctx: JSonicParser.DivContext): JsonNode? {
         val lhs = lib.number(visit(ctx.lhs))
         val rhs = lib.number(visit(ctx.rhs))
-        return context(DecimalNode(lhs.decimalValue().divide(rhs.decimalValue())))
+        return context(DecimalNode(lhs.decimalValue().divide(rhs.decimalValue(), mc)))
     }
 
     override fun visitEq(ctx: JSonicParser.EqContext): JsonNode? {

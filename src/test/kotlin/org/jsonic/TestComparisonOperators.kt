@@ -142,7 +142,6 @@ class TestComparisonOperators {
      * https://docs.jsonata.org/comparison-operators#in-inclusion
      */
     @Test
-    @Disabled
     fun `in (Inclusion) - in predicate`() {
         val expression = "library.books[\"Aho\" in authors].title"
 

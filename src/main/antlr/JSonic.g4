@@ -20,8 +20,7 @@ bool
 
 
 exp
-    : prd = exp '?' pos = exp ':' neg = exp                             #condition
-    | lhs = exp '~>' rhs = exp                                          #chain
+    : lhs = exp '~>' rhs = exp                                          #chain
     | '|' loc = exp ('|' upd = exp (',' del = exp)?)? '|'               #transform
     | '$' label ':=' exp                                                #define
     | '$' label ( '(' (exp (',' exp)*)? ')')?                           #call
@@ -45,6 +44,7 @@ exp
     | lhs = exp 'in' rhs = exp                                          #in
     | lhs = exp AND  rhs = exp                                          #and
     | lhs = exp OR   rhs = exp                                          #or
+    | prd = exp '?' pos = exp ':' neg = exp                             #condition
     | '[' range (',' range)* ']'                                        #ranges
     | path                                                              #select
     | json                                                              #literal

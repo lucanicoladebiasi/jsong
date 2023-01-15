@@ -2,7 +2,6 @@ package org.jsonic
 
 import com.fasterxml.jackson.databind.node.TextNode
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
 class TestOtherOperators {
@@ -21,7 +20,6 @@ class TestOtherOperators {
     /**
      * https://docs.jsonata.org/other-operators#--conditional
      */
-    @Disabled
     @Test
     fun  `Conditional - positive`() {
         val expression = "45 < 50 ? \"Cheap\" : \"Expensive\""
@@ -35,7 +33,6 @@ class TestOtherOperators {
      * https://docs.jsonata.org/other-operators#--conditional
      */
     @Test
-    @Disabled
     fun `Conditional - negative`() {
         val expression = "55 < 50 ? \"Cheap\" : \"Expensive\""
         val expected = TextNode("Expensive")

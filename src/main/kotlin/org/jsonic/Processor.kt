@@ -12,6 +12,8 @@ import org.jsong.antlr.JSonicParser
 import java.math.MathContext
 import java.time.Instant
 import kotlin.random.Random
+import kotlin.reflect.KClass
+import kotlin.reflect.full.memberFunctions
 
 class Processor(
     val root: JsonNode? = null,
@@ -31,6 +33,8 @@ class Processor(
                 else -> tag
             }
         }
+
+
 
     } //~ companion
 
@@ -138,6 +142,28 @@ class Processor(
 
     }
 
+    private fun recall(type: KClass<*>, name: String, args: Array<Any?>) {
+        type.memberFunctions.filter { it.name == name }.forEach {function ->
+            println(function)
+            if (function.parameters.size == args.size) {
+                println(function.call(*args))
+            }
+        }
+    }
+
+    override fun visitCall(ctx: JSonicParser.CallContext): JsonNode? {
+        val args = arrayOfNulls<Any?>(ctx.exp().size + 1)
+        args[0] = lib
+        ctx.exp().forEachIndexed { i, exp ->
+            args[i + 1] = reduce(visit(exp))
+        }
+//        val parameterType = args.map { it?.let { it::class.java }}.toTypedArray()
+//        val method = lib::class.java.getMethod(ctx.label().text, *parameterType)
+//        print(method)
+        recall(lib::class, ctx.label().text, args)
+        return null
+    }
+
     override fun visitConcatenate(ctx: JSonicParser.ConcatenateContext): JsonNode {
         val sb = StringBuilder()
         visit(ctx.lhs)?.let { lhs ->
@@ -150,7 +176,7 @@ class Processor(
     }
 
     override fun visitCondition(ctx: JSonicParser.ConditionContext): JsonNode? {
-        return when(lib.boolean(visit(ctx.prd)).booleanValue()) {
+        return when (lib.boolean(visit(ctx.prd)).booleanValue()) {
             true -> visit(ctx.pos)
             else -> visit(ctx.neg)
         }

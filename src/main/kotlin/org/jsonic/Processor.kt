@@ -155,8 +155,11 @@ class Processor(
     override fun visitCall(ctx: JSonicParser.CallContext): JsonNode? {
         val args = arrayOfNulls<Any?>(ctx.exp().size + 1)
         args[0] = lib
+        val context = peek()
         ctx.exp().forEachIndexed { i, exp ->
+            push(context)
             args[i + 1] = reduce(visit(exp))
+            pop()
         }
         return recall(lib::class, ctx.label().text, args).call(*args) as JsonNode?
     }
@@ -228,27 +231,27 @@ class Processor(
     override fun visitFilter(ctx: JSonicParser.FilterContext): JsonNode? {
         val res = ArrayNode(nf)
         val lhs = expand(visit(ctx.lhs))
-        lhs.forEachIndexed { index, node ->
-            push(node)
+        lhs.forEachIndexed { index, context ->
+            push(context)
             when (val rhs = visit(ctx.rhs)) {
                 is NumericNode -> {
                     val value = rhs.asInt()
                     val offset = if (value < 0) lhs.size() + value else value
                     if (index == offset) {
-                        res.add(node)
+                        res.add(context)
                     }
                 }
 
                 is RangesNode -> {
                     if (rhs.indexes.map { it.asInt() }.contains(index)) {
-                        res.add(node)
+                        res.add(context)
                     }
                 }
 
                 else -> {
                     val predicate = lib.boolean(rhs).asBoolean()
                     if (predicate) {
-                        res.add(node)
+                        res.add(context)
                     }
                 }
 

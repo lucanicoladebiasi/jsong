@@ -149,10 +149,8 @@ class Library(
         throw Error(message.textValue())
     }
 
-    override fun exists(arg: TextNode): BooleanNode {
-        val exp = arg.textValue()
-        val res = Processor(processor.root).evaluate(exp)
-        return BooleanNode.valueOf(res != null)
+    override fun exists(arg: JsonNode?): BooleanNode {
+        return BooleanNode.valueOf(arg != null)
     }
 
     override fun encodeUrl(str: TextNode): TextNode {

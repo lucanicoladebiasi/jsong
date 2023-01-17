@@ -57,7 +57,7 @@ interface JSonataLFunctions {
     /**
      *
      */
-    fun exists(arg: TextNode): BooleanNode
+    fun exists(arg: JsonNode?): BooleanNode
 
     // https://docs.jsonata.org/date-time-functions
 

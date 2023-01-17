@@ -6,7 +6,8 @@ class Test {
 
     @Test
     fun test() {
-        println(Processor().evaluate("\$count([1,2,3,1])"))
+        val actual = Processor(TestResources.address).evaluate("\$exists(Other.Nothing)")
+        println(actual)
     }
 
 }

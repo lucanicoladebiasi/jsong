@@ -10,37 +10,37 @@ interface JSonataLFunctions {
     /**
      * https://docs.jsonata.org/array-functions#append
      */
-    fun append(array1: JsonNode, array2: JsonNode): ArrayNode
+    fun append(node1: JsonNode, node2: JsonNode): ArrayNode
 
     /**
      * https://docs.jsonata.org/array-functions#count
      */
-    fun count(array: JsonNode): DecimalNode
+    fun count(node: JsonNode): DecimalNode
 
     /**
      * https://docs.jsonata.org/array-functions#distinct
      */
-    fun distinct(array: ArrayNode): ArrayNode
+    fun distinct(node: JsonNode): ArrayNode
 
     /**
      * https://docs.jsonata.org/array-functions#reverse
      */
-    fun reverse(array: ArrayNode): ArrayNode
+    fun reverse(node: JsonNode): ArrayNode
 
     /**
      * https://docs.jsonata.org/array-functions#shuffle
      */
-    fun shuffle(array: ArrayNode): ArrayNode
+    fun shuffle(node: JsonNode): ArrayNode
 
     /**
      * https://docs.jsonata.org/array-functions#sort
      */
-    fun sort(array: ArrayNode, function: FunNode?): ArrayNode
+    fun sort(node: JsonNode, function: FunNode?): ArrayNode
 
     /**
      * https://docs.jsonata.org/array-functions#zip
      */
-    fun zip(vararg arrays: ArrayNode): ArrayNode
+    fun zip(vararg nodes: JsonNode): ArrayNode
 
     // https://docs.jsonata.org/boolean-functions
 

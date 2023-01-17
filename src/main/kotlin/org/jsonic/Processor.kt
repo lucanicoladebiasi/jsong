@@ -13,6 +13,7 @@ import java.math.MathContext
 import java.time.Instant
 import kotlin.random.Random
 import kotlin.reflect.KClass
+import kotlin.reflect.KFunction
 import kotlin.reflect.full.memberFunctions
 
 class Processor(
@@ -33,7 +34,6 @@ class Processor(
                 else -> tag
             }
         }
-
 
 
     } //~ companion
@@ -69,6 +69,7 @@ class Processor(
     internal fun expand(node: JsonNode?): ArrayNode {
         return when (node) {
             null -> ArrayNode(nf)
+            is RangeNode -> RangesNode(nf).add(node)
             is ArrayNode -> node
             else -> ArrayNode(nf).add(node)
         }
@@ -142,13 +143,13 @@ class Processor(
 
     }
 
-    private fun recall(type: KClass<*>, name: String, args: Array<Any?>) {
-        type.memberFunctions.filter { it.name == name }.forEach {function ->
-            println(function)
+    private fun recall(type: KClass<*>, name: String, args: Array<Any?>): KFunction<*> {
+        type.memberFunctions.filter { it.name == name }.forEach { function ->
             if (function.parameters.size == args.size) {
-                println(function.call(*args))
+                return function
             }
         }
+        throw IllegalArgumentException("Function $name($args) not found.")
     }
 
     override fun visitCall(ctx: JSonicParser.CallContext): JsonNode? {
@@ -157,11 +158,7 @@ class Processor(
         ctx.exp().forEachIndexed { i, exp ->
             args[i + 1] = reduce(visit(exp))
         }
-//        val parameterType = args.map { it?.let { it::class.java }}.toTypedArray()
-//        val method = lib::class.java.getMethod(ctx.label().text, *parameterType)
-//        print(method)
-        recall(lib::class, ctx.label().text, args)
-        return null
+        return recall(lib::class, ctx.label().text, args).call(*args) as JsonNode?
     }
 
     override fun visitConcatenate(ctx: JSonicParser.ConcatenateContext): JsonNode {

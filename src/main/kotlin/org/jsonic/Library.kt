@@ -55,10 +55,18 @@ class Library(
         return DecimalNode(number.decimalValue().abs())
     }
 
-    override fun append(array1: JsonNode, array2: JsonNode): ArrayNode {
-        return processor.nf.arrayNode()
-            .addAll(processor.expand(array1))
-            .addAll(processor.expand(array2))
+    override fun append(node1: JsonNode, node2: JsonNode): ArrayNode {
+        val array1 = processor.expand(node1)
+        val array2 = processor.expand(node2)
+        return when {
+            array1 is RangesNode && array2 is RangesNode -> {
+                RangesNode(processor.nf).addAll(array1).addAll(array2)
+            }
+
+            else -> {
+                processor.nf.arrayNode().addAll(array1).addAll(array2)
+            }
+        }
     }
 
     override fun assert(condition: JsonNode, message: JsonNode) {
@@ -110,11 +118,12 @@ class Library(
         return BooleanNode.valueOf(str.textValue().contains(pattern.textValue()))
     }
 
-    override fun count(array: JsonNode): DecimalNode {
+    override fun count(node: JsonNode): DecimalNode {
+        val array = processor.expand(node)
         return DecimalNode(
             when (array) {
-                is ArrayNode -> array.size().toBigDecimal()
-                else -> BigDecimal.ONE
+                is RangesNode -> array.indexes.size().toBigDecimal()
+                else -> array.size().toBigDecimal()
             }
         )
     }
@@ -127,7 +136,8 @@ class Library(
         return TextNode(URLDecoder.decode(str.textValue(), Charsets.UTF_8.toString()))
     }
 
-    override fun distinct(array: ArrayNode): ArrayNode {
+    override fun distinct(node: JsonNode): ArrayNode {
+        val array = processor.expand(node)
         return processor.nf.arrayNode().addAll(array.toSet())
     }
 
@@ -353,7 +363,8 @@ class Library(
         return TextNode(str.textValue().replace(pattern.textValue(), replacement.textValue()))
     }
 
-    override fun reverse(array: ArrayNode): ArrayNode {
+    override fun reverse(node: JsonNode): ArrayNode {
+        val array = processor.expand(node)
         return processor.nf.arrayNode().addAll(array.reversed())
     }
 
@@ -362,8 +373,12 @@ class Library(
         return DecimalNode(number.decimalValue().setScale(scale, RoundingMode.HALF_EVEN))
     }
 
-    override fun shuffle(array: ArrayNode): ArrayNode {
-        return processor.nf.arrayNode().addAll(array.shuffled(processor.random))
+    override fun shuffle(node: JsonNode): ArrayNode {
+        val shuffled = when (val array = processor.expand(node)) {
+            is RangesNode -> array.indexes.shuffled(processor.random)
+            else -> array.shuffled(processor.random)
+        }
+        return processor.nf.arrayNode().addAll(shuffled)
     }
 
     override fun sift(obj: ObjectNode, function: FunNode): JsonNode {
@@ -374,7 +389,8 @@ class Library(
         TODO("Not yet implemented")
     }
 
-    override fun sort(array: ArrayNode, function: FunNode?): ArrayNode {
+    override fun sort(node: JsonNode, function: FunNode?): ArrayNode {
+        // val array = processor.expand(node)
         TODO("Not yet implemented")
     }
 
@@ -480,7 +496,8 @@ class Library(
         return TextNode(str.textValue().uppercase())
     }
 
-    override fun zip(vararg arrays: ArrayNode): ArrayNode {
+    override fun zip(vararg nodes: JsonNode): ArrayNode {
+        val arrays = nodes.map { processor.expand(it) }
         var len = Int.MAX_VALUE
         arrays.forEach { array ->
             len = min(len, array.size())

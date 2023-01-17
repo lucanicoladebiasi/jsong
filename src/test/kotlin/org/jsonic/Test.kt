@@ -6,7 +6,7 @@ class Test {
 
     @Test
     fun test() {
-        Processor().evaluate("\$count([1,2,3,1])")
+        println(Processor().evaluate("\$count([1,2,3,1])"))
     }
 
 }

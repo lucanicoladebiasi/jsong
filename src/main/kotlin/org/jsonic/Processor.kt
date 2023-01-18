@@ -145,11 +145,11 @@ class Processor(
 
     private fun recall(type: KClass<*>, name: String, args: Array<Any?>): KFunction<*> {
         type.memberFunctions.filter { it.name == name }.forEach { function ->
-            if (function.parameters.size == args.size) {
+            if (function.parameters.size >= args.size - 1) {
                 return function
             }
         }
-        throw IllegalArgumentException("Function $name($args) not found.")
+        throw IllegalArgumentException("Function $args) not found.")
     }
 
     override fun visitCall(ctx: JSonicParser.CallContext): JsonNode? {

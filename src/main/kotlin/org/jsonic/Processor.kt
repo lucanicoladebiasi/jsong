@@ -143,7 +143,7 @@ class Processor(
 
     }
 
-    private fun recall(type: KClass<*>, name: String, args: Array<Any?>): KFunction<*> {
+    private fun recall(type: KClass<*>, name: String, args: List<Any?>): KFunction<*> {
         type.memberFunctions.filter { it.name == name }.forEach { function ->
             if (function.parameters.size >= args.size - 1) {
                 return function
@@ -153,15 +153,19 @@ class Processor(
     }
 
     override fun visitCall(ctx: JSonicParser.CallContext): JsonNode? {
-        val args = arrayOfNulls<Any?>(ctx.exp().size + 1)
-        args[0] = lib
+        val args = mutableListOf<Any?>()
+        args.add(lib)
         val context = peek()
         ctx.exp().forEachIndexed { i, exp ->
             push(context)
-            args[i + 1] = reduce(visit(exp))
+            args.add(reduce(visit(exp)))
             pop()
         }
-        return recall(lib::class, ctx.label().text, args).call(*args) as JsonNode?
+        val function = recall(lib::class, ctx.label().text, args)
+        while (args.size  < function.parameters.size) {
+            args.add(null)
+        }
+        return function.call(*args.toTypedArray()) as JsonNode?
     }
 
     override fun visitConcatenate(ctx: JSonicParser.ConcatenateContext): JsonNode {

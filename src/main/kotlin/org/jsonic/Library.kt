@@ -75,7 +75,8 @@ class Library(
         }
     }
 
-    override fun average(array: ArrayNode): DecimalNode {
+    override fun average(node: JsonNode): DecimalNode {
+        val array = processor.expand(node)
         return DecimalNode(sum(array).decimalValue().divide(array.size().toBigDecimal()))
     }
 
@@ -270,7 +271,8 @@ class Library(
         }
     }
 
-    override fun max(array: ArrayNode): DecimalNode {
+    override fun max(node: JsonNode): DecimalNode {
+        val array = processor.expand(node)
         return DecimalNode(array.filterIsInstance<NumericNode>().maxOf { it.asDouble() }.toBigDecimal())
     }
 
@@ -288,7 +290,8 @@ class Library(
         return DecimalNode(processor.time.toEpochMilli().toBigDecimal())
     }
 
-    override fun min(array: ArrayNode): DecimalNode {
+    override fun min(node: JsonNode): DecimalNode {
+        val array = processor.expand(node)
         return DecimalNode(array.filterIsInstance<NumericNode>().minOf { it.asDouble() }.toBigDecimal())
     }
 
@@ -459,7 +462,8 @@ class Library(
         return TextNode(str.textValue().substringBefore(chars.textValue()))
     }
 
-    override fun sum(array: ArrayNode): DecimalNode {
+    override fun sum(node: JsonNode): DecimalNode {
+        val array = processor.expand(node)
         return DecimalNode(array.filterIsInstance<NumericNode>().sumOf { it.decimalValue() })
     }
 

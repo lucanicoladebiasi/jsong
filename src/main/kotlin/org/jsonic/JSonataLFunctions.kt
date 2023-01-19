@@ -109,27 +109,28 @@ interface JSonataLFunctions {
      */
     fun single(array: ArrayNode, function: FunNode): JsonNode
 
+
     // https://docs.jsonata.org/aggregation-functions
 
     /**
      * https://docs.jsonata.org/aggregation-functions#average
      */
-    fun average(array: ArrayNode): DecimalNode
+    fun average(node: JsonNode): DecimalNode
 
     /**
      * https://docs.jsonata.org/aggregation-functions#max
      */
-    fun max(array: ArrayNode): DecimalNode
+    fun max(node: JsonNode): DecimalNode
 
     /**
      * https://docs.jsonata.org/aggregation-functions#min
      */
-    fun min(array: ArrayNode): DecimalNode
+    fun min(node: JsonNode): DecimalNode
 
     /**
      * https://docs.jsonata.org/aggregation-functions#sum
      */
-    fun sum(array: ArrayNode): DecimalNode
+    fun sum(node: JsonNode): DecimalNode
 
 
     // https://docs.jsonata.org/numeric-functions

@@ -201,7 +201,7 @@ interface JSonataLFunctions {
      * https://docs.jsonata.org/object-functions#assert
      */
     @Throws(AssertionError::class)
-    fun assert(condition: JsonNode, message: JsonNode)
+    fun assert(condition: JsonNode, message: JsonNode): BooleanNode
 
     /**
      * https://docs.jsonata.org/object-functions#each

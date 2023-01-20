@@ -51,6 +51,16 @@ class Library(
 
     }
 
+    enum class Type(val descriptor: TextNode) {
+        ARRAY(TextNode("array")),
+        BOOLEAN(TextNode("boolean")),
+        NULL(TextNode("null")),
+        NUMBER(TextNode("number")),
+        OBJECT(TextNode("object")),
+        STRING(TextNode("string")),
+        UNDEFINED(TextNode("undefined"))
+    }
+
     override fun abs(number: DecimalNode): DecimalNode {
         return DecimalNode(number.decimalValue().abs())
     }
@@ -69,10 +79,11 @@ class Library(
         }
     }
 
-    override fun assert(condition: JsonNode, message: JsonNode) {
+    override fun assert(condition: JsonNode, message: JsonNode): BooleanNode {
         if (!boolean(condition).booleanValue()) {
-            throw AssertionError(message.textValue())
+            throw AssertionError(string(message).textValue())
         }
+        return BooleanNode.TRUE
     }
 
     override fun average(node: JsonNode): DecimalNode {
@@ -483,6 +494,7 @@ class Library(
         return TextNode(
             when (value) {
                 null -> IS_NULL
+                is NullNode -> IS_NULL
                 is ArrayNode -> IS_ARRAY
                 is BooleanNode -> IS_BOOLEAN
                 is FunNode -> IS_FUNCTION

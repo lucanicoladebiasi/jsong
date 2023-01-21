@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.*
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
-import org.jsong.RegexNode
 import org.jsong.antlr.JSonicBaseVisitor
 import org.jsong.antlr.JSonicLexer
 import org.jsong.antlr.JSonicParser
@@ -140,13 +139,21 @@ class Processor(
         val args = mutableListOf<Any?>()
         args.add(lib)
         val context = this.context
-        ctx.exp().forEach{ exp ->
-            this.context = context
-            args.add(visit(exp))
+        when (ctx.exp().isEmpty()) {
+            true -> args.add(context)
+            else -> ctx.exp().forEach { exp ->
+                this.context = context
+                args.add(visit(exp))
+            }
         }
         val function = recall(lib::class, ctx.label().text, args)
-        while (args.size < function.parameters.size) {
-            args.add(null)
+        when {
+            args.size > function.parameters.size -> while (args.size > function.parameters.size) {
+                args.removeLast()
+            }
+            args.size < function.parameters.size -> while (args.size < function.parameters.size) {
+                args.add(null)
+            }
         }
         try {
             return function.call(*args.toTypedArray()) as JsonNode?

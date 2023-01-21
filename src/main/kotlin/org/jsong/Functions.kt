@@ -155,7 +155,7 @@ class Functions(
                 null -> throw NullPointerException("<str> null in ${Syntax.CONTAINS}")
                 else -> when (val _pattern = flatten(pattern)) {
                     null -> throw NullPointerException("<pattern> null in ${Syntax.CONTAINS}")
-                    is RegexNode -> exp.asText().contains(_pattern.regex)
+                    is _RegexNode -> exp.asText().contains(_pattern.regex)
                     else -> exp.asText().contains(string(_pattern).asText())
                 }
             }
@@ -253,11 +253,11 @@ class Functions(
 
     fun flatten(node: JsonNode?): JsonNode? {
         return when (node) {
-            is RangesNode -> when (node.size()) {
+            is _RangesNode -> when (node.size()) {
                 0 -> null
                 1 -> flatten(node[0]) as RangeNode
                 else -> {
-                    val res = RangesNode(mapper.nodeFactory)
+                    val res = _RangesNode(mapper.nodeFactory)
                     node.forEach { element ->
                         flatten(element)?.let { res.add(it as RangeNode) }
                     }
@@ -453,7 +453,7 @@ class Functions(
         return when (val _str = flatten(str)) {
             null -> throw NullPointerException("<str> null in ${Syntax.MATCH}")
             else -> when (val _pattern = flatten(pattern)) {
-                !is RegexNode -> throw NullPointerException("<pattern> is not regex in ${Syntax.MATCH}")
+                !is _RegexNode -> throw NullPointerException("<pattern> is not regex in ${Syntax.MATCH}")
                 else -> mapper.nodeFactory.arrayNode().addAll(
                     _pattern.regex.findAll(string(_str).asText()).map { matchResult ->
                         mapper.nodeFactory.objectNode()
@@ -631,7 +631,7 @@ class Functions(
             else -> when (val _replacement = flatten(replacement)) {
                 null -> throw NullPointerException("<replacement> is null in ${Syntax.REPLACE}")
                 else -> when (val _pattern = flatten(pattern)) {
-                    is RegexNode -> TextNode(exp.asText().replace(_pattern.regex, string(_replacement).asText()))
+                    is _RegexNode -> TextNode(exp.asText().replace(_pattern.regex, string(_replacement).asText()))
                     else -> TextNode(exp.asText().replace(string(_pattern).asText(), string(_replacement).asText()))
                 }
             }
@@ -673,11 +673,11 @@ class Functions(
         when (array) {
             null -> throw NullPointerException("<array> null in ${Syntax.SHUFFLE}")
             is RangeNode -> array.indexes.forEach { list.add(it) }
-            is RangesNode -> array.indexes.forEach { list.add(it) }
+            is _RangesNode -> array.indexes.forEach { list.add(it) }
             is ArrayNode -> array.forEach {
                 when (it) {
                     is RangeNode -> list.addAll(it.indexes)
-                    is RangesNode -> list.addAll(it.indexes)
+                    is _RangesNode -> list.addAll(it.indexes)
                     else -> list.add(it)
                 }
             }
@@ -693,7 +693,7 @@ class Functions(
                 null -> throw NullPointerException("<str> is null in ${Syntax.SPLIT}")
                 else -> when (val _separator = flatten(separator)) {
                     null -> throw NullPointerException("<separator> is null in ${Syntax.SPLIT}")
-                    is RegexNode -> exp.asText().split(_separator.regex, flatten(limit)?.asInt(0) ?: 0)
+                    is _RegexNode -> exp.asText().split(_separator.regex, flatten(limit)?.asInt(0) ?: 0)
                     else -> exp.asText().split(
                         _separator.asText(),
                         ignoreCase = false,

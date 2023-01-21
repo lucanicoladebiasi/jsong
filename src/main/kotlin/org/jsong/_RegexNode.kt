@@ -10,7 +10,7 @@ import com.fasterxml.jackson.databind.node.TextNode
  *
  * @param pattern in JSONata notation: the pattern is between [DELIMITER], flags follow.
  */
-class RegexNode(pattern: String): TextNode(pattern) {
+class _RegexNode(pattern: String): TextNode(pattern) {
 
     companion object {
 

@@ -251,98 +251,83 @@ interface JSonataLFunctions {
      */
     fun type(value: JsonNode?): TextNode
 
+
     // https://docs.jsonata.org/string-functions
 
     /**
      * https://docs.jsonata.org/string-functions#base64encode
      */
-    fun base64decode(str: TextNode): TextNode
+    fun base64decode(str: JsonNode): TextNode
 
     /**
      * https://docs.jsonata.org/string-functions#base64encode
      */
-    fun base64encode(str: TextNode): TextNode
+    fun base64encode(str: JsonNode): TextNode
 
     /**
      * https://docs.jsonata.org/string-functions#contains
      */
-    fun contains(str: TextNode, pattern: RegexNode): BooleanNode
-
-    /**
-     * https://docs.jsonata.org/string-functions#contains
-     */
-    fun contains(str: TextNode, pattern: TextNode): BooleanNode
-
+    fun contains(str: JsonNode, pattern: JsonNode): BooleanNode
 
     /**
      * https://docs.jsonata.org/string-functions#decodeurl
      */
-    fun decodeUrl(str: TextNode): TextNode
+    fun decodeUrl(str: JsonNode): TextNode
 
     /**
      * https://docs.jsonata.org/string-functions#decodeurlcomponent
      */
-    fun decodeUrlComponent(str: TextNode): TextNode
+    fun decodeUrlComponent(str: JsonNode): TextNode
 
     /**
      * https://docs.jsonata.org/string-functions#encodeurl
      */
-    fun encodeUrl(str: TextNode): TextNode
+    fun encodeUrl(str: JsonNode): TextNode
 
     /**
      * https://docs.jsonata.org/string-functions#encodeurlcomponent
      */
-    fun encodeUrlComponent(str: TextNode): TextNode
+    fun encodeUrlComponent(str: JsonNode): TextNode
 
     /**
      * https://docs.jsonata.org/string-functions#eval
      */
-    fun eval(expr: TextNode, context: JsonNode? = null): JsonNode?
+    fun eval(expr: JsonNode, context: JsonNode? = null): JsonNode?
 
     /**
      * https://docs.jsonata.org/string-functions#join
      */
-    fun join(array: ArrayNode, separator: TextNode): TextNode
+    fun join(array: JsonNode, separator: JsonNode?): TextNode
 
     /**
      * https://docs.jsonata.org/string-functions#length
      */
-    fun length(str: TextNode): DecimalNode
+    fun length(str: JsonNode): DecimalNode
 
     /**
      * https://docs.jsonata.org/string-functions#lowercase
      */
-    fun lowercase(str: TextNode): TextNode
+    fun lowercase(str: JsonNode): TextNode
 
     /**
      * https://docs.jsonata.org/string-functions#join
      */
-    fun match(str: JsonNode, pattern: RegexNode, limit: DecimalNode? = null)
+    fun match(str: JsonNode, pattern: JsonNode, limit: JsonNode?): ArrayNode
 
     /**
      * https://docs.jsonata.org/string-functions#pad
      */
-    fun pad(str: TextNode, width: DecimalNode, char: TextNode): TextNode
+    fun pad(str: JsonNode, width: JsonNode, char: JsonNode?): TextNode
 
     /**
      * https://docs.jsonata.org/string-functions#replace
      */
-    fun replace(str: TextNode, pattern: RegexNode, replacement: TextNode, limit: DecimalNode? = null): TextNode
-
-    /**
-     * https://docs.jsonata.org/string-functions#replace
-     */
-    fun replace(str: TextNode, pattern: TextNode, replacement: TextNode, limit: DecimalNode? = null): TextNode
+    fun replace(str: JsonNode, pattern: JsonNode, replacement: JsonNode, limit: JsonNode?): TextNode
 
     /**
      * https://docs.jsonata.org/string-functions#split
      */
-    fun split(str: TextNode, separator: RegexNode, limit: DecimalNode?): ArrayNode
-
-    /**
-     * https://docs.jsonata.org/string-functions#split
-     */
-    fun split(str: TextNode, separator: TextNode, limit: DecimalNode?): ArrayNode
+    fun split(str: JsonNode, separator: JsonNode, limit: JsonNode?): ArrayNode
 
     /**
      * https://docs.jsonata.org/string-functions#string
@@ -352,28 +337,27 @@ interface JSonataLFunctions {
     /**
      * https://docs.jsonata.org/string-functions#substring
      */
-    fun substring(str: TextNode, start: DecimalNode, length: DecimalNode? = null): TextNode
+    fun substring(str: JsonNode, start: DecimalNode, length: DecimalNode? = null): TextNode
 
     /**
      * https://docs.jsonata.org/string-functions#substringafter
      */
-    fun substringAfter(str: TextNode, chars: TextNode): TextNode
+    fun substringAfter(str: JsonNode, chars: TextNode): TextNode
 
     /**
      * https://docs.jsonata.org/string-functions#substringbefore
      */
-    fun substringBefore(str: TextNode, chars: TextNode): TextNode
+    fun substringBefore(str: JsonNode, chars: TextNode): TextNode
 
     /**
      * https://docs.jsonata.org/string-functions#trim
      */
-    fun trim(str: TextNode): TextNode
+    fun trim(str: JsonNode): TextNode
 
     /**
      * https://docs.jsonata.org/string-functions#uppercase
      */
-    fun uppercase(str: TextNode): TextNode
-
+    fun uppercase(str: JsonNode): TextNode
 
 }
 

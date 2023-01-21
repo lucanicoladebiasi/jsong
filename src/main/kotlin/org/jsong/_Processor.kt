@@ -736,7 +736,7 @@ class _Processor internal constructor(
     }
 
     override fun visitRanges(ctx: JSongParser.RangesContext): JsonNode? {
-        val exp = RangesNode(mapper.nodeFactory)
+        val exp = _RangesNode(mapper.nodeFactory)
         ctx.range().forEach {
             visit(it)
             exp.add(pop())
@@ -763,7 +763,7 @@ class _Processor internal constructor(
     }
 
     override fun visitRegex(ctx: JSongParser.RegexContext): JsonNode? {
-        return push(RegexNode(ctx.REGEX().text))
+        return push(_RegexNode(ctx.REGEX().text))
     }
 
     override fun visitReminder(ctx: JSongParser.ReminderContext): JsonNode? {

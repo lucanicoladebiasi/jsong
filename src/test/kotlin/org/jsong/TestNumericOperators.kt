@@ -87,7 +87,7 @@ class TestNumericOperators {
     @Test
     fun `Range gap`() {
         val expected = TestResources.mapper.readTree("[1, 2, 3, 7, 8, 9]")
-        val actual = (JSong.of("[1..3, 7..9]").evaluate() as RangesNode).indexes
+        val actual = (JSong.of("[1..3, 7..9]").evaluate() as _RangesNode).indexes
         assertEquals(expected, actual)
     }
 

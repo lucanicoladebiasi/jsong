@@ -91,12 +91,12 @@ class Library(
         return DecimalNode(sum(array).decimalValue().divide(array.size().toBigDecimal()))
     }
 
-    override fun base64decode(str: TextNode): TextNode {
-        return TextNode(Base64.getDecoder().decode(str.textValue()).toString())
+    override fun base64decode(str: JsonNode): TextNode {
+        return TextNode(Base64.getDecoder().decode(string(str).textValue()).toString(Charsets.UTF_8))
     }
 
-    override fun base64encode(str: TextNode): TextNode {
-        return TextNode(Base64.getEncoder().encodeToString(str.textValue().toByteArray()))
+    override fun base64encode(str: JsonNode): TextNode {
+        return TextNode(Base64.getEncoder().encodeToString(string(str).textValue().toByteArray()))
     }
 
     override fun boolean(arg: JsonNode?): BooleanNode {
@@ -122,12 +122,14 @@ class Library(
         return DecimalNode(kotlin.math.ceil(number.asDouble()).toBigDecimal())
     }
 
-    override fun contains(str: TextNode, pattern: RegexNode): BooleanNode {
-        return BooleanNode.valueOf(str.textValue().contains(pattern.regex))
-    }
-
-    override fun contains(str: TextNode, pattern: TextNode): BooleanNode {
-        return BooleanNode.valueOf(str.textValue().contains(pattern.textValue()))
+    override fun contains(str: JsonNode, pattern: JsonNode): BooleanNode {
+        val txt = string(str).textValue()
+        return BooleanNode.valueOf(
+            when (pattern) {
+                is RegexNode -> txt.contains(pattern.regex)
+                else -> txt.contains(string(pattern).textValue())
+            }
+        )
     }
 
     override fun count(node: JsonNode): DecimalNode {
@@ -140,12 +142,12 @@ class Library(
         )
     }
 
-    override fun decodeUrl(str: TextNode): TextNode {
-        return TextNode(URLDecoder.decode(str.textValue(), Charsets.UTF_8.toString()))
+    override fun decodeUrl(str: JsonNode): TextNode {
+        return TextNode(URLDecoder.decode(string(str).textValue(), Charsets.UTF_8.toString()))
     }
 
-    override fun decodeUrlComponent(str: TextNode): TextNode {
-        return TextNode(URLDecoder.decode(str.textValue(), Charsets.UTF_8.toString()))
+    override fun decodeUrlComponent(str: JsonNode): TextNode {
+        return TextNode(URLDecoder.decode(string(str).textValue(), Charsets.UTF_8.toString()))
     }
 
     override fun distinct(node: JsonNode): ArrayNode {
@@ -165,16 +167,16 @@ class Library(
         return BooleanNode.valueOf(arg != null)
     }
 
-    override fun encodeUrl(str: TextNode): TextNode {
+    override fun encodeUrl(str: JsonNode): TextNode {
         return TextNode(URLEncoder.encode(str.textValue(), Charsets.UTF_8.toString()))
     }
 
-    override fun encodeUrlComponent(str: TextNode): TextNode {
+    override fun encodeUrlComponent(str: JsonNode): TextNode {
         return TextNode(URLEncoder.encode(str.textValue(), Charsets.UTF_8.toString()))
     }
 
-    override fun eval(expr: TextNode, context: JsonNode?): JsonNode? {
-        return Processor(context).evaluate(expr.textValue())
+    override fun eval(expr: JsonNode, context: JsonNode?): JsonNode? {
+        return Processor(context).evaluate(string(expr).textValue())
     }
 
     override fun filter(array: ArrayNode, function: FunNode): ArrayNode {
@@ -216,8 +218,10 @@ class Library(
     }
 
 
-    override fun join(array: ArrayNode, separator: TextNode): TextNode {
-        return TextNode(array.joinToString(separator.textValue()))
+    override fun join(array: JsonNode, separator: JsonNode?): TextNode {
+        val arr = processor.expand(array).map { string(it).textValue() }.toTypedArray()
+        val sep = separator?.let { string(it).textValue() } ?: ""
+        return TextNode(arr.joinToString(sep))
     }
 
     override fun keys(arr: ArrayNode): ArrayNode {
@@ -239,12 +243,12 @@ class Library(
         return processor.nf.arrayNode().addAll(keys.map { TextNode(it) })
     }
 
-    override fun length(str: TextNode): DecimalNode {
+    override fun length(str: JsonNode): DecimalNode {
         return DecimalNode(string(str).textValue().length.toBigDecimal())
     }
 
-    override fun lowercase(str: TextNode): TextNode {
-        return TextNode(str.textValue().lowercase())
+    override fun lowercase(str: JsonNode): TextNode {
+        return TextNode(string(str).textValue().lowercase())
     }
 
     override fun lookup(array: ArrayNode, key: TextNode): JsonNode? {
@@ -268,18 +272,28 @@ class Library(
         TODO("Not yet implemented")
     }
 
-    override fun match(str: JsonNode, pattern: RegexNode, limit: DecimalNode?) {
-        pattern.regex.findAll(str.textValue()).forEachIndexed { index, matchResult ->
-            if (index < (limit?.asInt() ?: Int.MAX_VALUE)) {
-                processor.nf.objectNode()
-                    .put(TAG_MATCH, matchResult.value)
-                    .put(TAG_INDEX, matchResult.range.first)
-                    .set<ObjectNode>(
-                        TAG_GROUPS,
-                        processor.nf.arrayNode().add(matchResult.groupValues.map { TextNode(it) }.last())
-                    )
+    override fun match(str: JsonNode, pattern: JsonNode, limit: JsonNode?): ArrayNode {
+        val res = processor.nf.arrayNode()
+        val txt = string(str).textValue()
+        val ptt = when (pattern) {
+            is RegexNode -> pattern
+            else -> RegexNode(string(pattern).textValue())
+        }
+        val lim = limit?.let { number(it).asInt() } ?: Int.MAX_VALUE
+        ptt.regex.findAll(txt).forEachIndexed { i, matchResult ->
+            if (i < lim) {
+                res.add(
+                    processor.nf.objectNode()
+                        .put(TAG_MATCH, matchResult.value)
+                        .put(TAG_INDEX, matchResult.range.first)
+                        .set<ObjectNode>(
+                            TAG_GROUPS,
+                            processor.nf.arrayNode().add(matchResult.groupValues.map { TextNode(it) }.last())
+                        )
+                )
             }
         }
+        return res
     }
 
     override fun max(node: JsonNode): DecimalNode {
@@ -339,12 +353,13 @@ class Library(
         )
     }
 
-    override fun pad(str: TextNode, width: DecimalNode, char: TextNode): TextNode {
-        val w = width.asInt()
+    override fun pad(str: JsonNode, width: JsonNode, char: JsonNode?): TextNode {
+        val w = number(width).asInt()
+        val filler = char?.let { string(char).textValue()[0] } ?: ' '
         return TextNode(
             when {
-                w < 0 -> str.textValue().padStart(-w, char.textValue()[0])
-                else -> str.textValue().padEnd(w, char.textValue()[0])
+                w < 0 -> string(str).textValue().padStart(-w, filler)
+                else -> string(str).textValue().padEnd(w, filler)
             }
         )
     }
@@ -366,13 +381,15 @@ class Library(
     }
 
     // todo: implement limit
-    override fun replace(str: TextNode, pattern: RegexNode, replacement: TextNode, limit: DecimalNode?): TextNode {
-        return TextNode(str.textValue().replace(pattern.regex, replacement.textValue()))
-    }
-
-    // todo: implement limit
-    override fun replace(str: TextNode, pattern: TextNode, replacement: TextNode, limit: DecimalNode?): TextNode {
-        return TextNode(str.textValue().replace(pattern.textValue(), replacement.textValue()))
+    override fun replace(str: JsonNode, pattern: JsonNode, replacement: JsonNode, limit: JsonNode?): TextNode {
+        val txt = string(str).textValue()
+        val new = string(replacement).textValue()
+        return TextNode(
+            when (pattern) {
+                is RegexNode -> txt.replace(pattern.regex, new)
+                else -> txt.replace(string(pattern).textValue(), new)
+            }
+        )
     }
 
     override fun reverse(node: JsonNode): ArrayNode {
@@ -406,20 +423,14 @@ class Library(
         TODO("Not yet implemented")
     }
 
-    override fun split(str: TextNode, separator: RegexNode, limit: DecimalNode?): ArrayNode {
-        return processor.nf.arrayNode().addAll(
-            str.textValue()
-                .split(separator.regex, limit?.asInt() ?: 0)
-                .map { TextNode(it) }
-        )
-    }
-
-    override fun split(str: TextNode, separator: TextNode, limit: DecimalNode?): ArrayNode {
-        return processor.nf.arrayNode().addAll(
-            str.textValue()
-                .split(separator.asText(), ignoreCase = false, limit = limit?.asInt() ?: 0)
-                .map { TextNode(it) }
-        )
+    override fun split(str: JsonNode, separator: JsonNode, limit: JsonNode?): ArrayNode {
+        val _str = string(str).textValue()
+        val _limit = limit?.let { number(it).asInt() } ?: 0
+        val _split = when (separator) {
+            is RegexNode -> _str.split(separator.regex, _limit)
+            else -> _str.split((string(separator).textValue()), ignoreCase = false, limit = _limit)
+        }.map { TextNode(it) }
+        return processor.nf.arrayNode().addAll(_split)
     }
 
     override fun spread(array: ArrayNode): ArrayNode {
@@ -454,7 +465,7 @@ class Library(
         }
     }
 
-    override fun substring(str: TextNode, start: DecimalNode, length: DecimalNode?): TextNode {
+    override fun substring(str: JsonNode, start: DecimalNode, length: DecimalNode?): TextNode {
         val txt = string(str).textValue()
         val first = 0
             .coerceAtLeast(if (start.intValue() < 0) txt.length + start.intValue() else start.intValue())
@@ -465,12 +476,12 @@ class Library(
         return TextNode(txt.substring(first, last))
     }
 
-    override fun substringAfter(str: TextNode, chars: TextNode): TextNode {
-        return TextNode(str.textValue().substringAfter(chars.textValue()))
+    override fun substringAfter(str: JsonNode, chars: TextNode): TextNode {
+        return TextNode(string(str).textValue().substringAfter(chars.textValue()))
     }
 
-    override fun substringBefore(str: TextNode, chars: TextNode): TextNode {
-        return TextNode(str.textValue().substringBefore(chars.textValue()))
+    override fun substringBefore(str: JsonNode, chars: TextNode): TextNode {
+        return TextNode(string(str).textValue().substringBefore(chars.textValue()))
     }
 
     override fun sum(node: JsonNode): DecimalNode {
@@ -486,8 +497,8 @@ class Library(
         return DecimalNode(Instant.from(dtf.parse(timestamp.asText())).toEpochMilli().toBigDecimal())
     }
 
-    override fun trim(str: TextNode): TextNode {
-        return TextNode(str.textValue().replace(whitespaceRegex, " ").trim())
+    override fun trim(str: JsonNode): TextNode {
+        return TextNode(string(str).textValue().replace(whitespaceRegex, " ").trim())
     }
 
     override fun type(value: JsonNode?): TextNode {
@@ -506,8 +517,8 @@ class Library(
         )
     }
 
-    override fun uppercase(str: TextNode): TextNode {
-        return TextNode(str.textValue().uppercase())
+    override fun uppercase(str: JsonNode): TextNode {
+        return TextNode(string(str).textValue().uppercase())
     }
 
     override fun zip(vararg nodes: JsonNode): ArrayNode {

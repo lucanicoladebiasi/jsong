@@ -8,7 +8,7 @@ import kotlin.test.assertNull
 /**
  * https://docs.jsonata.org/boolean-operators
  */
-class TestBooleanOperators {
+class _TestBooleanOperators {
 
     /**
      * https://docs.jsonata.org/boolean-operators#and-boolean-and
@@ -16,7 +16,7 @@ class TestBooleanOperators {
     @Test
     fun And() {
         val expected = TextNode("Compilers: Principles, Techniques, and Tools")
-        val actual = JSong.of("library.books[\"Aho\" in authors and price < 50].title").evaluate(TestResources.library)
+        val actual = _JSong.of("library.books[\"Aho\" in authors and price < 50].title").evaluate(_TestResources.library)
         assertEquals(expected, actual)
     }
 
@@ -25,7 +25,7 @@ class TestBooleanOperators {
      */
     @Test
     fun Or() {
-        val actual = JSong.of("library.books[price < 10 or section=\"diy\"].title").evaluate(TestResources.library)
+        val actual = _JSong.of("library.books[price < 10 or section=\"diy\"].title").evaluate(_TestResources.library)
         assertNull(actual)
     }
 }

@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.node.TextNode
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
-class TestOtherOperators {
+class _TestOtherOperators {
 
     /**
      * https://docs.jsonata.org/other-operators#-concatenation
@@ -12,7 +12,7 @@ class TestOtherOperators {
     @Test
     fun `& (Concatenation)`() {
         val expected = TextNode("HelloWorld")
-        val actual = JSong.of("\"Hello\" & \"World\"").evaluate()
+        val actual = _JSong.of("\"Hello\" & \"World\"").evaluate()
         assertEquals(expected, actual)
     }
 
@@ -23,7 +23,7 @@ class TestOtherOperators {
     fun  `Conditional - positive`() {
         val expression = "45 < 50 ? \"Cheap\" : \"Expensive\""
         val expected = TextNode("Cheap")
-        val actual = JSong.of(expression).evaluate()
+        val actual = _JSong.of(expression).evaluate()
         assertEquals(expected, actual)
 
     }
@@ -35,7 +35,7 @@ class TestOtherOperators {
     fun `Conditional - negative`() {
         val expression = "55 < 50 ? \"Cheap\" : \"Expensive\""
         val expected = TextNode("Expensive")
-        val actual = JSong.of(expression).evaluate()
+        val actual = _JSong.of(expression).evaluate()
         assertEquals(expected, actual)
     }
 

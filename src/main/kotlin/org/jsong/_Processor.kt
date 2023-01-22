@@ -22,9 +22,9 @@ class _Processor internal constructor(
 
     private val context = ArrayDeque<JsonNode>()
 
-    private val library = Functions(mapper, random, time)
+    private val library = _Functions(mapper, random, time)
 
-    private val functions = mutableMapOf<String, FunNode>()
+    private val functions = mutableMapOf<String, _FunNode>()
 
     @Volatile
     private var isToFlatten = true
@@ -69,7 +69,7 @@ class _Processor internal constructor(
     private fun select(node: JsonNode?, path: JsonNode?): ArrayNode {
         val exp = mapper.createArrayNode()
         when (path) {
-            is PathNode -> when (node) {
+            is _PathNode -> when (node) {
                 is ArrayNode -> node.forEach {
                     exp.addAll(select(it, path))
                 }
@@ -127,40 +127,40 @@ class _Processor internal constructor(
             fnc.APPEND() != null -> when (args.size) {
                 1 -> library.append(pop(), args[0])
                 2 -> library.append(args[0], args[1])
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.APPEND}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.APPEND}")
             }
 
             fnc.COUNT() != null -> when (args.size) {
                 0 -> library.count(pop())
                 1 -> library.count(args[0])
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.COUNT}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.COUNT}")
             }
 
             fnc.DISTINCT() != null -> mapper.createArrayNode().addAll(
                 when (args.size) {
                     0 -> library.distinct(pop())
                     1 -> library.distinct(args[0])
-                    else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.DISTINCT}")
+                    else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.DISTINCT}")
                 }
             )
 
             fnc.REVERSE() != null -> when (args.size) {
                 0 -> library.reverse(pop())
                 1 -> library.reverse(args[0])
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.REVERSE}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.REVERSE}")
             }
 
             fnc.SHUFFLE() != null -> when (args.size) {
                 0 -> library.shuffle(pop(), random)
                 1 -> library.shuffle(args[0], random)
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.SHUFFLE}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.SHUFFLE}")
             }
 
             fnc.SORT() != null -> when (args.size) {
                 0 -> library.sort(pop())
                 1 -> library.sort(args[0])
                 2 -> library.sort(args[0])
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.SORT}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.SORT}")
             }
 
             else -> throw UnsupportedOperationException("${ctx.text} not recognized")
@@ -195,19 +195,19 @@ class _Processor internal constructor(
             fnc.BOOLEAN() != null -> when (args.size) {
                 0 -> library.boolean(pop())
                 1 -> library.boolean(args[0])
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.BOOLEAN}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.BOOLEAN}")
             }
 
             fnc.EXISTS() != null -> when (args.size) {
                 0 -> library.exists(pop())
                 1 -> library.exists(args[0])
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.EXISTS}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.EXISTS}")
             }
 
             fnc.NOT() != null -> when (args.size) {
                 0 -> library.not(pop())
                 1 -> library.not(args[0])
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.NOT}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.NOT}")
             }
 
             else -> throw UnsupportedOperationException("${ctx.text} not recognized")
@@ -248,7 +248,7 @@ class _Processor internal constructor(
             args.add(VarNode(ctx.label()[i].text))
         }
         val body = ctx.exp().text
-        val exp = FunNode(name, args, body)
+        val exp = _FunNode(name, args, body)
         functions.put(name, exp)
         return push(exp)
     }
@@ -308,7 +308,7 @@ class _Processor internal constructor(
                         }
                     }
 
-                    is RangeNode -> if (rhe.indexes.map {
+                    is _RangeNode -> if (rhe.indexes.map {
                             val value = it.asInt()
                             val offset = if (value < 0) lhs.size() + value else value
                             offset
@@ -428,7 +428,7 @@ class _Processor internal constructor(
             context.push(lhe)
             loop.push(index)
             when (lhe) {
-                is RangeNode -> lhe.indexes.forEach { lhi ->
+                is _RangeNode -> lhe.indexes.forEach { lhi ->
                     loop.push(lhi.asInt())
                     push(lhi)
                     visit(ctx.rhs)
@@ -538,25 +538,25 @@ class _Processor internal constructor(
             fnc.AVERAGE() != null -> when (args.size) {
                 0 -> library.average(pop())
                 1 -> library.average(args[0])
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.AVERAGE}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.AVERAGE}")
             }
 
             fnc.MAX() != null -> when (args.size) {
                 0 -> library.max(pop())
                 1 -> library.max(args[0])
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.MAX}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.MAX}")
             }
 
             fnc.MIN() != null -> when (args.size) {
                 0 -> library.min(pop())
                 1 -> library.min(args[0])
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.MIN}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.MIN}")
             }
 
             fnc.SUM() != null -> when (args.size) {
                 0 -> library.sum(pop())
                 1 -> library.sum(args[0])
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.SUM}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.SUM}")
             }
 
             else -> throw UnsupportedOperationException("${ctx.text} not recognized")
@@ -575,75 +575,75 @@ class _Processor internal constructor(
             fnc.ABS() != null -> when (args.size) {
                 0 -> library.abs(pop())
                 1 -> library.abs(args[0])
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.ABS}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.ABS}")
             }
 
             fnc.CEIL() != null -> when (args.size) {
                 0 -> library.ceil(pop())
                 1 -> library.ceil(args[0])
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.CEIL}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.CEIL}")
             }
 
             fnc.FLOOR() != null -> when (args.size) {
                 0 -> library.floor(pop())
                 1 -> library.floor(args[0])
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.FLOOR}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.FLOOR}")
             }
 
             fnc.FORMAT_BASE() != null -> when (args.size) {
                 0 -> library.formatBase(pop())
                 1 -> library.formatBase(args[0])
                 2 -> library.formatBase(args[0], args[1])
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.FORMAT_BASE}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.FORMAT_BASE}")
             }
 
             fnc.FORMAT_INTEGER() != null -> when (args.size) {
                 1 -> library.formatInteger(pop(), args[0])
                 2 -> library.formatInteger(args[0], args[1])
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.FORMAT_INTEGER}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.FORMAT_INTEGER}")
             }
 
             fnc.FORMAT_NUMBER() != null -> when (args.size) {
                 1 -> library.formatNumber(pop(), args[0])
                 2 -> library.formatNumber(args[0], args[1])
                 3 -> library.formatNumber(args[0], args[1], args[2])
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.FORMAT_NUMBER}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.FORMAT_NUMBER}")
             }
 
             fnc.NUMBER_OF() != null -> when (args.size) {
                 0 -> library.number(pop())
                 1 -> library.number(args[0])
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.NUMBER}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.NUMBER}")
             }
 
             fnc.PARSE_INTEGER() != null -> when (args.size) {
                 1 -> library.parseInteger(pop(), args[0])
                 2 -> library.parseInteger(args[0], args[1])
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.PARSE_INTEGER}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.PARSE_INTEGER}")
             }
 
             fnc.POWER() != null -> when (args.size) {
                 1 -> library.power(pop(), args[0])
                 2 -> library.power(args[0], args[1])
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.POWER}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.POWER}")
             }
 
             fnc.RANDOM() != null -> when (args.size) {
                 0 -> library.randomFrom(random)
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.RANDOM}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.RANDOM}")
             }
 
             fnc.ROUND() != null -> when (args.size) {
                 0 -> library.round(pop())
                 1 -> library.round(args[0])
                 2 -> library.round(args[0], args[1])
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.ROUND}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.ROUND}")
             }
 
             fnc.SQRT() != null -> when (args.size) {
                 0 -> library.sqrt(pop())
                 1 -> library.sqrt(args[0])
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.SQRT}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.SQRT}")
             }
 
             else -> throw UnsupportedOperationException("${ctx.text} not recognized")
@@ -674,43 +674,43 @@ class _Processor internal constructor(
             fnc.ASSERT() != null -> when (args.size) {
                 1 -> library.assert(pop(), args[0])
                 2 -> library.assert(args[0], args[1])
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.ASSERT}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.ASSERT}")
             }
 
             fnc.ERROR() != null -> when (args.size) {
                 0 -> library.error(pop())
                 1 -> library.error(args[0])
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.ERROR}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.ERROR}")
             }
 
             fnc.KEYS() != null -> when (args.size) {
                 0 -> library.keys(pop())
                 1 -> library.keys(args[0])
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.KEYS}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.KEYS}")
             }
 
             fnc.LOOKUP() != null -> when (args.size) {
                 1 -> library.lookup(pop(), args[0])
                 2 -> library.lookup(args[0], args[1])
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.LOOKUP}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.LOOKUP}")
             }
 
             fnc.MERGE() != null -> when (args.size) {
                 0 -> library.merge(pop())
                 1 -> library.merge(args[0])
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.MERGE}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.MERGE}")
             }
 
             fnc.SPREAD() != null -> when (args.size) {
                 0 -> library.spread(pop())
                 1 -> library.spread(args[0])
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.SPREAD}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.SPREAD}")
             }
 
             fnc.TYPE() != null -> when (args.size) {
                 0 -> library.type(pop())
                 1 -> library.type(args[0])
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.TYPE}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.TYPE}")
             }
 
             else -> throw UnsupportedOperationException("${ctx.text} not recognized")
@@ -721,7 +721,7 @@ class _Processor internal constructor(
 
     override fun visitPath(ctx: JSongParser.PathContext): JsonNode? {
         scope.firstOrNull()?.let { push(it) }
-        return push(select(pop(), PathNode(ctx.text)))
+        return push(select(pop(), _PathNode(ctx.text)))
     }
 
     override fun visitRange(ctx: JSongParser.RangeContext): JsonNode? {
@@ -732,7 +732,7 @@ class _Processor internal constructor(
         push(context)
         visit(ctx.max)
         val max = library.flatten(stack.pop())?.decimalValue() ?: BigDecimal.ZERO
-        return push(RangeNode.of(min, max, mapper.nodeFactory))
+        return push(_RangeNode.of(min, max, mapper.nodeFactory))
     }
 
     override fun visitRanges(ctx: JSongParser.RangesContext): JsonNode? {
@@ -817,101 +817,101 @@ class _Processor internal constructor(
             fnc.BASE64_DECODE() != null -> when (args.size) {
                 0 -> library.base64decode(pop())
                 1 -> library.base64decode(args[0])
-                else -> throw IllegalArgumentException("\${ctx.text} requires ${Syntax.BASE64_DECODE}")
+                else -> throw IllegalArgumentException("\${ctx.text} requires ${_Syntax.BASE64_DECODE}")
             }
 
             fnc.BASE64_ENCODE() != null -> when (args.size) {
                 0 -> library.base64encode(pop())
                 1 -> library.base64encode(args[0])
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.BASE64_ENCODE}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.BASE64_ENCODE}")
             }
 
             fnc.CONTAINS() != null -> when (args.size) {
                 1 -> library.contains(pop(), args[0])
                 2 -> library.contains(args[0], args[1])
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.CONTAINS}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.CONTAINS}")
             }
 
             fnc.DECODE_URL() != null -> when (args.size) {
                 0 -> library.decodeUrl(pop())
                 1 -> library.decodeUrl(args[0])
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.DECODE_URL}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.DECODE_URL}")
             }
 
             fnc.DECODE_URL_COMPONENT() != null -> when (args.size) {
                 0 -> library.decodeUrlComponent(pop())
                 1 -> library.decodeUrlComponent(args[0])
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.DECODE_URL_COMPONENT}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.DECODE_URL_COMPONENT}")
             }
 
             fnc.ENCODE_URL() != null -> when (args.size) {
                 0 -> library.encodeUrl(pop())
                 1 -> library.encodeUrl(args[0])
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.ENCODE_URL}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.ENCODE_URL}")
             }
 
             fnc.ENCODE_URL_COMPONENT() != null -> when (args.size) {
                 0 -> library.encodeUrlComponent(pop())
                 1 -> library.encodeUrlComponent(args[0])
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.ENCODE_URL_COMPONENT}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.ENCODE_URL_COMPONENT}")
             }
 
             fnc.EVAL() != null -> when (args.size) {
                 1 -> library.eval(args[0], pop())
                 2 -> library.eval(args[0], args[1])
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.EVAL}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.EVAL}")
             }
 
             fnc.JOIN() != null -> when (args.size) {
                 0 -> library.join(pop())
                 1 -> library.join(args[0])
                 2 -> library.join(args[0], args[1])
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.JOIN}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.JOIN}")
             }
 
             fnc.LENGTH() != null -> when (args.size) {
                 0 -> library.length(pop())
                 1 -> library.length(args[0])
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.LENGTH_OF}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.LENGTH_OF}")
             }
 
             fnc.LOWERCASE() != null -> when (args.size) {
                 0 -> library.lowercase(pop())
                 1 -> library.lowercase(args[0])
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.LOWERCASE}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.LOWERCASE}")
             }
 
             fnc.MATCH() != null -> when (args.size) {
                 1 -> library.match(pop(), args[0])
                 2 -> library.match(args[0], args[1])
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.MATCH}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.MATCH}")
             }
 
             fnc.PAD() != null -> when (args.size) {
                 1 -> library.pad(pop(), args[0])
                 2 -> library.pad(args[0], args[1])
                 3 -> library.pad(args[0], args[1], args[2])
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.PAD}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.PAD}")
             }
 
             fnc.REPLACE() != null -> when (args.size) {
                 2 -> library.replace(pop(), args[0], args[1])
                 3 -> library.replace(args[0], args[1], args[2])
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.REPLACE}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.REPLACE}")
             }
 
             fnc.SPLIT() != null -> when (args.size) {
                 1 -> library.split(pop(), args[0])
                 2 -> library.split(args[0], args[1])
                 3 -> library.split(args[0], args[1], args[2])
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.SPLIT}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.SPLIT}")
             }
 
             fnc.STRING_OF() != null -> when (args.size) {
                 0 -> library.string(pop())
                 1 -> library.string(args[0])
                 2 -> library.string(args[0], args[1])
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.STRING_OF}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.STRING_OF}")
             }
 
             fnc.SUBSTRING() != null -> when (args.size) {
@@ -919,31 +919,31 @@ class _Processor internal constructor(
                 1 -> library.substring(args[0])
                 2 -> library.substring(args[0], args[1])
                 3 -> library.substring(args[0], args[1], args[2])
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.SUBSTRING}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.SUBSTRING}")
             }
 
             fnc.SUBSTRING_AFTER() != null -> when (args.size) {
                 1 -> library.substringAfter(pop(), args[0])
                 2 -> library.substringAfter(args[0], args[1])
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.SUBSTRING_AFTER}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.SUBSTRING_AFTER}")
             }
 
             fnc.SUBSTRING_BEFORE() != null -> when (args.size) {
                 1 -> library.substringBefore(pop(), args[0])
                 2 -> library.substringBefore(args[0], args[1])
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.SUBSTRING_BEFORE}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.SUBSTRING_BEFORE}")
             }
 
             fnc.TRIM() != null -> when (args.size) {
                 0 -> library.trim(pop())
                 1 -> library.trim(args[0])
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.TRIM}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.TRIM}")
             }
 
             fnc.UPPERCASE() != null -> when (args.size) {
                 0 -> library.uppercase(pop())
                 1 -> library.uppercase(args[0])
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.UPPERCASE}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.UPPERCASE}")
             }
 
             else -> throw UnsupportedOperationException("${ctx.text} not recognized")
@@ -965,27 +965,27 @@ class _Processor internal constructor(
                     1 -> library.fromMillis(args[0])
                     2 -> library.fromMillis(args[0], args[1])
                     3 -> library.fromMillis(args[0], args[1], args[2])
-                    else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.FROM_MILLIS}")
+                    else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.FROM_MILLIS}")
                 }
             )
 
             fnc.MILLIS() != null -> when (args.size) {
                 0 -> library.millis(time)
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.MILLIS}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.MILLIS}")
             }
 
             fnc.NOW() != null -> when (args.size) {
                 0 -> library.now(time)
                 1 -> library.now(time, args[0])
                 2 -> library.now(time, args[0], args[1])
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.NOW}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.NOW}")
             }
 
             fnc.TO_MILLIS() != null -> when (args.size) {
                 0 -> library.toMillis(pop())
                 1 -> library.toMillis(args[0])
                 2 -> library.toMillis(args[0], args[1])
-                else -> throw IllegalArgumentException("${ctx.text} requires ${Syntax.TO_MILLIS}")
+                else -> throw IllegalArgumentException("${ctx.text} requires ${_Syntax.TO_MILLIS}")
             }
 
             else -> throw UnsupportedOperationException("${ctx.text} not recognized")

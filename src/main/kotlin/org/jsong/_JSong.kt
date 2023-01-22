@@ -11,7 +11,7 @@ import java.time.Instant.now
 import kotlin.random.Random
 
 
-class JSong private constructor(
+class _JSong private constructor(
     private val parser: JSongParser,
     private val mapper: ObjectMapper,
     private val random: Random,
@@ -26,8 +26,8 @@ class JSong private constructor(
             mapper: ObjectMapper = ObjectMapper(),
             random: Random = Random.Default,
             time: Instant = now()
-        ): JSong {
-            return JSong(
+        ): _JSong {
+            return _JSong(
                 JSongParser(CommonTokenStream(JSongLexer(CharStreams.fromString(exp)))),
                 mapper,
                 random,

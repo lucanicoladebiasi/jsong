@@ -2,7 +2,7 @@ package org.jsong
 
 import com.fasterxml.jackson.databind.node.TextNode
 
-class PathNode(tag: String) : TextNode(normalize(tag)) {
+class _PathNode(tag: String) : TextNode(normalize(tag)) {
 
     companion object {
 

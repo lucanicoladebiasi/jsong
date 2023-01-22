@@ -9,14 +9,14 @@ import kotlin.test.assertEquals
 /**
  * https://docs.jsonata.org/comparison-operators
  */
-class TestComparisonOperators {
+class _TestComparisonOperators {
     
     /**
      * https://docs.jsonata.org/comparison-operators#-equals
      */
     @Test
     fun `= (Equals) - numbers`() {
-        assertTrue(JSong.of("1+1 = 2").evaluate()?.booleanValue() ?: false)
+        assertTrue(_JSong.of("1+1 = 2").evaluate()?.booleanValue() ?: false)
     }
 
     /**
@@ -24,7 +24,7 @@ class TestComparisonOperators {
      */
     @Test
     fun `= (Equals) - strings`() {
-        assertFalse(JSong.of("\"Hello\" = \"World\"").evaluate()?.booleanValue() ?: true)
+        assertFalse(_JSong.of("\"Hello\" = \"World\"").evaluate()?.booleanValue() ?: true)
     }
 
     /**
@@ -32,7 +32,7 @@ class TestComparisonOperators {
      */
     @Test
     fun `!= (Not Equals) - numbers`() {
-        assertTrue(JSong.of("1+1 != 3").evaluate()?.booleanValue() ?: false)
+        assertTrue(_JSong.of("1+1 != 3").evaluate()?.booleanValue() ?: false)
     }
 
     /**
@@ -40,7 +40,7 @@ class TestComparisonOperators {
      */
     @Test
     fun `!= (Not equals) - strings`() {
-        assertTrue(JSong.of("\"Hello\" != \"World\"").evaluate()?.booleanValue() ?: false)
+        assertTrue(_JSong.of("\"Hello\" != \"World\"").evaluate()?.booleanValue() ?: false)
     }
 
     /**
@@ -48,8 +48,8 @@ class TestComparisonOperators {
      */
     @Test
     fun `Greater then - numbers`() {
-        assertTrue(JSong.of("22 / 7 > 3").evaluate()?.booleanValue() ?: false)
-        assertFalse(JSong.of("5 > 5").evaluate()?.booleanValue() ?: true)
+        assertTrue(_JSong.of("22 / 7 > 3").evaluate()?.booleanValue() ?: false)
+        assertFalse(_JSong.of("5 > 5").evaluate()?.booleanValue() ?: true)
     }
 
     /**
@@ -57,8 +57,8 @@ class TestComparisonOperators {
      */
     @Test
     fun `Less then - numbers`() {
-        assertFalse(JSong.of("22 / 7 < 3").evaluate()?.booleanValue() ?: true)
-        assertFalse(JSong.of("5 < 5").evaluate()?.booleanValue() ?: true)
+        assertFalse(_JSong.of("22 / 7 < 3").evaluate()?.booleanValue() ?: true)
+        assertFalse(_JSong.of("5 < 5").evaluate()?.booleanValue() ?: true)
     }
 
     /**
@@ -66,8 +66,8 @@ class TestComparisonOperators {
      */
     @Test
     fun `Greater than or equals - numbers`() {
-        assertTrue(JSong.of("22 / 7 >= 3").evaluate()?.booleanValue() ?: false)
-        assertTrue(JSong.of("5 >= 5").evaluate()?.booleanValue() ?: false)
+        assertTrue(_JSong.of("22 / 7 >= 3").evaluate()?.booleanValue() ?: false)
+        assertTrue(_JSong.of("5 >= 5").evaluate()?.booleanValue() ?: false)
     }
 
     /**
@@ -75,8 +75,8 @@ class TestComparisonOperators {
      */
     @Test
     fun `Less then or equals - numbers`() {
-        assertFalse(JSong.of("22 / 7 <= 3").evaluate()?.booleanValue() ?: true)
-        assertTrue(JSong.of("5 <= 5").evaluate()?.booleanValue() ?: false)
+        assertFalse(_JSong.of("22 / 7 <= 3").evaluate()?.booleanValue() ?: true)
+        assertTrue(_JSong.of("5 <= 5").evaluate()?.booleanValue() ?: false)
     }
 
     /**
@@ -84,7 +84,7 @@ class TestComparisonOperators {
      */
     @Test
     fun `in (Inclusion) - in array`() {
-        assertTrue(JSong.of("\"world\" in [\"hello\", \"world\"]").evaluate()?.booleanValue() ?: false)
+        assertTrue(_JSong.of("\"world\" in [\"hello\", \"world\"]").evaluate()?.booleanValue() ?: false)
     }
 
     /**
@@ -92,7 +92,7 @@ class TestComparisonOperators {
      */
     @Test
     fun `in (Inclusion) - in singleton`() {
-        assertTrue(JSong.of("\"hello\" in \"hello\"").evaluate()?.booleanValue() ?: false)
+        assertTrue(_JSong.of("\"hello\" in \"hello\"").evaluate()?.booleanValue() ?: false)
     }
 
     /**
@@ -101,7 +101,7 @@ class TestComparisonOperators {
     @Test
     fun `in (Inclusion) - in predicate`() {
         @Language("JSON")
-        val expected = TestResources.mapper.readTree(
+        val expected = _TestResources.mapper.readTree(
             """
             [
               "The AWK Programming Language",
@@ -109,7 +109,7 @@ class TestComparisonOperators {
             ]
         """.trimIndent()
         )
-        val actual = JSong.of("library.books[\"Aho\" in authors].title").evaluate(TestResources.library)
+        val actual = _JSong.of("library.books[\"Aho\" in authors].title").evaluate(_TestResources.library)
         assertEquals(expected, actual)
     }
 

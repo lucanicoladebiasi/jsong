@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.node.TextNode
 
-class FunNode(
+class _FunNode(
     name: String,
     args: List<VarNode>,
     body: String,

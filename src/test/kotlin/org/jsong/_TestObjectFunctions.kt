@@ -8,14 +8,14 @@ import kotlin.test.assertEquals
 /**
  * https://docs.jsonata.org/object-functions
  */
-class TestObjectFunctions {
+class _TestObjectFunctions {
     
     /**
      * https://docs.jsonata.org/object-functions#assert
      */
     @Test
     fun `$assert - negative`() {
-        assertThrows<Error> { JSong.of("\$assert(false, \"I'm innocent\")").evaluate() }
+        assertThrows<Error> { _JSong.of("\$assert(false, \"I'm innocent\")").evaluate() }
     }
 
     /**
@@ -23,14 +23,15 @@ class TestObjectFunctions {
      */
     @Test
     fun `$assert - positive`() {
-        JSong.of("\$assert(true, \"no bug, no cries\")").evaluate()
+        _JSong.of("\$assert(true, \"no bug, no cries\")").evaluate()
     }
 
     /**
      * https://docs.jsonata.org/object-functions#error
      */
+    @Test
     fun `$error`() {
-        assertThrows<Error> { JSong.of("\$error(\"hello bug\")").evaluate() }
+        assertThrows<Error> { _JSong.of("\$error(\"hello bug\")").evaluate() }
     }
 
     /**
@@ -39,7 +40,7 @@ class TestObjectFunctions {
     @Test
     fun `$keys`() {
         @Language("JSON")
-        val expected = TestResources.mapper.readTree(
+        val expected = _TestResources.mapper.readTree(
             """
             [
               "Product Name",
@@ -51,7 +52,7 @@ class TestObjectFunctions {
             ]
             """.trimIndent()
         )
-        val actual = JSong.of("\$keys(Account.Order.Product)").evaluate(TestResources.invoice)
+        val actual = _JSong.of("\$keys(Account.Order.Product)").evaluate(_TestResources.invoice)
         assertEquals(expected, actual)
     }
 
@@ -61,7 +62,7 @@ class TestObjectFunctions {
     @Test
     fun `$lookup`() {
         @Language("JSON")
-        val expected = TestResources.mapper.readTree(
+        val expected = _TestResources.mapper.readTree(
             """
             [
               "0406654608",
@@ -71,7 +72,7 @@ class TestObjectFunctions {
             ]
             """.trimIndent()
         )
-        val actual = JSong.of("\$lookup(Account.Order.Product, \"SKU\")").evaluate(TestResources.invoice)
+        val actual = _JSong.of("\$lookup(Account.Order.Product, \"SKU\")").evaluate(_TestResources.invoice)
         assertEquals(expected, actual)
     }
 
@@ -83,7 +84,7 @@ class TestObjectFunctions {
     @Test
     fun `$merge`() {
         @Language("JSON")
-        val expected = TestResources.mapper.readTree(
+        val expected = _TestResources.mapper.readTree(
             """
             {
                "Product Name":[
@@ -149,7 +150,7 @@ class TestObjectFunctions {
             }
         """.trimIndent()
         )
-        val actual = JSong.of("\$merge(Account.Order.Product)").evaluate(TestResources.invoice)
+        val actual = _JSong.of("\$merge(Account.Order.Product)").evaluate(_TestResources.invoice)
         assertEquals(expected, actual)
     }
 
@@ -159,7 +160,7 @@ class TestObjectFunctions {
     @Test
     fun `$spread`() {
         @Language("JSON")
-        val expected = TestResources.mapper.readTree(
+        val expected = _TestResources.mapper.readTree(
             """
             [
               {
@@ -261,7 +262,7 @@ class TestObjectFunctions {
             ]
         """.trimIndent()
         )
-        val actual = JSong.of("\$spread(Account.Order.Product)").evaluate(TestResources.invoice)
+        val actual = _JSong.of("\$spread(Account.Order.Product)").evaluate(_TestResources.invoice)
         assertEquals(expected, actual)
     }
 
@@ -270,8 +271,8 @@ class TestObjectFunctions {
      */
     @Test
     fun `$type - array`() {
-        val expected = Functions.Type.ARRAY.descriptor
-        val actual = JSong.of("\$type($)").evaluate(TestResources.mapper.readTree("[]"))
+        val expected = _Functions.Type.ARRAY.descriptor
+        val actual = _JSong.of("\$type($)").evaluate(_TestResources.mapper.readTree("[]"))
         assertEquals(expected, actual)
     }
 
@@ -280,8 +281,8 @@ class TestObjectFunctions {
      */
     @Test
     fun `$type - boolean`() {
-        val expected = Functions.Type.BOOLEAN.descriptor
-        val actual = JSong.of("\$type($)").evaluate(TestResources.mapper.readTree("true"))
+        val expected = _Functions.Type.BOOLEAN.descriptor
+        val actual = _JSong.of("\$type($)").evaluate(_TestResources.mapper.readTree("true"))
         assertEquals(expected, actual)
     }
 
@@ -290,8 +291,8 @@ class TestObjectFunctions {
      */
     @Test
     fun `$type - null`() {
-        val expected = Functions.Type.NULL.descriptor
-        val actual = JSong.of("\$type($)").evaluate(TestResources.mapper.readTree("null"))
+        val expected = _Functions.Type.NULL.descriptor
+        val actual = _JSong.of("\$type($)").evaluate(_TestResources.mapper.readTree("null"))
         assertEquals(expected, actual)
     }
 
@@ -300,8 +301,8 @@ class TestObjectFunctions {
      */
     @Test
     fun `$type - number`() {
-        val expected = Functions.Type.NUMBER.descriptor
-        val actual = JSong.of("\$type($)").evaluate(TestResources.mapper.readTree(("3.14")))
+        val expected = _Functions.Type.NUMBER.descriptor
+        val actual = _JSong.of("\$type($)").evaluate(_TestResources.mapper.readTree(("3.14")))
         assertEquals(expected, actual)
     }
 
@@ -310,8 +311,8 @@ class TestObjectFunctions {
      */
     @Test
     fun `$type - object`() {
-        val expected = Functions.Type.OBJECT.descriptor
-        val actual = JSong.of("\$type($)").evaluate(TestResources.mapper.readTree(("{}")))
+        val expected = _Functions.Type.OBJECT.descriptor
+        val actual = _JSong.of("\$type($)").evaluate(_TestResources.mapper.readTree(("{}")))
         assertEquals(expected, actual)
     }
 
@@ -320,9 +321,9 @@ class TestObjectFunctions {
      */
     @Test
     fun `$type - string`() {
-        val expected = Functions.Type.STRING.descriptor
-        val actual = JSong.of("\$type($)")
-            .evaluate(TestResources.mapper.readTree(("\"God's in his heaven — All's right with the world.\"")))
+        val expected = _Functions.Type.STRING.descriptor
+        val actual = _JSong.of("\$type($)")
+            .evaluate(_TestResources.mapper.readTree(("\"God's in his heaven — All's right with the world.\"")))
         assertEquals(expected, actual)
     }
 

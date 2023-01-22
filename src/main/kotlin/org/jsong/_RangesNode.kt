@@ -12,7 +12,7 @@ class _RangesNode constructor(nodeFactory: JsonNodeFactory) : ArrayNode(nodeFact
             val set = mutableSetOf<Int>()
             forEach { node ->
                 when (node) {
-                    is RangeNode -> node.indexes.forEach {
+                    is _RangeNode -> node.indexes.forEach {
                         when (it) {
                             is IntNode -> set.add(it.asInt())
                         }

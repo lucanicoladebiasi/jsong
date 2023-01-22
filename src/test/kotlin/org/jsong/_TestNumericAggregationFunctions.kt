@@ -6,15 +6,15 @@ import kotlin.test.assertEquals
 /**
  * https://docs.jsonata.org/aggregation-functions
  */
-class TestNumericAggregationFunctions {
+class _TestNumericAggregationFunctions {
 
     /**
      * https://docs.jsonata.org/aggregation-functions#sum
      */
     @Test
     fun `$sum()`() {
-        val expected = JSong.of("20").evaluate()
-        val actual = JSong.of("\$sum([5,1,3,7,4])").evaluate()
+        val expected = _JSong.of("20").evaluate()
+        val actual = _JSong.of("\$sum([5,1,3,7,4])").evaluate()
         assertEquals(expected, actual)
     }
 
@@ -23,8 +23,8 @@ class TestNumericAggregationFunctions {
      */
     @Test
     fun `$max()`() {
-        val expected = JSong.of("7").evaluate()
-        val actual = JSong.of("\$max([5,1,3,7,4])").evaluate()
+        val expected = _JSong.of("7").evaluate()
+        val actual = _JSong.of("\$max([5,1,3,7,4])").evaluate()
         assertEquals(expected, actual)
     }
 
@@ -33,8 +33,8 @@ class TestNumericAggregationFunctions {
      */
     @Test
     fun `$min()`() {
-        val expected = JSong.of("1").evaluate()
-        val actual = JSong.of("\$min([5,1,3,7,4])").evaluate()
+        val expected = _JSong.of("1").evaluate()
+        val actual = _JSong.of("\$min([5,1,3,7,4])").evaluate()
         assertEquals(expected, actual)
     }
 
@@ -43,8 +43,8 @@ class TestNumericAggregationFunctions {
      */
     @Test
     fun `$average()`() {
-        val expected = JSong.of("4").evaluate()
-        val actual = JSong.of("\$average([5,1,3,7,4])").evaluate()
+        val expected = _JSong.of("4").evaluate()
+        val actual = _JSong.of("\$average([5,1,3,7,4])").evaluate()
         assertEquals(expected, actual)
     }
 

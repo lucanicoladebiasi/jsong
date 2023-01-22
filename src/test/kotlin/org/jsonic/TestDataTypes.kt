@@ -1,7 +1,7 @@
 package org.jsonic
 
 import com.fasterxml.jackson.databind.node.*
-import org.jsong.TestResources
+import org.jsong._TestResources
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import kotlin.test.assertTrue
@@ -14,7 +14,7 @@ class TestDataTypes {
     @Test
     fun `Literal - array`() {
         val expression = "[\"value1\", \"value2\"]"
-        val expected = TestResources.mapper.createArrayNode().add("value1").add("value2")
+        val expected = _TestResources.mapper.createArrayNode().add("value1").add("value2")
         val actual =  Processor().evaluate(expression)
         assertEquals(expected, actual)
     }
@@ -58,7 +58,7 @@ class TestDataTypes {
     @Test
     fun `Literal - object`() {
         val expression = "{\"key1\": \"value1\", \"key2\": \"value2\"}"
-        val expected = TestResources.mapper.createObjectNode()
+        val expected = _TestResources.mapper.createObjectNode()
             .set<ObjectNode>("key1", TextNode("value1"))
             .set<ObjectNode>("key2", TextNode("value2"))
         val actual = Processor().evaluate(expression)
@@ -79,7 +79,7 @@ class TestDataTypes {
     @Test
     fun `Literal - range as array`()  {
         val expression = "[1..3]"
-        val expected = TestResources.mapper.createArrayNode().add(1).add(2).add(3)
+        val expected = _TestResources.mapper.createArrayNode().add(1).add(2).add(3)
         val actual = Processor().evaluate(expression)
         assertTrue(actual is RangesNode)
         assertEquals(expected, actual.indexes)
@@ -91,7 +91,7 @@ class TestDataTypes {
     @Test
     fun `Literal - range with gap`() {
         val expression = "[1..3, 5..7]"
-        val expected = TestResources.mapper.createArrayNode().add(1).add(2).add(3).add(5).add(6).add(7)
+        val expected = _TestResources.mapper.createArrayNode().add(1).add(2).add(3).add(5).add(6).add(7)
         val actual = Processor().evaluate(expression)
         assertTrue(actual is RangesNode)
         assertEquals(expected, actual.indexes)
@@ -103,7 +103,7 @@ class TestDataTypes {
     @Test
     fun `Literal - range with overlapping gap`() {
         val expression = "[1..3, 5..7, 2..4]"
-        val expected = TestResources.mapper.createArrayNode().add(1).add(2).add(3).add(4).add(5).add(6).add(7)
+        val expected = _TestResources.mapper.createArrayNode().add(1).add(2).add(3).add(4).add(5).add(6).add(7)
         val actual = Processor().evaluate(expression)
         assertTrue(actual is RangesNode)
         assertEquals(expected, actual.indexes)

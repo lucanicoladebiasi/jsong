@@ -384,9 +384,17 @@ class Processor(
     }
 
     override fun visitRange(ctx: JSonicParser.RangeContext): JsonNode {
+        val min = visit(ctx.min)
+        val max = visit(ctx.max)
         return RangeNode.of(
-            ctx.min.text.toBigDecimal(),
-            ctx.max.text.toBigDecimal(),
+            when(min) {
+                is DecimalNode -> min.decimalValue()
+                else -> lib.string(min).textValue().toBigDecimal()
+            },
+            when(max) {
+                is DecimalNode -> max.decimalValue()
+                else -> lib.string(max).textValue().toBigDecimal()
+            },
             nf
         )
     }

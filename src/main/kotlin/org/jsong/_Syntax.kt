@@ -1,10 +1,10 @@
 package org.jsong
 
 /**
- * This class collects constant describing the syntax of JSONata functions implemented in [Functions],
+ * This class collects constant describing the syntax of JSONata functions implemented in [_Functions],
  * these are used in the emssages of the trown exceptions.
  */
-object Syntax {
+object _Syntax {
 
     const val BASE64_DECODE = "\$base64decode(str)"
     const val BASE64_ENCODE = "\$base64encode(str)"

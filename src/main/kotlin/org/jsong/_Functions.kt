@@ -15,7 +15,7 @@ import java.time.format.DateTimeFormatter
 import java.util.*
 import kotlin.random.Random
 
-class Functions(
+class _Functions(
     private val mapper: ObjectMapper,
     private val random: Random,
     private val time: Instant,
@@ -59,7 +59,7 @@ class Functions(
     fun abs(number: JsonNode?): DecimalNode {
         return DecimalNode(
             when (number) {
-                null -> throw NullPointerException("<number> null in ${Syntax.ABS}")
+                null -> throw NullPointerException("<number> null in ${_Syntax.ABS}")
                 else -> number(number).decimalValue().abs()
             }
         )
@@ -97,7 +97,7 @@ class Functions(
 
     fun average(array: JsonNode?): DecimalNode {
         return when (array) {
-            null -> throw NullPointerException("<array> null in ${Syntax.AVERAGE}")
+            null -> throw NullPointerException("<array> null in ${_Syntax.AVERAGE}")
             is ArrayNode -> {
                 var sum = BigDecimal.ZERO
                 array.forEach { element ->
@@ -112,14 +112,14 @@ class Functions(
 
     fun base64decode(str: JsonNode?): TextNode {
         return when (val exp = flatten(str)) {
-            null -> throw java.lang.NullPointerException("<str> null in ${Syntax.BASE64_DECODE}")
+            null -> throw java.lang.NullPointerException("<str> null in ${_Syntax.BASE64_DECODE}")
             else -> TextNode(Base64.getDecoder().decode(string(exp).asText()).toString(Charsets.UTF_8))
         }
     }
 
     fun base64encode(str: JsonNode?): TextNode {
         return when (val flt = flatten(str)) {
-            null -> throw NullPointerException("<str> null in ${Syntax.BASE64_ENCODE}")
+            null -> throw NullPointerException("<str> null in ${_Syntax.BASE64_ENCODE}")
             else -> TextNode(Base64.getEncoder().encodeToString(flt.asText().toByteArray()))
         }
     }
@@ -152,9 +152,9 @@ class Functions(
     fun contains(str: JsonNode?, pattern: JsonNode?): BooleanNode {
         return BooleanNode.valueOf(
             when (val exp = flatten(str)) {
-                null -> throw NullPointerException("<str> null in ${Syntax.CONTAINS}")
+                null -> throw NullPointerException("<str> null in ${_Syntax.CONTAINS}")
                 else -> when (val _pattern = flatten(pattern)) {
-                    null -> throw NullPointerException("<pattern> null in ${Syntax.CONTAINS}")
+                    null -> throw NullPointerException("<pattern> null in ${_Syntax.CONTAINS}")
                     is _RegexNode -> exp.asText().contains(_pattern.regex)
                     else -> exp.asText().contains(string(_pattern).asText())
                 }
@@ -165,7 +165,7 @@ class Functions(
     fun ceil(number: JsonNode?): DecimalNode {
         return DecimalNode(
             when (number) {
-                null -> throw NullPointerException("<number> is null in ${Syntax.CEIL}")
+                null -> throw NullPointerException("<number> is null in ${_Syntax.CEIL}")
                 else -> kotlin.math.ceil(number(number).asDouble()).toBigDecimal()
             }
         )
@@ -173,7 +173,7 @@ class Functions(
 
     fun count(array: JsonNode?): DecimalNode {
         return when (array) {
-            null -> throw NullPointerException("<array> is null in ${Syntax.COUNT}")
+            null -> throw NullPointerException("<array> is null in ${_Syntax.COUNT}")
             is ArrayNode -> DecimalNode(array.size().toBigDecimal())
             else -> DecimalNode(BigDecimal.ONE)
         }
@@ -181,14 +181,14 @@ class Functions(
 
     fun decodeUrl(str: JsonNode?): TextNode {
         return when (val flt = flatten(str)) {
-            null -> throw java.lang.NullPointerException("<str> is null in ${Syntax.DECODE_URL}")
+            null -> throw java.lang.NullPointerException("<str> is null in ${_Syntax.DECODE_URL}")
             else -> TextNode(URLDecoder.decode(flt.asText(), Charsets.UTF_8.toString()))
         }
     }
 
     fun decodeUrlComponent(str: JsonNode?): JsonNode {
         return when (val flt = flatten(str)) {
-            null -> throw IllegalArgumentException("str is null in ${Syntax.DECODE_URL_COMPONENT}")
+            null -> throw IllegalArgumentException("str is null in ${_Syntax.DECODE_URL_COMPONENT}")
             else -> TextNode(URLDecoder.decode(flt.asText(), Charsets.UTF_8.toString()))
         }
     }
@@ -196,7 +196,7 @@ class Functions(
     fun distinct(array: JsonNode?): ArrayNode {
         val exp = mapper.nodeFactory.arrayNode()
         when (array) {
-            null -> throw NullPointerException("<array> null in ${Syntax.DISTINCT}")
+            null -> throw NullPointerException("<array> null in ${_Syntax.DISTINCT}")
             is ArrayNode -> array.forEach { if (!exp.contains(it)) exp.add(it) }
             else -> exp.add(array)
         }
@@ -211,14 +211,14 @@ class Functions(
 
     fun encodeUrl(str: JsonNode?): TextNode {
         return when (val flt = flatten(str)) {
-            null -> throw NullPointerException("<str> null in ${Syntax.ENCODE_URL}")
+            null -> throw NullPointerException("<str> null in ${_Syntax.ENCODE_URL}")
             else -> TextNode(URLEncoder.encode(flt.asText(), Charsets.UTF_8.toString()))
         }
     }
 
     fun encodeUrlComponent(str: JsonNode?): TextNode {
         return when (val flt = flatten(str)) {
-            null -> throw NullPointerException("<str> is null in ${Syntax.ENCODE_URL_COMPONENT}")
+            null -> throw NullPointerException("<str> is null in ${_Syntax.ENCODE_URL_COMPONENT}")
             else -> TextNode(URLEncoder.encode(flt.asText(), Charsets.UTF_8.toString()))
         }
     }
@@ -230,7 +230,7 @@ class Functions(
     fun error(message: JsonNode?): JsonNode? {
         @Suppress("UNREACHABLE_CODE")
         return when (message) {
-            null -> throw java.lang.IllegalArgumentException("<message> is null in ${Syntax.ERROR}")
+            null -> throw java.lang.IllegalArgumentException("<message> is null in ${_Syntax.ERROR}")
             else -> throw Error(string(message).asText())
         }
     }
@@ -238,7 +238,7 @@ class Functions(
     fun eval(expr: JsonNode?, context: JsonNode? = null): JsonNode? {
         return when (val exp = flatten(expr)) {
             null -> expr
-            else -> JSong.of(exp.asText(), mapper, random, time).evaluate(context)
+            else -> _JSong.of(exp.asText(), mapper, random, time).evaluate(context)
         }
     }
 
@@ -255,11 +255,11 @@ class Functions(
         return when (node) {
             is _RangesNode -> when (node.size()) {
                 0 -> null
-                1 -> flatten(node[0]) as RangeNode
+                1 -> flatten(node[0]) as _RangeNode
                 else -> {
                     val res = _RangesNode(mapper.nodeFactory)
                     node.forEach { element ->
-                        flatten(element)?.let { res.add(it as RangeNode) }
+                        flatten(element)?.let { res.add(it as _RangeNode) }
                     }
                     res
                 }
@@ -284,7 +284,7 @@ class Functions(
     fun floor(number: JsonNode?): DecimalNode {
         return DecimalNode(
             when (number) {
-                null -> throw java.lang.NullPointerException("<number> is null in ${Syntax.FLOOR}")
+                null -> throw java.lang.NullPointerException("<number> is null in ${_Syntax.FLOOR}")
                 else -> kotlin.math.floor(number(number).asDouble()).toBigDecimal()
             }
         )
@@ -293,11 +293,11 @@ class Functions(
     fun formatBase(number: JsonNode?, radix: JsonNode? = null): TextNode {
         val base = flatten(radix)?.asInt(10) ?: 10
         when {
-            base < 2 -> throw IllegalArgumentException("<radix> < 2 in ${Syntax.FORMAT_BASE}")
-            base > 36 -> throw IllegalArgumentException("<radix> > 36 in ${Syntax.FORMAT_BASE}")
+            base < 2 -> throw IllegalArgumentException("<radix> < 2 in ${_Syntax.FORMAT_BASE}")
+            base > 36 -> throw IllegalArgumentException("<radix> > 36 in ${_Syntax.FORMAT_BASE}")
             else -> return TextNode(
                 when (number) {
-                    null -> throw IllegalArgumentException("<number> is null in ${Syntax.FORMAT_BASE}")
+                    null -> throw IllegalArgumentException("<number> is null in ${_Syntax.FORMAT_BASE}")
                     else -> number(number).asInt().toString(base)
                 }
             )
@@ -318,7 +318,7 @@ class Functions(
 
     fun fromMillis(number: JsonNode?, picture: JsonNode? = null, timezone: JsonNode? = null): String {
         return when (val _number = flatten(number)) {
-            null -> throw IllegalArgumentException("number is null in ${Syntax.FROM_MILLIS}")
+            null -> throw IllegalArgumentException("number is null in ${_Syntax.FROM_MILLIS}")
             else -> {
                 val _picture = flatten(picture)
                 val _timezone = flatten(timezone)
@@ -374,7 +374,7 @@ class Functions(
 
     fun join(array: JsonNode?, separator: JsonNode? = null): TextNode {
         return when (array) {
-            null -> throw NullPointerException("<array> is null in ${Syntax.JOIN}")
+            null -> throw NullPointerException("<array> is null in ${_Syntax.JOIN}")
             !is ArrayNode -> TextNode(string(array).asText())
             else -> TextNode(array.joinToString(separator?.asText("") ?: "") { string(it).asText() })
         }
@@ -395,7 +395,7 @@ class Functions(
 
     fun length(str: JsonNode?): DecimalNode {
         return when (val flt = flatten(str)) {
-            null -> throw NullPointerException("<str> is null in ${Syntax.LENGTH_OF}")
+            null -> throw NullPointerException("<str> is null in ${_Syntax.LENGTH_OF}")
             else -> DecimalNode(flt.asText().length.toBigDecimal())
         }
     }
@@ -415,7 +415,7 @@ class Functions(
 
     fun lowercase(str: JsonNode?): TextNode {
         return when (val flt = flatten(str)) {
-            null -> throw NullPointerException("<str> is null in ${Syntax.LOWERCASE}")
+            null -> throw NullPointerException("<str> is null in ${_Syntax.LOWERCASE}")
             else -> TextNode(flt.asText().lowercase((Locale.getDefault())))
         }
     }
@@ -451,9 +451,9 @@ class Functions(
     @Suppress("UNUSED_PARAMETER")
     fun match(str: JsonNode?, pattern: JsonNode?, limit: JsonNode? = null): ArrayNode {
         return when (val _str = flatten(str)) {
-            null -> throw NullPointerException("<str> null in ${Syntax.MATCH}")
+            null -> throw NullPointerException("<str> null in ${_Syntax.MATCH}")
             else -> when (val _pattern = flatten(pattern)) {
-                !is _RegexNode -> throw NullPointerException("<pattern> is not regex in ${Syntax.MATCH}")
+                !is _RegexNode -> throw NullPointerException("<pattern> is not regex in ${_Syntax.MATCH}")
                 else -> mapper.nodeFactory.arrayNode().addAll(
                     _pattern.regex.findAll(string(_str).asText()).map { matchResult ->
                         mapper.nodeFactory.objectNode()
@@ -471,7 +471,7 @@ class Functions(
 
     fun max(array: JsonNode?): DecimalNode {
         return when (array) {
-            null -> throw NullPointerException("<array> is null in ${Syntax.MAX}")
+            null -> throw NullPointerException("<array> is null in ${_Syntax.MAX}")
             is ArrayNode -> {
                 var max = Double.MIN_VALUE
                 array.forEach { element ->
@@ -515,7 +515,7 @@ class Functions(
 
     fun min(array: JsonNode?): DecimalNode {
         return when (array) {
-            null -> throw NullPointerException("<array> is null in ${Syntax.MIN}")
+            null -> throw NullPointerException("<array> is null in ${_Syntax.MIN}")
             is ArrayNode -> {
                 var min = Double.MAX_VALUE
                 array.forEach { element -> min = min.coerceAtMost(element.asDouble()) }
@@ -544,14 +544,14 @@ class Functions(
     fun number(arg: JsonNode?): DecimalNode {
         return DecimalNode(
             when (val scalar = flatten(arg)) {
-                null -> throw NullPointerException("<arg> null in ${Syntax.NUMBER}")
-                is ArrayNode -> throw IllegalArgumentException("<arg> is array, can't cast as number in ${Syntax.NUMBER}")
+                null -> throw NullPointerException("<arg> null in ${_Syntax.NUMBER}")
+                is ArrayNode -> throw IllegalArgumentException("<arg> is array, can't cast as number in ${_Syntax.NUMBER}")
                 is BooleanNode -> when (scalar) {
                     BooleanNode.TRUE -> BigDecimal.ONE
                     else -> BigDecimal.ZERO
                 }
 
-                is RangeNode -> throw IllegalArgumentException("<arg> is range, can't cast as number in ${Syntax.NUMBER}")
+                is _RangeNode -> throw IllegalArgumentException("<arg> is range, can't cast as number in ${_Syntax.NUMBER}")
                 is NumericNode -> scalar.decimalValue()
                 else -> scalar.asText().toBigDecimal()
 
@@ -579,9 +579,9 @@ class Functions(
 
     fun pad(str: JsonNode?, width: JsonNode?, char: JsonNode? = null): TextNode {
         return when (val flt = flatten(str)) {
-            null -> throw NullPointerException("<str> is null in ${Syntax.PAD}")
+            null -> throw NullPointerException("<str> is null in ${_Syntax.PAD}")
             else -> when (val w = flatten(width)) {
-                null -> throw NullPointerException("<width> is null in ${Syntax.PAD}")
+                null -> throw NullPointerException("<width> is null in ${_Syntax.PAD}")
                 else -> {
                     val txt = flt.asText()
                     val offset = w.asInt(0)
@@ -608,9 +608,9 @@ class Functions(
     fun power(base: JsonNode?, exponent: JsonNode?): DecimalNode {
         return DecimalNode(
             when (base) {
-                null -> throw IllegalArgumentException("<base> is null in ${Syntax.POWER}")
+                null -> throw IllegalArgumentException("<base> is null in ${_Syntax.POWER}")
                 else -> when (exponent) {
-                    null -> throw IllegalArgumentException("<exponent> is null in ${Syntax.POWER}")
+                    null -> throw IllegalArgumentException("<exponent> is null in ${_Syntax.POWER}")
                     else -> number(base).decimalValue().pow(number(exponent).asInt())
                 }
             }
@@ -627,9 +627,9 @@ class Functions(
 
     fun replace(str: JsonNode?, pattern: JsonNode?, replacement: JsonNode?): TextNode {
         return when (val exp = flatten(str)) {
-            null -> throw NullPointerException("<str> is null in ${Syntax.REPLACE}")
+            null -> throw NullPointerException("<str> is null in ${_Syntax.REPLACE}")
             else -> when (val _replacement = flatten(replacement)) {
-                null -> throw NullPointerException("<replacement> is null in ${Syntax.REPLACE}")
+                null -> throw NullPointerException("<replacement> is null in ${_Syntax.REPLACE}")
                 else -> when (val _pattern = flatten(pattern)) {
                     is _RegexNode -> TextNode(exp.asText().replace(_pattern.regex, string(_replacement).asText()))
                     else -> TextNode(exp.asText().replace(string(_pattern).asText(), string(_replacement).asText()))
@@ -642,7 +642,7 @@ class Functions(
     fun reverse(array: JsonNode?): ArrayNode {
         val list = mutableListOf<JsonNode>()
         when (array) {
-            null -> throw NullPointerException("<array> is null in ${Syntax.REVERSE}")
+            null -> throw NullPointerException("<array> is null in ${_Syntax.REVERSE}")
             is ArrayNode -> array.forEach { list.add(it) }
             else -> list.add(array)
         }
@@ -653,7 +653,7 @@ class Functions(
     fun round(number: JsonNode?, precision: JsonNode? = null): DecimalNode {
         return DecimalNode(
             when (number) {
-                null -> throw NullPointerException("<number> is null in ${Syntax.ROUND}")
+                null -> throw NullPointerException("<number> is null in ${_Syntax.ROUND}")
                 else -> {
                     val scale = precision?.let { number(it).asInt() } ?: 0
                     number(number).decimalValue().setScale(scale, RoundingMode.HALF_EVEN)
@@ -671,12 +671,12 @@ class Functions(
     fun shuffle(array: JsonNode?, random: Random): ArrayNode {
         val list = mutableListOf<JsonNode>()
         when (array) {
-            null -> throw NullPointerException("<array> null in ${Syntax.SHUFFLE}")
-            is RangeNode -> array.indexes.forEach { list.add(it) }
+            null -> throw NullPointerException("<array> null in ${_Syntax.SHUFFLE}")
+            is _RangeNode -> array.indexes.forEach { list.add(it) }
             is _RangesNode -> array.indexes.forEach { list.add(it) }
             is ArrayNode -> array.forEach {
                 when (it) {
-                    is RangeNode -> list.addAll(it.indexes)
+                    is _RangeNode -> list.addAll(it.indexes)
                     is _RangesNode -> list.addAll(it.indexes)
                     else -> list.add(it)
                 }
@@ -690,9 +690,9 @@ class Functions(
     fun split(str: JsonNode?, separator: JsonNode?, limit: JsonNode? = null): ArrayNode {
         return mapper.nodeFactory.arrayNode().addAll(
             when (val exp = flatten(str)) {
-                null -> throw NullPointerException("<str> is null in ${Syntax.SPLIT}")
+                null -> throw NullPointerException("<str> is null in ${_Syntax.SPLIT}")
                 else -> when (val _separator = flatten(separator)) {
-                    null -> throw NullPointerException("<separator> is null in ${Syntax.SPLIT}")
+                    null -> throw NullPointerException("<separator> is null in ${_Syntax.SPLIT}")
                     is _RegexNode -> exp.asText().split(_separator.regex, flatten(limit)?.asInt(0) ?: 0)
                     else -> exp.asText().split(
                         _separator.asText(),
@@ -727,7 +727,7 @@ class Functions(
     fun sqrt(number: JsonNode?): DecimalNode {
         return DecimalNode(
             when (number) {
-                null -> throw NullPointerException("<number> is null in ${Syntax.SQRT}")
+                null -> throw NullPointerException("<number> is null in ${_Syntax.SQRT}")
                 else -> kotlin.math.sqrt(number(number).asDouble()).toBigDecimal()
             }
         )
@@ -751,7 +751,7 @@ class Functions(
 
     fun substring(str: JsonNode?, start: JsonNode? = null, length: JsonNode? = null): TextNode {
         return when (val flt = flatten(str)) {
-            null -> throw NullPointerException("<str> is null in ${Syntax.SUBSTRING}")
+            null -> throw NullPointerException("<str> is null in ${_Syntax.SUBSTRING}")
             else -> {
                 val len = flatten(length)
                 val txt = flt.asText()
@@ -768,9 +768,9 @@ class Functions(
     fun substringAfter(str: JsonNode?, chars: JsonNode?): TextNode {
         return TextNode(
             when (val flt = flatten(str)) {
-                null -> throw NullPointerException("<str> is null in ${Syntax.SUBSTRING_AFTER}")
+                null -> throw NullPointerException("<str> is null in ${_Syntax.SUBSTRING_AFTER}")
                 else -> when (val token = flatten(chars)) {
-                    null -> throw NullPointerException("<chars> is null in ${Syntax.SUBSTRING_AFTER}")
+                    null -> throw NullPointerException("<chars> is null in ${_Syntax.SUBSTRING_AFTER}")
                     else -> flt.asText().substringAfter(string(token).asText())
                 }
             }
@@ -780,9 +780,9 @@ class Functions(
     fun substringBefore(str: JsonNode?, chars: JsonNode?): TextNode {
         return TextNode(
             when (val flt = flatten(str)) {
-                null -> throw NullPointerException("<str> is null in ${Syntax.SUBSTRING_BEFORE} ")
+                null -> throw NullPointerException("<str> is null in ${_Syntax.SUBSTRING_BEFORE} ")
                 else -> when (val token = flatten(chars)) {
-                    null -> throw NullPointerException("<chars> is null in ${Syntax.SUBSTRING_BEFORE}")
+                    null -> throw NullPointerException("<chars> is null in ${_Syntax.SUBSTRING_BEFORE}")
                     else -> flt.asText().substringBefore(string(token).asText())
                 }
             }
@@ -791,7 +791,7 @@ class Functions(
 
     fun sum(array: JsonNode?): DecimalNode {
         return when (array) {
-            null -> throw NullPointerException("<array> is null in ${Syntax.SUM}")
+            null -> throw NullPointerException("<array> is null in ${_Syntax.SUM}")
             is ArrayNode -> {
                 var sum = BigDecimal.ZERO
                 array.forEach { element ->
@@ -808,7 +808,7 @@ class Functions(
         val time = flatten(timestamp)
         val form = flatten(picture)
         return when (time) {
-            null -> throw IllegalArgumentException("timestamp is null in ${Syntax.TO_MILLIS}")
+            null -> throw IllegalArgumentException("timestamp is null in ${_Syntax.TO_MILLIS}")
             else -> {
                 val dtf = (form
                     ?.let { DateTimeFormatter.ofPattern(form.asText()) }
@@ -822,7 +822,7 @@ class Functions(
     fun trim(str: JsonNode?): TextNode {
         return TextNode(
             when (val flt = flatten(str)) {
-                null -> throw NullPointerException("<str> null in ${Syntax.TRIM}")
+                null -> throw NullPointerException("<str> null in ${_Syntax.TRIM}")
                 else -> flt.asText().replace(whitespaceRegex, " ").trim()
             }
         )
@@ -843,7 +843,7 @@ class Functions(
     fun uppercase(str: JsonNode?): TextNode {
         return TextNode(
             when (val flt = flatten(str)) {
-                null -> throw NullPointerException("<str> is null in ${Syntax.UPPERCASE}")
+                null -> throw NullPointerException("<str> is null in ${_Syntax.UPPERCASE}")
                 else -> flt.asText().uppercase(Locale.getDefault())
             }
         )

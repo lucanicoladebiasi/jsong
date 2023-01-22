@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.*
 import java.math.BigDecimal
 
-class RangeNode private constructor(
+class _RangeNode private constructor(
     min: DecimalNode,
     max: DecimalNode,
     nodeFactory: JsonNodeFactory
@@ -16,8 +16,8 @@ class RangeNode private constructor(
 
         const val MIN_TAG = "min"
 
-        fun of(x: BigDecimal, y: BigDecimal, nodeFactory: JsonNodeFactory = ObjectMapper().nodeFactory): RangeNode {
-            return RangeNode(DecimalNode(x.min(y)), DecimalNode(x.max(y)), nodeFactory)
+        fun of(x: BigDecimal, y: BigDecimal, nodeFactory: JsonNodeFactory = ObjectMapper().nodeFactory): _RangeNode {
+            return _RangeNode(DecimalNode(x.min(y)), DecimalNode(x.max(y)), nodeFactory)
         }
 
     } //~ companion
@@ -43,7 +43,7 @@ class RangeNode private constructor(
         if (javaClass != other?.javaClass) return false
         if (!super.equals(other)) return false
 
-        other as RangeNode
+        other as _RangeNode
 
         if (max != other.max) return false
         if (min != other.min) return false

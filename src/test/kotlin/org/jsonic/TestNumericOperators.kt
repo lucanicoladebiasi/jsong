@@ -1,9 +1,8 @@
 package org.jsonic
 
 import com.fasterxml.jackson.databind.node.DecimalNode
-import org.jsong.TestResources
+import org.jsong._TestResources
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import java.math.BigDecimal
 
@@ -85,7 +84,7 @@ class TestNumericOperators {
     @Test
     fun Range() {
         val expression = "[1..5]"
-        val expected = TestResources.mapper.readTree("[1, 2, 3, 4, 5]")
+        val expected = _TestResources.mapper.readTree("[1, 2, 3, 4, 5]")
         val actual = (Processor().evaluate(expression) as RangesNode).indexes
         assertEquals(expected, actual)
     }
@@ -96,7 +95,7 @@ class TestNumericOperators {
     @Test
     fun `Range gap`() {
         val expression = "[1..3, 7..9]"
-        val expected = TestResources.mapper.readTree("[1, 2, 3, 7, 8, 9]")
+        val expected = _TestResources.mapper.readTree("[1, 2, 3, 7, 8, 9]")
         val actual = (Processor().evaluate(expression) as RangesNode).indexes
         assertEquals(expected, actual)
     }
@@ -105,11 +104,10 @@ class TestNumericOperators {
      * https://docs.jsonata.org/numeric-operators#-range
      */
     @Test
-    @Disabled
     fun `Range expression`() {
         val expression = "[1..\$count(Items)].(\"Item \" & \$)"
-        val expected = TestResources.mapper.readTree("[\"Item 1\",\"Item 2\",\"Item 3\"]")
-        val actual = Processor().evaluate(expression)
+        val expected = _TestResources.mapper.readTree("[\"Item 1\",\"Item 2\",\"Item 3\"]")
+        val actual = Processor(TestResources.items).evaluate(expression)
         assertEquals(expected, actual)
     }
 
@@ -119,7 +117,7 @@ class TestNumericOperators {
     @Test
     fun `Range context`() {
         val expression = "[1..5].(\$ * \$)"
-        val expected = TestResources.mapper.createArrayNode()
+        val expected = _TestResources.mapper.createArrayNode()
             .add(BigDecimal(1L))
             .add(BigDecimal(4L))
             .add(BigDecimal(9L))

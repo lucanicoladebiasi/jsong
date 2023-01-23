@@ -18,38 +18,37 @@ bool
     | FALSE
     ;
 
-
 exp
-    : lhs = exp '~>' rhs = exp                                          #chain
-    | '|' loc = exp ('|' upd = exp (',' del = exp)?)? '|'               #transform
-    | '$' label ':=' exp                                                #define
-    | '$' label ( '(' (exp (',' exp)*)? ')')?                           #call
-    | 'fun'('ction')? '(' ('$' label (',' '$' label)*)? ')' '{' exp '}' #function
-    | '^(' sort (',' sort)* ')'                                         #orderby
-    | exp'[' ']'                                                        #expand
-    | lhs = exp'['  rhs = exp ']'                                       #filter
-    | lhs = exp '.' rhs = exp                                           #map
-    | lhs = exp '&' rhs = exp                                           #concatenate
-    | lhs = exp '*' rhs = exp                                           #mul
-    | lhs = exp '/' rhs = exp                                           #div
-    | lhs = exp '%' rhs = exp                                           #mod
-    | lhs = exp '+' rhs = exp                                           #add
-    | lhs = exp '-' rhs = exp                                           #sub
-    | lhs = exp '='  rhs = exp                                          #eq
-    | lhs = exp '!=' rhs = exp                                          #ne
-    | lhs = exp '>'  rhs = exp                                          #gt
-    | lhs = exp '<'  rhs = exp                                          #lt
-    | lhs = exp '>=' rhs = exp                                          #gte
-    | lhs = exp '<=' rhs = exp                                          #lte
-    | lhs = exp 'in' rhs = exp                                          #in
-    | lhs = exp AND  rhs = exp                                          #and
-    | lhs = exp OR   rhs = exp                                          #or
-    | prd = exp '?' pos = exp ':' neg = exp                             #condition
-    | '[' range (',' range)* ']'                                        #ranges
-    | path                                                              #select
-    | json                                                              #literal
-    | '(' exp (';' exp)*')'                                             #scope
-    | REGEX                                                             #regex
+    : lhs = exp '~>' rhs = exp                                              #chain
+    | '|' loc = exp ('|' upd = exp (',' del = exp)?)? '|'                   #transform
+    | '$' label ':=' exp                                                    #define
+    | '$' label ( '(' (exp (',' exp)*)? ')')?                               #call
+    | ('fun'|'function') '(' ('$' label (',' '$' label)*)? ')' '{' exp '}'  #function
+    | '^(' sort (',' sort)* ')'                                             #orderby
+    | exp'[' ']'                                                            #expand
+    | lhs = exp'['  rhs = exp ']'                                           #filter
+    | lhs = exp '.' rhs = exp                                               #map
+    | lhs = exp '&' rhs = exp                                               #concatenate
+    | lhs = exp '*' rhs = exp                                               #mul
+    | lhs = exp '/' rhs = exp                                               #div
+    | lhs = exp '%' rhs = exp                                               #mod
+    | lhs = exp '+' rhs = exp                                               #add
+    | lhs = exp '-' rhs = exp                                               #sub
+    | lhs = exp '='  rhs = exp                                              #eq
+    | lhs = exp '!=' rhs = exp                                              #ne
+    | lhs = exp '>'  rhs = exp                                              #gt
+    | lhs = exp '<'  rhs = exp                                              #lt
+    | lhs = exp '>=' rhs = exp                                              #gte
+    | lhs = exp '<=' rhs = exp                                              #lte
+    | lhs = exp 'in' rhs = exp                                              #in
+    | lhs = exp AND  rhs = exp                                              #and
+    | lhs = exp OR   rhs = exp                                              #or
+    | prd = exp '?' pos = exp ':' neg = exp                                 #condition
+    | '[' range (',' range)* ']'                                            #ranges
+    | path                                                                  #select
+    | json                                                                  #literal
+    | '(' exp (';' exp)*')'                                                 #scope
+    | REGEX                                                                 #regex
     ;
 
 

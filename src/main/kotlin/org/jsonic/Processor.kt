@@ -35,7 +35,6 @@ class Processor(
             }
         }
 
-
     } //~ companion
 
     private var context = root
@@ -271,7 +270,7 @@ class Processor(
         return reduce(res)
     }
 
-    override fun visitFun(ctx: JSonicParser.FunContext): JsonNode {
+    override fun visitFun(ctx: JSonicParser.FunContext): FunNode {
         return FunNode(
             ctx.label().map { label -> label.text },
             ctx.exp().text
@@ -318,6 +317,20 @@ class Processor(
             res = visit(exp)
         }
         return res
+    }
+
+    override fun visitLambda(ctx: JSonicParser.LambdaContext): JsonNode? {
+        val function = visitFun(ctx.`fun`())
+        val context = this.context
+        ctx.exp().forEachIndexed { i, exp ->
+            this.context = context
+            varMap[function.args[i]] = VarNode(function.args[i], visit(exp))
+        }
+        return visit(JSonicParser(CommonTokenStream(JSonicLexer(CharStreams.fromString(function.body)))).jsong())
+    }
+
+    override fun visitLbl(ctx: JSonicParser.LblContext): JsonNode? {
+        return varMap[ctx.label().text]?.value
     }
 
     override fun visitLt(ctx: JSonicParser.LtContext): JsonNode? {

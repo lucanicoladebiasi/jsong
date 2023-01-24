@@ -23,7 +23,7 @@ exp
     | '|' loc = exp ('|' upd = exp (',' del = exp)?)? '|'   #transform
     | '$' label ':=' exp                                    #define
     | '$' label '(' (exp (',' exp)*)? ')'                   #call
-    | exp '(' (exp (',' exp)*)? ')'                         #lambda
+    | fun '(' (exp (',' exp)*)? ')'                         #lambda
     | '^(' sort (',' sort)* ')'                             #orderby
     | exp'[' ']'                                            #expand
     | lhs = exp'['  rhs = exp ']'                           #filter
@@ -46,8 +46,8 @@ exp
     | prd = exp '?' pos = exp ':' neg = exp                 #condition
     | '[' range (',' range)* ']'                            #ranges
     | fun                                                   #function
-    | path                                                  #select
     | '$' label                                             #lbl
+    | path                                                  #select
     | json                                                  #literal
     | '(' exp (';' exp)*')'                                 #scope
     | REGEX                                                 #regex

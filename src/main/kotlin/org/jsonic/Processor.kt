@@ -271,6 +271,17 @@ class Processor(
         return reduce(res)
     }
 
+    override fun visitFun(ctx: JSonicParser.FunContext): JsonNode {
+        return FunNode(
+            ctx.label().map { label -> label.text },
+            ctx.exp().text
+        )
+    }
+
+    override fun visitFunction(ctx: JSonicParser.FunctionContext): JsonNode {
+        return visit(ctx.`fun`())!!
+    }
+
     override fun visitGt(ctx: JSonicParser.GtContext): JsonNode? {
         val lhs = visit(ctx.lhs)
         val rhs = visit(ctx.rhs)

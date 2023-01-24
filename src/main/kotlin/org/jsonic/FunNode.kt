@@ -6,15 +6,13 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.node.TextNode
 
 class FunNode(
-    name: String,
-    args: List<VarNode>,
+    args: List<String>,
     body: String,
     nodeFactory: JsonNodeFactory = ObjectMapper().nodeFactory
 ) : ObjectNode(
     nodeFactory,
     mapOf(
-        Pair(NAME_TAG, TextNode(name)),
-        Pair(ARGS_TAG, nodeFactory.arrayNode().addAll(args)),
+        Pair(ARGS_TAG, nodeFactory.arrayNode().addAll(args.map { arg -> TextNode(arg) })),
         Pair(BODY_TAG, TextNode(body))
     )
 ) {
@@ -25,15 +23,31 @@ class FunNode(
 
         const val BODY_TAG = "body"
 
-        const val NAME_TAG = "name"
-
     } //~ companion
 
-    val name get() = (this[NAME_TAG] as TextNode).textValue()
-
-    @Suppress("UNCHECKED_CAST")
-    val args get() = this[ARGS_TAG].toList() as List<VarNode>
+    val args get() = this[ARGS_TAG].map { arg -> arg.textValue() }
 
     val body get() = (this[BODY_TAG] as TextNode).textValue()
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+        if (!super.equals(other)) return false
+
+        other as FunNode
+
+        if (args != other.args) return false
+        if (body != other.body) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = super.hashCode()
+        result = 31 * result + args.hashCode()
+        result = 31 * result + (body?.hashCode() ?: 0)
+        return result
+    }
+
 
 }

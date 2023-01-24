@@ -21,8 +21,19 @@ class TestFunctionalProgramming {
      * https://docs.jsonata.org/programming#defining-a-function
      */
     @Test
-    @Disabled
     fun `defining a function`() {
+        val expression = "function(\$l, \$w, \$h){ 'x' }"
+        val expected = FunNode(listOf("l", "w", "h"), "'x'")
+        val actual = Processor().evaluate(expression)
+        assertEquals(expected, actual)
+    }
+
+    /**
+     * https://docs.jsonata.org/programming#defining-a-function
+     */
+    @Test
+    @Disabled
+    fun `lambda function call`() {
         val expression = "function(\$l, \$w, \$h){ \$l * \$w * \$h }(10, 10, 5)"
         val expected = Processor().evaluate("500")
         val actual = Processor().evaluate(expression)

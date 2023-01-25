@@ -1,7 +1,6 @@
 package org.jsonic
 
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
 class TestFunctionalProgramming {
@@ -43,7 +42,6 @@ class TestFunctionalProgramming {
      * https://docs.jsonata.org/programming#defining-a-function
      */
     @Test
-    @Disabled
     fun `binding a function`() {
         val expression = "(\$volume := function(\$l, \$w, \$h){ \$l * \$w * \$h }; \$volume(10, 10, 5))"
         val expected = Processor().evaluate("500")

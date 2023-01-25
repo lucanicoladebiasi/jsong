@@ -134,9 +134,18 @@ class Processor(
     }
 
     override fun visitCall(ctx: JSonicParser.CallContext): JsonNode? {
-        val label = ctx.label().text
-        when (varMap.contains(label)) {
-            true -> return varMap[label]?.value
+        val function = varMap[ctx.label().text]?.value
+        return when (function) {
+
+            is FunNode -> {
+                val context = this.context
+                ctx.exp().forEachIndexed { i, exp ->
+                    this.context = context
+                    varMap[function.args[i]] = VarNode(function.args[i], visit(exp))
+                }
+                return visit(JSonicParser(CommonTokenStream(JSonicLexer(CharStreams.fromString(function.body)))).jsong())
+            }
+
             else -> {
                 val args = mutableListOf<Any?>()
                 args.add(lib)
@@ -148,24 +157,58 @@ class Processor(
                         args.add(visit(exp))
                     }
                 }
-                val function = recall(lib::class, ctx.label().text, args)
+                val kfun = recall(lib::class, ctx.label().text, args)
                 when {
-                    args.size > function.parameters.size -> while (args.size > function.parameters.size) {
+                    args.size > kfun.parameters.size -> while (args.size > kfun.parameters.size) {
                         args.removeLast()
                     }
 
-                    args.size < function.parameters.size -> while (args.size < function.parameters.size) {
+                    args.size < kfun.parameters.size -> while (args.size < kfun.parameters.size) {
                         args.add(null)
                     }
                 }
                 try {
-                    return function.call(*args.toTypedArray()) as JsonNode?
+                    kfun.call(*args.toTypedArray()) as JsonNode?
                 } catch (e: InvocationTargetException) {
                     throw e.targetException
                 }
             }
         }
     }
+
+//    override fun visitCall(ctx: JSonicParser.CallContext): JsonNode? {
+//        val label = ctx.label().text
+//        when (varMap.contains(label)) {
+//            true -> return varMap[label]?.value
+//            else -> {
+//                val args = mutableListOf<Any?>()
+//                args.add(lib)
+//                val context = this.context
+//                when (ctx.exp().isEmpty()) {
+//                    true -> args.add(context)
+//                    else -> ctx.exp().forEach { exp ->
+//                        this.context = context
+//                        args.add(visit(exp))
+//                    }
+//                }
+//                val function = recall(lib::class, ctx.label().text, args)
+//                when {
+//                    args.size > function.parameters.size -> while (args.size > function.parameters.size) {
+//                        args.removeLast()
+//                    }
+//
+//                    args.size < function.parameters.size -> while (args.size < function.parameters.size) {
+//                        args.add(null)
+//                    }
+//                }
+//                try {
+//                    return function.call(*args.toTypedArray()) as JsonNode?
+//                } catch (e: InvocationTargetException) {
+//                    throw e.targetException
+//                }
+//            }
+//        }
+//    }
 
     override fun visitConcatenate(ctx: JSonicParser.ConcatenateContext): JsonNode {
         val sb = StringBuilder()

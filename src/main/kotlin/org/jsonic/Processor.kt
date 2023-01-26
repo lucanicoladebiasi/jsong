@@ -45,6 +45,10 @@ class Processor(
 
     val nf: JsonNodeFactory = om.nodeFactory
 
+    private val ctxMap = mutableMapOf<String, ArrayNode>()
+
+    private val posMap = mutableMapOf<String, ArrayNode>()
+
     private val varMap = mutableMapOf<String, VarNode>()
 
     private fun descendants(node: JsonNode?): ArrayNode {
@@ -134,8 +138,7 @@ class Processor(
     }
 
     override fun visitCall(ctx: JSonicParser.CallContext): JsonNode? {
-        val function = varMap[ctx.label().text]?.value
-        return when (function) {
+        return when (val function = varMap[ctx.label().text]?.value) {
 
             is FunNode -> {
                 val context = this.context
@@ -175,40 +178,6 @@ class Processor(
             }
         }
     }
-
-//    override fun visitCall(ctx: JSonicParser.CallContext): JsonNode? {
-//        val label = ctx.label().text
-//        when (varMap.contains(label)) {
-//            true -> return varMap[label]?.value
-//            else -> {
-//                val args = mutableListOf<Any?>()
-//                args.add(lib)
-//                val context = this.context
-//                when (ctx.exp().isEmpty()) {
-//                    true -> args.add(context)
-//                    else -> ctx.exp().forEach { exp ->
-//                        this.context = context
-//                        args.add(visit(exp))
-//                    }
-//                }
-//                val function = recall(lib::class, ctx.label().text, args)
-//                when {
-//                    args.size > function.parameters.size -> while (args.size > function.parameters.size) {
-//                        args.removeLast()
-//                    }
-//
-//                    args.size < function.parameters.size -> while (args.size < function.parameters.size) {
-//                        args.add(null)
-//                    }
-//                }
-//                try {
-//                    return function.call(*args.toTypedArray()) as JsonNode?
-//                } catch (e: InvocationTargetException) {
-//                    throw e.targetException
-//                }
-//            }
-//        }
-//    }
 
     override fun visitConcatenate(ctx: JSonicParser.ConcatenateContext): JsonNode {
         val sb = StringBuilder()
@@ -373,7 +342,13 @@ class Processor(
     }
 
     override fun visitLbl(ctx: JSonicParser.LblContext): JsonNode? {
-        return varMap[ctx.label().text]?.value
+        val label = ctx.label().text
+        return when {
+            posMap.contains(label) -> {
+                DecimalNode(posMap[label]!!.indexOf(context).toBigDecimal())
+            }
+            else -> varMap[label]?.value
+        }
     }
 
     override fun visitLt(ctx: JSonicParser.LtContext): JsonNode? {
@@ -402,7 +377,8 @@ class Processor(
 
     override fun visitMap(ctx: JSonicParser.MapContext): JsonNode? {
         val res = ArrayNode(nf)
-        when (val lhs = expand(visit(ctx.lhs))) {
+        val lhs = expand(visit(ctx.lhs))
+        when (lhs) {
             is RangesNode -> lhs.indexes.forEach { context ->
                 this.context = context
                 when (val rhs = visit(ctx.rhs)) {
@@ -410,7 +386,6 @@ class Processor(
                     else -> rhs?.let { res.add(it) }
                 }
             }
-
             else -> lhs.forEach { context ->
                 this.context = context
                 when (val rhs = visit(ctx.rhs)) {
@@ -418,6 +393,15 @@ class Processor(
                     else -> rhs?.let { res.add(it) }
                 }
             }
+        }
+        when {
+            ctx.CTX() != null -> {
+                for(i in 0 until res.size()) {
+                    res[i] = lhs
+                }
+                ctxMap[ctx.label().text] = res
+            }
+            ctx.POS() != null -> posMap[ctx.label().text] = res
         }
         return reduce(res)
     }

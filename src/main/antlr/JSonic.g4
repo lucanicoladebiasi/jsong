@@ -27,7 +27,7 @@ exp
     | '^(' sort (',' sort)* ')'                             #orderby
     | exp'[' ']'                                            #expand
     | lhs = exp'['  rhs = exp ']'                           #filter
-    | lhs = exp '.' rhs = exp                               #map
+    | lhs = exp '.' rhs = exp ((CTX | POS) label)?          #map
     | lhs = exp '&' rhs = exp                               #concatenate
     | lhs = exp '*' rhs = exp                               #mul
     | lhs = exp '/' rhs = exp                               #div
@@ -119,6 +119,9 @@ TRUE: 'true';
 FALSE: 'false';
 
 REGEX: '/' (.)+? '/' 'i'? 'm'?;
+
+CTX: '@$';
+POS: '#$';
 
 LABEL: ([a-zA-Z][0-9a-zA-Z]*) | ('`' (.)+? '`');
 

@@ -91,7 +91,13 @@ class Processor(
                 0 -> null
 
                 1 -> node[0]
-                else -> node
+                else -> {
+                    val res = nf.arrayNode()
+                    node.forEach { element ->
+                        reduce(element)?.let { res.add(it) }
+                    }
+                    res
+                }
             }
 
             else -> node

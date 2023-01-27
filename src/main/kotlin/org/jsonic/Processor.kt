@@ -45,7 +45,7 @@ class Processor(
 
     val nf: JsonNodeFactory = om.nodeFactory
 
-    private val ctxMap = mutableMapOf<String, ArrayNode>()
+    private val ctxMap = mutableMapOf<String, JsonNode?>()
 
     private val posMap = mutableMapOf<String, ArrayNode>()
 
@@ -350,9 +350,14 @@ class Processor(
     override fun visitLbl(ctx: JSonicParser.LblContext): JsonNode? {
         val label = ctx.label().text
         return when {
-            posMap.contains(label) -> {
-                DecimalNode(posMap[label]!!.indexOf(context).toBigDecimal())
+            ctxMap[label] != null -> {
+                context?.contains(ctxMap[label])?.let { context }
             }
+
+//            posMap.contains(label) -> {
+//                DecimalNode(posMap[label]!!.indexOf(context).toBigDecimal())
+//            }
+
             else -> varMap[label]?.value
         }
     }
@@ -392,6 +397,7 @@ class Processor(
                     else -> rhs?.let { res.add(it) }
                 }
             }
+
             else -> lhs.forEach { context ->
                 this.context = context
                 when (val rhs = visit(ctx.rhs)) {
@@ -400,14 +406,11 @@ class Processor(
                 }
             }
         }
-        when {
-            ctx.CTX() != null -> {
-                for(i in 0 until res.size()) {
-                    res[i] = lhs
-                }
-                ctxMap[ctx.label().text] = res
+        if (ctx.ctx?.text != null) {
+            ctxMap[ctx.ctx!!.text] = reduce(res)
+            for(i in 0 until res.size()) {
+                res[i] = lhs
             }
-            ctx.POS() != null -> posMap[ctx.label().text] = res
         }
         return reduce(res)
     }

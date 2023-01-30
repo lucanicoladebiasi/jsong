@@ -49,7 +49,7 @@ class Processor(
 
     private val posMap = mutableMapOf<String, ArrayNode>()
 
-    private val varMap = mutableMapOf<String, VarNode>()
+    private val varMap = mutableMapOf<String, JsonNode?>()
 
     private fun descendants(node: JsonNode?): ArrayNode {
         val res = ArrayNode(nf)
@@ -144,13 +144,13 @@ class Processor(
     }
 
     override fun visitCall(ctx: JSonicParser.CallContext): JsonNode? {
-        return when (val function = varMap[ctx.label().text]?.value) {
+        return when (val function = varMap[ctx.label().text]) {
 
             is FunNode -> {
                 val context = this.context
                 ctx.exp().forEachIndexed { i, exp ->
                     this.context = context
-                    varMap[function.args[i]] = VarNode(function.args[i], visit(exp))
+                    varMap[function.args[i]] = visit(exp)
                 }
                 return visit(JSonicParser(CommonTokenStream(JSonicLexer(CharStreams.fromString(function.body)))).jsong())
             }
@@ -207,11 +207,9 @@ class Processor(
         return context
     }
 
-    override fun visitDefine(ctx: JSonicParser.DefineContext): JsonNode {
-        val label = ctx.label().text
-        val value = visit(ctx.exp())
-        val res = VarNode(label, value, nf)
-        varMap[label] = res
+    override fun visitDefine(ctx: JSonicParser.DefineContext): JsonNode? {
+        val res = visit(ctx.exp())
+        varMap[ctx.label().text] = res
         return res
     }
 
@@ -342,7 +340,7 @@ class Processor(
         val context = this.context
         ctx.exp().forEachIndexed { i, exp ->
             this.context = context
-            varMap[function.args[i]] = VarNode(function.args[i], visit(exp))
+            varMap[function.args[i]] = visit(exp)
         }
         return visit(JSonicParser(CommonTokenStream(JSonicLexer(CharStreams.fromString(function.body)))).jsong())
     }
@@ -358,7 +356,7 @@ class Processor(
 //                DecimalNode(posMap[label]!!.indexOf(context).toBigDecimal())
 //            }
 
-            else -> varMap[label]?.value
+            else -> varMap[label]
         }
     }
 

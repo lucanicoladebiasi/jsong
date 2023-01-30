@@ -37,6 +37,8 @@ class Processor(
 
     } //~ companion
 
+    private var bracket: Pair<Int, Int>? = null
+
     private var context = root
 
     private var isToReduce: Boolean = true
@@ -45,7 +47,7 @@ class Processor(
 
     val nf: JsonNodeFactory = om.nodeFactory
 
-    private val ctxMap = mutableMapOf<String, JsonNode?>()
+    private val ctxMap = mutableMapOf<String, ArrayNode>()
 
     private val posMap = mutableMapOf<String, ArrayNode>()
 
@@ -102,6 +104,20 @@ class Processor(
 
             else -> node
         } else node
+    }
+
+    private fun select(node: JsonNode?, fieldName: String): JsonNode? {
+        return when (node) {
+            is ObjectNode -> {
+                val field = normalizeFieldName(fieldName)
+                when (this.context?.has(field)) {
+                    true -> this.context?.get(field)
+                    else -> null
+                }
+            }
+
+            else -> null
+        }
     }
 
     override fun visitAdd(ctx: JSonicParser.AddContext): JsonNode {
@@ -240,18 +256,7 @@ class Processor(
     }
 
     override fun visitField(ctx: JSonicParser.FieldContext): JsonNode? {
-        val res = when (context) {
-            is ObjectNode -> {
-                val field = normalizeFieldName(ctx.text)
-                when (context?.has(field)) {
-                    true -> context?.get(field)
-                    else -> null
-                }
-            }
-
-            else -> null
-        }
-        return res
+        return select(context, ctx.text)
     }
 
     override fun visitFilter(ctx: JSonicParser.FilterContext): JsonNode? {
@@ -349,7 +354,14 @@ class Processor(
         val label = ctx.label().text
         return when {
             ctxMap[label] != null -> {
-                context?.contains(ctxMap[label])?.let { context }
+                when {
+                    bracket != null -> {
+                        val size = ctxMap[label]!!.size()
+                        val ratio = bracket!!.first / size
+                        ctxMap[label]!![bracket!!.second / ratio]
+                    }
+                    else -> null
+                }
             }
 
 //            posMap.contains(label) -> {
@@ -396,8 +408,9 @@ class Processor(
                 }
             }
 
-            else -> lhs.forEach { context ->
+            else -> lhs.forEachIndexed { index, context ->
                 this.context = context
+                this.bracket = Pair(lhs.size(), index)
                 when (val rhs = visit(ctx.rhs)) {
                     is ArrayNode -> res.addAll(rhs)
                     else -> rhs?.let { res.add(it) }
@@ -405,11 +418,12 @@ class Processor(
             }
         }
         if (ctx.ctx?.text != null) {
-            ctxMap[ctx.ctx!!.text] = reduce(res)
+            ctxMap[ctx.ctx!!.text] = res
             for(i in 0 until res.size()) {
                 res[i] = lhs
             }
         }
+        this.bracket = null
         return reduce(res)
     }
 

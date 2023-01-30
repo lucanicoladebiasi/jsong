@@ -49,7 +49,7 @@ class Processor(
 
     private val ctxMap = mutableMapOf<String, ArrayNode>()
 
-    private val posMap = mutableMapOf<String, ArrayNode>()
+    //private val posMap = mutableMapOf<String, ArrayNode>()
 
     private val varMap = mutableMapOf<String, JsonNode?>()
 
@@ -418,7 +418,7 @@ class Processor(
             }
         }
         if (ctx.ctx?.text != null) {
-            ctxMap[ctx.ctx!!.text] = res
+            ctxMap[ctx.ctx!!.text] = res.deepCopy()
             for(i in 0 until res.size()) {
                 res[i] = lhs
             }

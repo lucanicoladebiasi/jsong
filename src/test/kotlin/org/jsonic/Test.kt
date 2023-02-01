@@ -9,9 +9,8 @@ class Test {
 
     @Test
     fun test() {
-        //val expression = "library.books#\$i[\"Kernighan\" in authors].{\"title\": title, \"index\": \$i }"
-        //val expression = "library.loans@\$l.{'L': \$l }"
-        val expression = "library.loans@\$L.{'due': \$L.return}"
+        val expression =
+            "library.loans@\$L.books@\$B[\$L.isbn=\$B.isbn]"
 
         val actual = Processor(TestResources.library).evaluate(expression)
         println(w.writeValueAsString(actual))

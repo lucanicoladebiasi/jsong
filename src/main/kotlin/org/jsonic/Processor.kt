@@ -264,6 +264,7 @@ class Processor(
         val lhs = expand(visit(ctx.lhs))
         lhs.forEachIndexed { index, context ->
             this.context = context
+            this.bracket = Pair(lhs.size(), index)
             when (val rhs = visit(ctx.rhs)) {
                 is NumericNode -> {
                     val value = rhs.asInt()
@@ -287,6 +288,7 @@ class Processor(
                 }
 
             }
+            this.context = null
         }
         return reduce(res)
     }
@@ -397,7 +399,7 @@ class Processor(
     }
 
     override fun visitMap(ctx: JSonicParser.MapContext): JsonNode? {
-        val res = ArrayNode(nf)
+        var res = ArrayNode(nf)
         val lhs = expand(visit(ctx.lhs))
         when (lhs) {
             is RangesNode -> lhs.indexes.forEach { context ->
@@ -415,15 +417,17 @@ class Processor(
                     is ArrayNode -> res.addAll(rhs)
                     else -> rhs?.let { res.add(it) }
                 }
+                this.bracket = null
             }
         }
         if (ctx.ctx?.text != null) {
-            ctxMap[ctx.ctx!!.text] = res.deepCopy()
-            for(i in 0 until res.size()) {
-                res[i] = lhs
+            val ratio = res.size() / lhs.size()
+            ctxMap[ctx.ctx!!.text] = res
+            res = ArrayNode(nf)
+            for (i in 0 until ratio) {
+                res.addAll(lhs)
             }
         }
-        this.bracket = null
         return reduce(res)
     }
 

@@ -277,7 +277,8 @@ class Processor(
         lhs.forEachIndexed { index, context ->
             this.context = context
             indexStack.push(index)
-            when (val rhs = visit(ctx.rhs)) {
+            val rhs = visit(ctx.rhs)
+            when (rhs) {
                 is NumericNode -> {
                     val value = rhs.asInt()
                     val offset = if (value < 0) lhs.size() + value else value
@@ -372,7 +373,11 @@ class Processor(
             value != null -> {
                when(indexStack.isEmpty()) {
                    true -> value
-                   else -> value[indexStack.peek()]
+                   else -> {
+                       val size = indexStack.size
+                       val index = indexStack.peek()
+                       value[index]
+                   }
                }
             }
             else -> null

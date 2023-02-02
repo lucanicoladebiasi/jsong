@@ -5,9 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.*
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
-import org.jsong.antlr.JSonicBaseVisitor
-import org.jsong.antlr.JSonicLexer
-import org.jsong.antlr.JSonicParser
+import org.jsong.antlr.JSongBaseVisitor
+import org.jsong.antlr.JSongLexer
+import org.jsong.antlr.JSongParser
 import java.lang.reflect.InvocationTargetException
 import java.math.MathContext
 import java.time.Instant
@@ -23,7 +23,7 @@ class Processor(
     val om: ObjectMapper = ObjectMapper(),
     val random: Random = Random.Default,
     val time: Instant = Instant.now()
-) : JSonicBaseVisitor<JsonNode?>() {
+) : JSongBaseVisitor<JsonNode?>() {
 
     companion object {
 
@@ -67,7 +67,7 @@ class Processor(
 
 
     fun evaluate(exp: String): JsonNode? {
-        return visit(JSonicParser(CommonTokenStream(JSonicLexer(CharStreams.fromString(exp)))).jsong())
+        return visit(JSongParser(CommonTokenStream(JSongLexer(CharStreams.fromString(exp)))).jsong())
     }
 
     internal fun expand(node: JsonNode?): ArrayNode {
@@ -132,13 +132,13 @@ class Processor(
         return value
     }
 
-    override fun visitAdd(ctx: JSonicParser.AddContext): JsonNode {
+    override fun visitAdd(ctx: JSongParser.AddContext): JsonNode {
         val lhs = lib.number(visit(ctx.lhs))
         val rhs = lib.number(visit(ctx.rhs))
         return DecimalNode(lhs.decimalValue().add(rhs.decimalValue()))
     }
 
-    override fun visitAll(ctx: JSonicParser.AllContext): JsonNode? {
+    override fun visitAll(ctx: JSongParser.AllContext): JsonNode? {
         val res = ArrayNode(nf)
         if (context is ObjectNode) {
             context?.fields()?.forEach { field ->
@@ -148,13 +148,13 @@ class Processor(
         return reduce(res)
     }
 
-    override fun visitAnd(ctx: JSonicParser.AndContext): JsonNode? {
+    override fun visitAnd(ctx: JSongParser.AndContext): JsonNode? {
         val lhs = lib.boolean(visit(ctx.lhs))
         val rhs = lib.boolean(visit(ctx.rhs))
         return BooleanNode.valueOf(lhs.booleanValue() && rhs.booleanValue())
     }
 
-    override fun visitArray(ctx: JSonicParser.ArrayContext): JsonNode {
+    override fun visitArray(ctx: JSongParser.ArrayContext): JsonNode {
         val res = ArrayNode(nf)
         ctx.exp().forEach { exp ->
             res.add(visit(exp))
@@ -162,7 +162,7 @@ class Processor(
         return res
     }
 
-    override fun visitBool(ctx: JSonicParser.BoolContext): JsonNode? {
+    override fun visitBool(ctx: JSongParser.BoolContext): JsonNode? {
         return when {
             ctx.FALSE() != null -> BooleanNode.FALSE
             ctx.TRUE() != null -> BooleanNode.TRUE
@@ -171,7 +171,7 @@ class Processor(
 
     }
 
-    override fun visitCall(ctx: JSonicParser.CallContext): JsonNode? {
+    override fun visitCall(ctx: JSongParser.CallContext): JsonNode? {
         return when (val function = varMap[ctx.label().text]) {
 
             is FunNode -> {
@@ -180,7 +180,7 @@ class Processor(
                     this.context = context
                     varMap[function.args[i]] = visit(exp)
                 }
-                return visit(JSonicParser(CommonTokenStream(JSonicLexer(CharStreams.fromString(function.body)))).jsong())
+                return visit(JSongParser(CommonTokenStream(JSongLexer(CharStreams.fromString(function.body)))).jsong())
             }
 
             else -> {
@@ -213,7 +213,7 @@ class Processor(
         }
     }
 
-    override fun visitConcatenate(ctx: JSonicParser.ConcatenateContext): JsonNode {
+    override fun visitConcatenate(ctx: JSongParser.ConcatenateContext): JsonNode {
         val sb = StringBuilder()
         visit(ctx.lhs)?.let { lhs ->
             sb.append(lib.string(lhs).textValue())
@@ -224,24 +224,24 @@ class Processor(
         return TextNode(sb.toString())
     }
 
-    override fun visitCondition(ctx: JSonicParser.ConditionContext): JsonNode? {
+    override fun visitCondition(ctx: JSongParser.ConditionContext): JsonNode? {
         return when (lib.boolean(visit(ctx.prd)).booleanValue()) {
             true -> visit(ctx.pos)
             else -> visit(ctx.neg)
         }
     }
 
-    override fun visitContext(ctx: JSonicParser.ContextContext): JsonNode? {
+    override fun visitContext(ctx: JSongParser.ContextContext): JsonNode? {
         return context
     }
 
-    override fun visitDefine(ctx: JSonicParser.DefineContext): JsonNode? {
+    override fun visitDefine(ctx: JSongParser.DefineContext): JsonNode? {
         val res = visit(ctx.exp())
         varMap[ctx.label().text] = res
         return res
     }
 
-    override fun visitDescendants(ctx: JSonicParser.DescendantsContext): JsonNode? {
+    override fun visitDescendants(ctx: JSongParser.DescendantsContext): JsonNode? {
         val res = ArrayNode(nf)
         if (context is ObjectNode) {
             res.addAll(descendants(context))
@@ -249,34 +249,36 @@ class Processor(
         return reduce(res)
     }
 
-    override fun visitDiv(ctx: JSonicParser.DivContext): JsonNode {
+    override fun visitDiv(ctx: JSongParser.DivContext): JsonNode {
         val lhs = lib.number(visit(ctx.lhs))
         val rhs = lib.number(visit(ctx.rhs))
         return DecimalNode(lhs.decimalValue().divide(rhs.decimalValue(), mc))
     }
 
-    override fun visitEq(ctx: JSonicParser.EqContext): JsonNode? {
+    override fun visitEq(ctx: JSongParser.EqContext): JsonNode? {
         val lhs = visit(ctx.lhs)
         val rhs = visit(ctx.rhs)
         return BooleanNode.valueOf(lhs == rhs)
     }
 
-    override fun visitExpand(ctx: JSonicParser.ExpandContext): JsonNode {
+    override fun visitExpand(ctx: JSongParser.ExpandContext): JsonNode {
         val res = expand(visit(ctx.exp()))
         isToReduce = false
         return res
     }
 
-    override fun visitField(ctx: JSonicParser.FieldContext): JsonNode? {
+    override fun visitField(ctx: JSongParser.FieldContext): JsonNode? {
         return select(context, ctx.text)
     }
 
-    override fun visitFilter(ctx: JSonicParser.FilterContext): JsonNode? {
+    override fun visitFilter(ctx: JSongParser.FilterContext): JsonNode? {
+        println("<FLT ${ctx.lhs.text}")
         val res = ArrayNode(nf)
         val lhs = expand(visit(ctx.lhs))
         lhs.forEachIndexed { index, context ->
             this.context = context
             indexStack.push(index)
+            println(" FLT ${ctx.rhs.text} $index")
             val rhs = visit(ctx.rhs)
             when (rhs) {
                 is NumericNode -> {
@@ -304,21 +306,22 @@ class Processor(
             indexStack.pop()
             this.context = null
         }
+        println(">FLT ${ctx.lhs.text}")
         return reduce(res)
     }
 
-    override fun visitFun(ctx: JSonicParser.FunContext): FunNode {
+    override fun visitFun(ctx: JSongParser.FunContext): FunNode {
         return FunNode(
             ctx.label().map { label -> label.text },
             ctx.exp().text
         )
     }
 
-    override fun visitFunction(ctx: JSonicParser.FunctionContext): JsonNode {
+    override fun visitFunction(ctx: JSongParser.FunctionContext): JsonNode {
         return visit(ctx.`fun`())!!
     }
 
-    override fun visitGt(ctx: JSonicParser.GtContext): JsonNode? {
+    override fun visitGt(ctx: JSongParser.GtContext): JsonNode? {
         val lhs = visit(ctx.lhs)
         val rhs = visit(ctx.rhs)
         val res = BooleanNode.valueOf(
@@ -330,7 +333,7 @@ class Processor(
         return res
     }
 
-    override fun visitGte(ctx: JSonicParser.GteContext): JsonNode? {
+    override fun visitGte(ctx: JSongParser.GteContext): JsonNode? {
         val lhs = visit(ctx.lhs)
         val rhs = visit(ctx.rhs)
         val res = BooleanNode.valueOf(
@@ -342,13 +345,13 @@ class Processor(
         return res
     }
 
-    override fun visitIn(ctx: JSonicParser.InContext): JsonNode? {
+    override fun visitIn(ctx: JSongParser.InContext): JsonNode? {
         val lhs = reduce(visit(ctx.lhs))
         val rhs = expand(visit(ctx.rhs))
         return BooleanNode.valueOf(rhs.contains(lhs))
     }
 
-    override fun visitJsong(ctx: JSonicParser.JsongContext): JsonNode? {
+    override fun visitJsong(ctx: JSongParser.JsongContext): JsonNode? {
         var res: JsonNode? = null
         ctx.exp().forEach { exp ->
             res = visit(exp)
@@ -356,17 +359,17 @@ class Processor(
         return res
     }
 
-    override fun visitLambda(ctx: JSonicParser.LambdaContext): JsonNode? {
+    override fun visitLambda(ctx: JSongParser.LambdaContext): JsonNode? {
         val function = visitFun(ctx.`fun`())
         val context = this.context
         ctx.exp().forEachIndexed { i, exp ->
             this.context = context
             varMap[function.args[i]] = visit(exp)
         }
-        return visit(JSonicParser(CommonTokenStream(JSonicLexer(CharStreams.fromString(function.body)))).jsong())
+        return visit(JSongParser(CommonTokenStream(JSongLexer(CharStreams.fromString(function.body)))).jsong())
     }
 
-    override fun visitLbl(ctx: JSonicParser.LblContext): JsonNode? {
+    override fun visitLbl(ctx: JSongParser.LblContext): JsonNode? {
         val label = ctx.label().text
         val value = ctxMap[label]
         return when {
@@ -384,7 +387,7 @@ class Processor(
         }
     }
 
-    override fun visitLt(ctx: JSonicParser.LtContext): JsonNode? {
+    override fun visitLt(ctx: JSongParser.LtContext): JsonNode? {
         val lhs = visit(ctx.lhs)
         val rhs = visit(ctx.rhs)
         val res = BooleanNode.valueOf(
@@ -396,7 +399,7 @@ class Processor(
         return res
     }
 
-    override fun visitLte(ctx: JSonicParser.LteContext): JsonNode? {
+    override fun visitLte(ctx: JSongParser.LteContext): JsonNode? {
         val lhs = visit(ctx.lhs)
         val rhs = visit(ctx.rhs)
         val res = BooleanNode.valueOf(
@@ -408,7 +411,8 @@ class Processor(
         return res
     }
 
-    override fun visitMap(ctx: JSonicParser.MapContext): JsonNode? {
+    override fun visitMap(ctx: JSongParser.MapContext): JsonNode? {
+        println("<MAP ${ctx.lhs.text}")
         var res = ArrayNode(nf)
         val lhs = expand(visit(ctx.lhs))
         when (lhs) {
@@ -423,6 +427,7 @@ class Processor(
             else -> lhs.forEachIndexed { index, context ->
                 this.context = context
                 indexStack.push(index)
+                println(" MAP ${ctx.rhs.text} $index")
                 when (val rhs = visit(ctx.rhs)) {
                     is ArrayNode -> res.addAll(rhs)
                     else -> rhs?.let { res.add(it) }
@@ -441,36 +446,37 @@ class Processor(
                 res.addAll(lhs)
             }
         }
+        println("MAP> ${ctx.lhs.text}")
         return reduce(res)
     }
 
-    override fun visitMod(ctx: JSonicParser.ModContext): JsonNode {
+    override fun visitMod(ctx: JSongParser.ModContext): JsonNode {
         val lhs = lib.number(visit(ctx.lhs))
         val rhs = lib.number(visit(ctx.rhs))
         return DecimalNode(lhs.decimalValue().remainder(rhs.decimalValue()))
     }
 
-    override fun visitMul(ctx: JSonicParser.MulContext): JsonNode {
+    override fun visitMul(ctx: JSongParser.MulContext): JsonNode {
         val lhs = lib.number(visit(ctx.lhs))
         val rhs = lib.number(visit(ctx.rhs))
         return DecimalNode(lhs.decimalValue().multiply(rhs.decimalValue()))
     }
 
-    override fun visitNe(ctx: JSonicParser.NeContext): JsonNode? {
+    override fun visitNe(ctx: JSongParser.NeContext): JsonNode? {
         val lhs = visit(ctx.lhs)
         val rhs = visit(ctx.rhs)
         return BooleanNode.valueOf(lhs != rhs)
     }
 
-    override fun visitNihil(ctx: JSonicParser.NihilContext): JsonNode? {
+    override fun visitNihil(ctx: JSongParser.NihilContext): JsonNode? {
         return NullNode.instance
     }
 
-    override fun visitNumber(ctx: JSonicParser.NumberContext): JsonNode {
+    override fun visitNumber(ctx: JSongParser.NumberContext): JsonNode {
         return DecimalNode(ctx.text.toBigDecimal())
     }
 
-    override fun visitObj(ctx: JSonicParser.ObjContext): JsonNode {
+    override fun visitObj(ctx: JSongParser.ObjContext): JsonNode {
         val res = ObjectNode(nf)
         ctx.pair().forEachIndexed { index, pair ->
             val key = visit(pair.key)?.asText() ?: index.toString()
@@ -480,13 +486,13 @@ class Processor(
         return res
     }
 
-    override fun visitOr(ctx: JSonicParser.OrContext): JsonNode? {
+    override fun visitOr(ctx: JSongParser.OrContext): JsonNode? {
         val lhs = lib.boolean(visit(ctx.lhs))
         val rhs = lib.boolean(visit(ctx.rhs))
         return BooleanNode.valueOf(lhs.booleanValue() || rhs.booleanValue())
     }
 
-    override fun visitRange(ctx: JSonicParser.RangeContext): JsonNode {
+    override fun visitRange(ctx: JSongParser.RangeContext): JsonNode {
         val min = visit(ctx.min)
         val max = visit(ctx.max)
         return RangeNode.of(
@@ -502,7 +508,7 @@ class Processor(
         )
     }
 
-    override fun visitRanges(ctx: JSonicParser.RangesContext): JsonNode {
+    override fun visitRanges(ctx: JSongParser.RangesContext): JsonNode {
         val res = RangesNode(nf)
         ctx.range().forEach {
             res.add(visit(it))
@@ -510,15 +516,15 @@ class Processor(
         return res
     }
 
-    override fun visitRegex(ctx: JSonicParser.RegexContext): JsonNode {
+    override fun visitRegex(ctx: JSongParser.RegexContext): JsonNode {
         return RegexNode(ctx.REGEX().text)
     }
 
-    override fun visitRoot(ctx: JSonicParser.RootContext): JsonNode? {
+    override fun visitRoot(ctx: JSongParser.RootContext): JsonNode? {
         return root
     }
 
-    override fun visitScope(ctx: JSonicParser.ScopeContext): JsonNode? {
+    override fun visitScope(ctx: JSongParser.ScopeContext): JsonNode? {
         val context = this.context
         ctx.exp().forEach { exp ->
             this.context = context
@@ -527,13 +533,13 @@ class Processor(
         return this.context
     }
 
-    override fun visitSub(ctx: JSonicParser.SubContext): JsonNode {
+    override fun visitSub(ctx: JSongParser.SubContext): JsonNode {
         val lhs = lib.number(visit(ctx.lhs))
         val rhs = lib.number(visit(ctx.rhs))
         return DecimalNode(lhs.decimalValue().subtract(rhs.decimalValue()))
     }
 
-    override fun visitText(ctx: JSonicParser.TextContext): JsonNode {
+    override fun visitText(ctx: JSongParser.TextContext): JsonNode {
         return TextNode(ctx.text.substring(1, ctx.text.length - 1))
     }
 

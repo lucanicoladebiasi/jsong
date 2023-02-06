@@ -34,22 +34,24 @@ exp
     | '$' label '(' (exp (',' exp)*)? ')'                               #call
 
     | lhs = exp'['  rhs = exp ']'                                       #filter
-    | lhs = exp '.' rhs = exp  (POS pos = label)? (CTX ctx = label)?    #map
+    | lhs = exp '.' rhs = exp                                           #map
+    | lhs = exp '.' rhs = exp  POS label                                #mappos
+    | lhs = exp '.' rhs = exp  CTX label                                #mapctx
 
-    | lhs = exp '='  rhs = exp                                          #eq
 
+    | lhs = exp '*' rhs = exp                                           #mul
+    | lhs = exp '/' rhs = exp                                           #div
+    | lhs = exp '%' rhs = exp                                           #mod
+    | lhs = exp '+' rhs = exp                                           #add
+    | lhs = exp '-' rhs = exp                                           #sub
+    | lhs = exp '&' rhs = exp                                           #concatenate
     | lhs = exp 'in' rhs = exp                                          #in
     | lhs = exp '>'  rhs = exp                                          #gt
     | lhs = exp '<'  rhs = exp                                          #lt
     | lhs = exp '>=' rhs = exp                                          #gte
     | lhs = exp '<=' rhs = exp                                          #lte
     | lhs = exp '!=' rhs = exp                                          #ne
-    | lhs = exp '&' rhs = exp                                           #concatenate
-    | lhs = exp '*' rhs = exp                                           #mul
-    | lhs = exp '/' rhs = exp                                           #div
-    | lhs = exp '%' rhs = exp                                           #mod
-    | lhs = exp '+' rhs = exp                                           #add
-    | lhs = exp '-' rhs = exp                                           #sub
+    | lhs = exp '='  rhs = exp                                          #eq
     | lhs = exp AND  rhs = exp                                          #and
     | lhs = exp OR   rhs = exp                                          #or
     | prd = exp '?' pos = exp ':' neg = exp                             #condition

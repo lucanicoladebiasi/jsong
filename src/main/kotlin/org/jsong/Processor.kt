@@ -379,7 +379,7 @@ class Processor(
                 }
             }
 
-            else -> null
+            else -> varMap[label]
         }
     }
 

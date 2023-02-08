@@ -23,7 +23,6 @@ exp
     //| '|' loc = exp ('|' upd = exp (',' del = exp)?)? '|'               #transform
     //| '^(' sort (',' sort)* ')'                                         #orderby
     : '(' exp (';' exp)*')'                                             #scope
-    | prd = exp '?' pos = exp ':' neg = exp                             #condition
 
     | lhs = exp '*' rhs = exp                                           #mul
     | lhs = exp '/' rhs = exp                                           #div
@@ -45,6 +44,8 @@ exp
     | lhs = exp '.' rhs = exp                                           #map
     | lhs = exp '.' rhs = exp  POS label                                #mappos
     | lhs = exp '.' rhs = exp  CTX label                                #mapctx
+
+    | prd = exp '?' pos = exp ':' neg = exp                             #condition
 
     | '$' label '(' (exp (',' exp)*)? ')'                               #call
     | '$' label ':=' exp                                                #define

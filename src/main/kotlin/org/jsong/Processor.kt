@@ -258,6 +258,7 @@ class Processor(
     override fun visitEq(ctx: JSongParser.EqContext): JsonNode? {
         val lhs = visit(ctx.lhs)
         val rhs = visit(ctx.rhs)
+        println("$lhs $rhs ${lhs==rhs}")
         return BooleanNode.valueOf(lhs == rhs)
     }
 
@@ -295,6 +296,7 @@ class Processor(
 
                 else -> {
                     val predicate = lib.boolean(rhs).asBoolean()
+                    println(predicate)
                     if (predicate) {
                         res.add(context)
                     }
@@ -374,6 +376,7 @@ class Processor(
                 when (indexStack.isEmpty()) {
                     true -> value
                     else -> {
+                        println("$label[${indexStack.peek()}]=${value[indexStack.peek()]}")
                         value[indexStack.peek()]
                     }
                 }

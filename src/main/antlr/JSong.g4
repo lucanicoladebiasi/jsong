@@ -24,6 +24,11 @@ exp
     //| '^(' sort (',' sort)* ')'                                         #orderby
     : '(' exp (';' exp)*')'                                             #scope
 
+    | lhs = exp'['  rhs = exp ']'                                       #filter
+    | lhs = exp '.' rhs = exp  POS label                                #mappos
+    | lhs = exp '.' rhs = exp  CTX label                                #mapctx
+    | lhs = exp '.' rhs = exp                                           #map
+
     | lhs = exp '*' rhs = exp                                           #mul
     | lhs = exp '/' rhs = exp                                           #div
     | lhs = exp '%' rhs = exp                                           #mod
@@ -39,11 +44,6 @@ exp
     | lhs = exp '='  rhs = exp                                          #eq
     | lhs = exp AND  rhs = exp                                          #and
     | lhs = exp OR   rhs = exp                                          #or
-
-    | lhs = exp'['  rhs = exp ']'                                       #filter
-    | lhs = exp '.' rhs = exp                                           #map
-    | lhs = exp '.' rhs = exp  POS label                                #mappos
-    | lhs = exp '.' rhs = exp  CTX label                                #mapctx
 
     | prd = exp '?' pos = exp ':' neg = exp                             #condition
 

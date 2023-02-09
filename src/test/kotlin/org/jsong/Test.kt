@@ -10,7 +10,7 @@ class Test {
     @Test
     fun test() {
         val expression =
-            "library.loans@\$L.books@\$B[(\$L.isbn)=(\$B.isbn)].{\"title\": \$B.title, \"customer\": \$L.customer}"
+            "library.loans@\$L.books@\$B[\$L.isbn=\$B.isbn].{\"title\": \$B.title, \"customer\": \$L.customer}"
 
         val actual = Processor(TestResources.library).evaluate(expression)
         println(w.writeValueAsString(actual))

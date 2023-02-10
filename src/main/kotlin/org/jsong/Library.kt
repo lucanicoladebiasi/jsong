@@ -112,6 +112,7 @@ class Library(
             }
 
             is BooleanNode -> arg.booleanValue()
+            is FunNode -> false
             is NumericNode -> arg.decimalValue() != BigDecimal.ZERO
             is ObjectNode -> !arg.isEmpty
             is TextNode -> arg.textValue().isNotBlank()

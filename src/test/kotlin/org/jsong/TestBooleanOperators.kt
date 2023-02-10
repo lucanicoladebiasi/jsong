@@ -14,7 +14,7 @@ class TestBooleanOperators {
      * https://docs.jsonata.org/boolean-operators#and-boolean-and
      */
     @Test
-    fun And() {
+    fun and() {
         val expected = TextNode("Compilers: Principles, Techniques, and Tools")
         val actual = Processor(TestResources.library).evaluate("library.books[\"Aho\" in authors and price < 50].title")
         assertEquals(expected, actual)
@@ -24,7 +24,7 @@ class TestBooleanOperators {
      * https://docs.jsonata.org/boolean-operators#or-boolean-or
      */
     @Test
-    fun Or() {
+    fun or() {
         val actual = Processor(TestResources.library).evaluate("library.books[price < 10 or section=\"diy\"].title")
         assertNull(actual)
     }

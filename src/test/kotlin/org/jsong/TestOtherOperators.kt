@@ -11,8 +11,9 @@ class TestOtherOperators {
      */
     @Test
     fun `& (Concatenation)`() {
+        val expression = "\"Hello\" & \"World\""
         val expected = TextNode("HelloWorld")
-        val actual = JSong.of("\"Hello\" & \"World\"").evaluate()
+        val actual = Processor().evaluate(expression)
         assertEquals(expected, actual)
     }
 
@@ -23,7 +24,7 @@ class TestOtherOperators {
     fun  `Conditional - positive`() {
         val expression = "45 < 50 ? \"Cheap\" : \"Expensive\""
         val expected = TextNode("Cheap")
-        val actual = JSong.of(expression).evaluate()
+        val actual = Processor().evaluate(expression)
         assertEquals(expected, actual)
 
     }
@@ -35,7 +36,7 @@ class TestOtherOperators {
     fun `Conditional - negative`() {
         val expression = "55 < 50 ? \"Cheap\" : \"Expensive\""
         val expected = TextNode("Expensive")
-        val actual = JSong.of(expression).evaluate()
+        val actual = Processor().evaluate(expression)
         assertEquals(expected, actual)
     }
 

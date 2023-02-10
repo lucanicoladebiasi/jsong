@@ -16,8 +16,9 @@ class TestNumericOperators {
      */
     @Test
     fun Addition() {
+        val expression = "5 + 2"
         val expected = DecimalNode(BigDecimal.valueOf(7L))
-        val actual = JSong.of("5 + 2").evaluate()
+        val actual = Processor().evaluate(expression)
         assertEquals(expected, actual)
     }
 
@@ -26,8 +27,9 @@ class TestNumericOperators {
      */
     @Test
     fun Subtraction() {
+        val expression = "5 - 2"
         val expected = DecimalNode(BigDecimal(3L))
-        val actual = JSong.of("5 - 2").evaluate()
+        val actual = Processor().evaluate(expression)
         assertEquals(expected, actual)
     }
 
@@ -36,8 +38,9 @@ class TestNumericOperators {
      */
     @Test
     fun Negation() {
+        val expression = "-42"
         val expected = DecimalNode(BigDecimal(-42))
-        val actual = JSong.of("-42").evaluate()
+        val actual = Processor().evaluate(expression)
         assertEquals(expected, actual)
     }
 
@@ -46,8 +49,9 @@ class TestNumericOperators {
      */
     @Test
     fun Multiplication() {
+        val expression = "5 * 2"
         val expected = DecimalNode(BigDecimal(10L))
-        val actual = JSong.of("5 * 2").evaluate()
+        val actual = Processor().evaluate(expression)
         assertEquals(expected, actual)
     }
 
@@ -56,8 +60,9 @@ class TestNumericOperators {
      */
     @Test
     fun Division() {
+        val expression = "5 / 2"
         val expected = DecimalNode(BigDecimal(2.5))
-        val actual = JSong.of("5 / 2").evaluate()
+        val actual = Processor().evaluate(expression)
         assertEquals(expected, actual)
     }
 
@@ -66,8 +71,9 @@ class TestNumericOperators {
      */
     @Test
     fun Reminder() {
+        val expression = "5 % 2"
         val expected = DecimalNode(BigDecimal.ONE)
-        val actual = JSong.of("5 % 2").evaluate()
+        val actual = Processor().evaluate(expression)
         assertEquals(expected, actual)
     }
 
@@ -76,8 +82,9 @@ class TestNumericOperators {
      */
     @Test
     fun Range() {
+        val expression = "[1..5]"
         val expected = TestResources.mapper.readTree("[1, 2, 3, 4, 5]")
-        val actual = (JSong.of("[1..5]").evaluate() as RangeNode).indexes
+        val actual = (Processor().evaluate(expression) as RangesNode).indexes
         assertEquals(expected, actual)
     }
 
@@ -86,8 +93,9 @@ class TestNumericOperators {
      */
     @Test
     fun `Range gap`() {
+        val expression = "[1..3, 7..9]"
         val expected = TestResources.mapper.readTree("[1, 2, 3, 7, 8, 9]")
-        val actual = (JSong.of("[1..3, 7..9]").evaluate() as RangesNode).indexes
+        val actual = (Processor().evaluate(expression) as RangesNode).indexes
         assertEquals(expected, actual)
     }
 
@@ -96,8 +104,9 @@ class TestNumericOperators {
      */
     @Test
     fun `Range expression`() {
+        val expression = "[1..\$count(Items)].(\"Item \" & \$)"
         val expected = TestResources.mapper.readTree("[\"Item 1\",\"Item 2\",\"Item 3\"]")
-        val actual = JSong.of("[1..\$count(Items)].(\"Item \" & \$)").evaluate(TestResources.items)
+        val actual = Processor(TestResources.items).evaluate(expression)
         assertEquals(expected, actual)
     }
 
@@ -113,7 +122,7 @@ class TestNumericOperators {
             .add(BigDecimal(9L))
             .add(BigDecimal(16L))
             .add(BigDecimal(25L))
-        val actual = JSong.of(expression).evaluate()
+        val actual = Processor().evaluate(expression)
         assertEquals(expected, actual)
     }
 

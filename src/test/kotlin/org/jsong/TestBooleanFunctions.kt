@@ -15,7 +15,7 @@ class TestBooleanFunctions {
      */
     @Test
     fun `$boolean() - boolean false`() {
-        assertFalse(JSong.of("\$boolean(false)").evaluate()!!.booleanValue())
+        assertFalse(Processor().evaluate("\$boolean(false)")!!.booleanValue())
     }
 
     /**
@@ -23,7 +23,7 @@ class TestBooleanFunctions {
      */
     @Test
     fun `$boolean() - boolean true`() {
-        assertTrue(JSong.of("\$boolean(true)").evaluate()!!.booleanValue())
+        assertTrue(Processor().evaluate("\$boolean(true)")!!.booleanValue())
     }
 
     /**
@@ -31,7 +31,7 @@ class TestBooleanFunctions {
      */
     @Test
     fun `$boolean() - string empty`() {
-        assertFalse(JSong.of("\$boolean(\"\")").evaluate()!!.booleanValue())
+        assertFalse(Processor().evaluate("\$boolean(\"\")")!!.booleanValue())
     }
 
     /**
@@ -39,7 +39,7 @@ class TestBooleanFunctions {
      */
     @Test
     fun `$boolean() - string non-empty`() {
-        assertTrue(JSong.of("\$boolean(\"Hello world!\")").evaluate()!!.booleanValue())
+        assertTrue(Processor().evaluate("\$boolean(\"Hello world!\")")!!.booleanValue())
     }
 
     /**
@@ -47,7 +47,7 @@ class TestBooleanFunctions {
      */
     @Test
     fun `$boolean() - number zero`() {
-        assertFalse(JSong.of("\$boolean(0)").evaluate()!!.booleanValue())
+        assertFalse(Processor().evaluate("\$boolean(0)")!!.booleanValue())
     }
 
     /**
@@ -55,7 +55,7 @@ class TestBooleanFunctions {
      */
     @Test
     fun `$boolean() - number non-zero`() {
-        assertTrue(JSong.of("\$boolean(1)").evaluate()!!.booleanValue())
+        assertTrue(Processor().evaluate("\$boolean(1)")!!.booleanValue())
     }
 
     /**
@@ -63,7 +63,7 @@ class TestBooleanFunctions {
      */
     @Test
     fun `$boolean() - null`() {
-        assertFalse(JSong.of("\$boolean(null)").evaluate()!!.booleanValue())
+        assertFalse(Processor().evaluate("\$boolean(null)")!!.booleanValue())
     }
 
     /**
@@ -71,7 +71,7 @@ class TestBooleanFunctions {
      */
     @Test
     fun `$boolean() - array empty`() {
-        assertFalse(JSong.of("\$boolean([ ])").evaluate()!!.booleanValue())
+        assertFalse(Processor().evaluate("\$boolean([ ])")!!.booleanValue())
     }
 
     /**
@@ -79,7 +79,7 @@ class TestBooleanFunctions {
      */
     @Test
     fun `$boolean() - array some true`() {
-        assertTrue(JSong.of("\$boolean([0, 1, 0])").evaluate()!!.booleanValue())
+        assertTrue(Processor().evaluate("\$boolean([0, 1, 0])")!!.booleanValue())
     }
 
     /**
@@ -87,7 +87,7 @@ class TestBooleanFunctions {
      */
     @Test
     fun `$boolean() - array all false`() {
-        assertFalse(JSong.of("\$boolean([0, 0, 0])").evaluate()!!.booleanValue())
+        assertFalse(Processor().evaluate("\$boolean([0, 0, 0])")!!.booleanValue())
     }
 
     /**
@@ -95,7 +95,7 @@ class TestBooleanFunctions {
      */
     @Test
     fun `$boolean() - object empty`() {
-        val actual = JSong.of("\$boolean([{}])").evaluate()
+        val actual = Processor().evaluate("\$boolean([{}])")
         assertFalse(actual!!.booleanValue())
     }
 
@@ -104,7 +104,7 @@ class TestBooleanFunctions {
      */
     @Test
     fun `$boolean() - object not empty`() {
-        assertTrue(JSong.of("\$boolean([{\"flag\": false}])").evaluate()!!.booleanValue())
+        assertTrue(Processor().evaluate("\$boolean([{\"flag\": false}])")!!.booleanValue())
     }
 
     /**
@@ -120,7 +120,7 @@ class TestBooleanFunctions {
      */
     @Test
     fun `$not() - false`() {
-        assertTrue(JSong.of("\$not(false)").evaluate()!!.booleanValue())
+        assertTrue(Processor().evaluate("\$not(false)")!!.booleanValue())
     }
 
     /**
@@ -128,7 +128,7 @@ class TestBooleanFunctions {
      */
     @Test
     fun `$not() - true`() {
-        assertFalse(JSong.of("\$not(true)").evaluate()!!.booleanValue())
+        assertFalse(Processor().evaluate("\$not(true)")!!.booleanValue())
     }
 
     /**
@@ -136,7 +136,7 @@ class TestBooleanFunctions {
      */
     @Test
     fun `$exists() - false`() {
-        val actual = JSong.of("\$exists(Other.Nothing)").evaluate(TestResources.address)
+        val actual = Processor(TestResources.address).evaluate("\$exists(Other.Nothing)")
         assertFalse(actual!!.booleanValue())
     }
 
@@ -145,7 +145,7 @@ class TestBooleanFunctions {
      */
     @Test
     fun `$exists() - true`() {
-        val actual = JSong.of("\$exists(Address.City)").evaluate(TestResources.address)
+        val actual = Processor(TestResources.address).evaluate("\$exists(Address.City)")
         assertTrue(actual!!.booleanValue())
     }
 }

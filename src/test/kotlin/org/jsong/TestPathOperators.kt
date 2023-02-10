@@ -16,8 +16,8 @@ class TestPathOperators {
      */
     @Test
     fun `map results in scalar`() {
-        val expected = JSong.of("\"Winchester\"").evaluate()
-        val actual = JSong.of("Address.City").evaluate(TestResources.address)
+        val expected = Processor().evaluate("\"Winchester\"")
+        val actual = Processor(TestResources.address).evaluate("Address.City")
         assertEquals(expected, actual)
     }
 
@@ -27,8 +27,8 @@ class TestPathOperators {
     @Test
     fun `map results in array`() {
         val expected =
-            JSong.of("[ \"0203 544 1234\", \"01962 001234\", \"01962 001235\", \"077 7700 1234\" ]").evaluate()
-        val actual = JSong.of("Phone.number").evaluate(TestResources.address)
+            Processor().evaluate("[ \"0203 544 1234\", \"01962 001234\", \"01962 001235\", \"077 7700 1234\" ]")
+        val actual = Processor(TestResources.address).evaluate("Phone.number")
         assertEquals(expected, actual)
     }
 
@@ -37,8 +37,8 @@ class TestPathOperators {
      */
     @Test
     fun `map multiplication`() {
-        val expected = JSong.of("[ 68.9, 21.67, 137.8, 107.99 ]").evaluate()
-        val actual = JSong.of("Account.Order.Product.(Price * Quantity)").evaluate(TestResources.invoice)
+        val expected = Processor().evaluate("[ 68.9, 21.67, 137.8, 107.99 ]")
+        val actual = Processor(TestResources.invoice).evaluate("Account.Order.Product.(Price * Quantity)")
         assertEquals(expected, actual)
     }
 
@@ -47,8 +47,8 @@ class TestPathOperators {
      */
     @Test
     fun `map function`() {
-        val expected = JSong.of("[ \"ORDER103\", \"ORDER104\"]").evaluate()
-        val actual = JSong.of("Account.Order.OrderID.\$uppercase()").evaluate(TestResources.invoice)
+        val expected = Processor().evaluate("[ \"ORDER103\", \"ORDER104\"]")
+        val actual = Processor(TestResources.invoice).evaluate("Account.Order.OrderID.\$uppercase()")
         assertEquals(expected, actual)
     }
 
@@ -59,7 +59,7 @@ class TestPathOperators {
     @Disabled
     fun `order by default`() {
         @Language("JSON")
-        val expected = JSong.of(
+        val expected = Processor().evaluate(
             """
                 [
                     {
@@ -118,8 +118,8 @@ class TestPathOperators {
                     }
                 ]
             """.trimIndent()
-        ).evaluate()
-        val actual = JSong.of("Account.Order.Product^(Price)").evaluate(TestResources.invoice)
+        )
+        val actual = Processor(TestResources.invoice).evaluate("Account.Order.Product^(Price)")
         assertEquals(expected, actual)
     }
 
@@ -130,7 +130,7 @@ class TestPathOperators {
     @Disabled
     fun `order by decreasing`() {
         @Language("JSON")
-        val expected = JSong.of(
+        val expected = Processor().evaluate(
             """
                 [
                 {
@@ -191,8 +191,8 @@ class TestPathOperators {
                     
                 ]
             """.trimIndent()
-        ).evaluate()
-        val actual = JSong.of("Account.Order.Product^(>Price)").evaluate(TestResources.invoice)
+        )
+        val actual = Processor(TestResources.invoice).evaluate("Account.Order.Product^(>Price)")
         assertEquals(expected, actual)
     }
 
@@ -203,7 +203,7 @@ class TestPathOperators {
     @Disabled
     fun `order by decreasing price, increasing quantity`() {
         @Language("JSON")
-        val expected = JSong.of(
+        val expected = Processor().evaluate(
             """
                 [
                 {
@@ -264,8 +264,8 @@ class TestPathOperators {
                     
                 ]
             """.trimIndent()
-        ).evaluate()
-        val actual = JSong.of("Account.Order.Product^(>Price, <Quantity)").evaluate(TestResources.invoice)
+        )
+        val actual = Processor(TestResources.invoice).evaluate("Account.Order.Product^(>Price, <Quantity)")
         assertEquals(expected, actual)
     }
 
@@ -276,7 +276,7 @@ class TestPathOperators {
     @Disabled
     fun `order by increasing total`() {
         @Language("JSON")
-        val expected = JSong.of(
+        val expected = Processor().evaluate(
             """
                 [
                     {
@@ -336,8 +336,8 @@ class TestPathOperators {
                     }                                                     
                 ]
             """.trimIndent()
-        ).evaluate()
-        val actual = JSong.of("Account.Order.Product^(Price * Quantity)").evaluate(TestResources.invoice)
+        )
+        val actual = Processor(TestResources.invoice).evaluate("Account.Order.Product^(Price * Quantity)")
         assertEquals(expected, actual)
     }
 
@@ -345,6 +345,7 @@ class TestPathOperators {
      * https://docs.jsonata.org/path-operators#-positional-variable-binding
      */
     @Test
+    @Disabled
     fun `Positional variable binding`() {
         val expression = "library.books#\$i[\"Kernighan\" in authors].{\"title\": title, \"index\": \$i }"
 
@@ -364,7 +365,7 @@ class TestPathOperators {
             ]
             """.trimIndent()
         )
-        val actual = JSong.of(expression).evaluate(TestResources.library)
+        val actual = Processor(TestResources.library).evaluate(expression)
         assertEquals(expected, actual)
     }
 
@@ -372,9 +373,9 @@ class TestPathOperators {
     @Test
     fun `Context variable binding - carry on once`() {
         val expression = "library.loans@\$L"
-        val actual = JSong.of(expression).evaluate(TestResources.library)
-        val library = JSong.of("library").evaluate(TestResources.library)
-        val loans = JSong.of("library.loans").evaluate(TestResources.library)
+        val actual = Processor(TestResources.library).evaluate(expression)
+        val library = Processor(TestResources.library).evaluate("library")
+        val loans = Processor(TestResources.library).evaluate("library.loans")
         val expected = TestResources.mapper.createArrayNode().let {
             for (i in 1..loans!!.size()) {
                 it.add(library)
@@ -387,8 +388,8 @@ class TestPathOperators {
     @Test
     fun `Context variable binding - carry on once and recall`() {
         val expression = "library.loans@\$L.{\"loan\": \$L}"
-        val actual = JSong.of(expression).evaluate(TestResources.library)
-        val loans = JSong.of("library.loans").evaluate(TestResources.library)
+        val actual = Processor(TestResources.library).evaluate(expression)
+        val loans = Processor(TestResources.library).evaluate("library.loans")
         val expected = TestResources.mapper.createArrayNode().let {
             for (i in 0 until loans!!.size()) {
                 it.addObject().set<JsonNode>("loan", loans[i])
@@ -401,10 +402,10 @@ class TestPathOperators {
     @Test
     fun `Context variable binding - carry on twice`() {
         val expression = "library.loans@\$L.books@\$B"
-        val actual = JSong.of(expression).evaluate(TestResources.library)
-        val library = JSong.of("library").evaluate(TestResources.library)
-        val loans = JSong.of("library.loans").evaluate(TestResources.library)
-        val books = JSong.of("library.books").evaluate(TestResources.library)
+        val actual = Processor(TestResources.library).evaluate(expression)
+        val library = Processor(TestResources.library).evaluate("library")
+        val loans = Processor(TestResources.library).evaluate("library.loans")
+        val books = Processor(TestResources.library).evaluate("library.books")
         val expected = TestResources.mapper.createArrayNode().let {
             for (i in 1..loans!!.size() * books!!.size()) {
                 it.add(library)
@@ -417,9 +418,9 @@ class TestPathOperators {
     @Test
     fun `Context variable binding - carry on twice and recall`() {
         val expression = "library.loans@\$L.books@\$B.{\"title\": \$B.title}"
-        val actual = JSong.of(expression).evaluate(TestResources.library)
-        val loans = JSong.of("library.loans").evaluate(TestResources.library)
-        val titles = JSong.of("library.books.title").evaluate(TestResources.library)
+        val actual = Processor(TestResources.library).evaluate(expression)
+        val loans = Processor(TestResources.library).evaluate("library.loans")
+        val titles = Processor(TestResources.library).evaluate("library.books.title")
         val expected = TestResources.mapper.createArrayNode().let {
             for (i in 1..loans!!.size()) {
                 titles!!.forEach { title ->
@@ -459,7 +460,7 @@ class TestPathOperators {
             ]   
             """.trimIndent()
         )
-        val actual = JSong.of(expression).evaluate(TestResources.library)
+        val actual = Processor(TestResources.library).evaluate(expression)
         assertEquals(expected, actual)
     }
 

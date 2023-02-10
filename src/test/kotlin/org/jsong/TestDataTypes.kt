@@ -12,8 +12,9 @@ class TestDataTypes {
      */
     @Test
     fun `Literal - array`() {
+        val expression = "[\"value1\", \"value2\"]"
         val expected = TestResources.mapper.createArrayNode().add("value1").add("value2")
-        val actual = JSong.of("[\"value1\", \"value2\"]").evaluate()
+        val actual =  Processor().evaluate(expression)
         assertEquals(expected, actual)
     }
 
@@ -22,8 +23,9 @@ class TestDataTypes {
      */
     @Test
     fun `Literal - false`() {
+        val expression = "false"
         val expected = BooleanNode.FALSE
-        val actual = JSong.of("false").evaluate()
+        val actual = Processor().evaluate(expression)
         assertEquals(expected, actual)
     }
 
@@ -32,8 +34,9 @@ class TestDataTypes {
      */
     @Test
     fun `Literal - null`() {
+        val expression = "null"
         val expected = NullNode.instance
-        val actual = JSong.of("null").evaluate()
+        val actual = Processor().evaluate(expression)
         assertEquals(expected, actual)
     }
 
@@ -42,8 +45,9 @@ class TestDataTypes {
      */
     @Test
     fun `Literal - number`() {
+        val expression = "-12.35e+7"
         val expected = DecimalNode("-12.35e+7".toBigDecimal())
-        val actual = JSong.of("-12.35e+7").evaluate()
+        val actual = Processor().evaluate(expression)
         assertEquals(expected, actual)
     }
 
@@ -52,17 +56,19 @@ class TestDataTypes {
      */
     @Test
     fun `Literal - object`() {
+        val expression = "{\"key1\": \"value1\", \"key2\": \"value2\"}"
         val expected = TestResources.mapper.createObjectNode()
             .set<ObjectNode>("key1", TextNode("value1"))
             .set<ObjectNode>("key2", TextNode("value2"))
-        val actual = JSong.of("{\"key1\": \"value1\", \"key2\": \"value2\"}").evaluate()
+        val actual = Processor().evaluate(expression)
         assertEquals(expected, actual)
     }
 
     @Test
     fun `Literal - range twisted`() {
-        val expected = RangeNode.of("2.718281828459".toBigDecimal(), "3.14159265359".toBigDecimal())
-        val actual = JSong.of("[3.14159265359..2.718281828459]").evaluate()
+        val expression = "[3.14159265359..2.718281828459]"
+        val expected = RangesNode().add(RangeNode.of("2.718281828459".toBigDecimal(), "3.14159265359".toBigDecimal()))
+        val actual = Processor().evaluate(expression)
         assertEquals(expected, actual)
     }
 
@@ -71,9 +77,10 @@ class TestDataTypes {
      */
     @Test
     fun `Literal - range as array`()  {
+        val expression = "[1..3]"
         val expected = TestResources.mapper.createArrayNode().add(1).add(2).add(3)
-        val actual = JSong.of("[1..3]").evaluate()
-        assertTrue(actual is RangeNode)
+        val actual = Processor().evaluate(expression)
+        assertTrue(actual is RangesNode)
         assertEquals(expected, actual.indexes)
     }
 
@@ -82,8 +89,9 @@ class TestDataTypes {
      */
     @Test
     fun `Literal - range with gap`() {
+        val expression = "[1..3, 5..7]"
         val expected = TestResources.mapper.createArrayNode().add(1).add(2).add(3).add(5).add(6).add(7)
-        val actual = JSong.of("[1..3, 5..7]").evaluate()
+        val actual = Processor().evaluate(expression)
         assertTrue(actual is RangesNode)
         assertEquals(expected, actual.indexes)
     }
@@ -93,8 +101,9 @@ class TestDataTypes {
      */
     @Test
     fun `Literal - range with overlapping gap`() {
+        val expression = "[1..3, 5..7, 2..4]"
         val expected = TestResources.mapper.createArrayNode().add(1).add(2).add(3).add(4).add(5).add(6).add(7)
-        val actual = JSong.of("[1..3, 5..7, 2..4]").evaluate()
+        val actual = Processor().evaluate(expression)
         assertTrue(actual is RangesNode)
         assertEquals(expected, actual.indexes)
     }
@@ -106,8 +115,8 @@ class TestDataTypes {
     @Test
     fun REGEX() {
         val expression = "/[a-z]*an[a-z]*/i"
-        val actual = JSong.of(expression).evaluate()
         val expected = RegexNode(expression)
+        val actual = Processor().evaluate(expression)
         assertEquals(expected, actual)
     }
 
@@ -116,9 +125,9 @@ class TestDataTypes {
      */
     @Test
     fun `Literal - text`() {
-        val text = "\"God's in his heaven — All's right with the world!\""
-        val expected = TextNode(text.substring(1, text.length - 1))
-        val actual = JSong.of(text).evaluate()
+        val expression = "\"God's in his heaven — All's right with the world!\""
+        val expected = TextNode(expression.substring(1, expression.length - 1))
+        val actual = Processor().evaluate(expression)
         assertEquals(expected, actual)
     }
 
@@ -127,8 +136,9 @@ class TestDataTypes {
      */
     @Test
     fun `Literal - true`() {
+        val expression = "true"
         val expected = BooleanNode.TRUE
-        val actual = JSong.of("true").evaluate()
+        val actual = Processor().evaluate(expression)
         assertEquals(expected, actual)
     }
 

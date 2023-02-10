@@ -13,8 +13,8 @@ class TestNumericAggregationFunctions {
      */
     @Test
     fun `$sum()`() {
-        val expected = JSong.of("20").evaluate()
-        val actual = JSong.of("\$sum([5,1,3,7,4])").evaluate()
+        val expected = Processor().evaluate("20")
+        val actual = Processor().evaluate("\$sum([5,1,3,7,4])")
         assertEquals(expected, actual)
     }
 
@@ -23,8 +23,8 @@ class TestNumericAggregationFunctions {
      */
     @Test
     fun `$max()`() {
-        val expected = JSong.of("7").evaluate()
-        val actual = JSong.of("\$max([5,1,3,7,4])").evaluate()
+        val expected = Processor().evaluate("7")
+        val actual = Processor().evaluate("\$max([5,1,3,7,4])")
         assertEquals(expected, actual)
     }
 
@@ -33,8 +33,8 @@ class TestNumericAggregationFunctions {
      */
     @Test
     fun `$min()`() {
-        val expected = JSong.of("1").evaluate()
-        val actual = JSong.of("\$min([5,1,3,7,4])").evaluate()
+        val expected = Processor().evaluate("1")
+        val actual = Processor().evaluate("\$min([5,1,3,7,4])")
         assertEquals(expected, actual)
     }
 
@@ -43,8 +43,8 @@ class TestNumericAggregationFunctions {
      */
     @Test
     fun `$average()`() {
-        val expected = JSong.of("4").evaluate()
-        val actual = JSong.of("\$average([5,1,3,7,4])").evaluate()
+        val expected = Processor().evaluate("4")
+        val actual = Processor().evaluate("\$average([5,1,3,7,4])")
         assertEquals(expected, actual)
     }
 

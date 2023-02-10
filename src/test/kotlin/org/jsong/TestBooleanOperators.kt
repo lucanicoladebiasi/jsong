@@ -16,7 +16,7 @@ class TestBooleanOperators {
     @Test
     fun And() {
         val expected = TextNode("Compilers: Principles, Techniques, and Tools")
-        val actual = JSong.of("library.books[\"Aho\" in authors and price < 50].title").evaluate(TestResources.library)
+        val actual = Processor(TestResources.library).evaluate("library.books[\"Aho\" in authors and price < 50].title")
         assertEquals(expected, actual)
     }
 
@@ -25,7 +25,7 @@ class TestBooleanOperators {
      */
     @Test
     fun Or() {
-        val actual = JSong.of("library.books[price < 10 or section=\"diy\"].title").evaluate(TestResources.library)
+        val actual = Processor(TestResources.library).evaluate("library.books[price < 10 or section=\"diy\"].title")
         assertNull(actual)
     }
 }

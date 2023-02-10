@@ -15,7 +15,7 @@ class TestObjectFunctions {
      */
     @Test
     fun `$assert - negative`() {
-        assertThrows<Error> { JSong.of("\$assert(false, \"I'm innocent\")").evaluate() }
+        assertThrows<AssertionError> { Processor().evaluate("\$assert(false, \"I'm innocent\")") }
     }
 
     /**
@@ -23,14 +23,15 @@ class TestObjectFunctions {
      */
     @Test
     fun `$assert - positive`() {
-        JSong.of("\$assert(true, \"no bug, no cries\")").evaluate()
+        Processor().evaluate("\$assert(true, \"no bug, no cries\")")
     }
 
     /**
      * https://docs.jsonata.org/object-functions#error
      */
+    @Test
     fun `$error`() {
-        assertThrows<Error> { JSong.of("\$error(\"hello bug\")").evaluate() }
+        assertThrows<Error> { Processor().evaluate("\$error(\"hello bug\")") }
     }
 
     /**
@@ -51,7 +52,7 @@ class TestObjectFunctions {
             ]
             """.trimIndent()
         )
-        val actual = JSong.of("\$keys(Account.Order.Product)").evaluate(TestResources.invoice)
+        val actual = Processor(TestResources.invoice).evaluate("\$keys(Account.Order.Product)")
         assertEquals(expected, actual)
     }
 
@@ -71,7 +72,7 @@ class TestObjectFunctions {
             ]
             """.trimIndent()
         )
-        val actual = JSong.of("\$lookup(Account.Order.Product, \"SKU\")").evaluate(TestResources.invoice)
+        val actual = Processor(TestResources.invoice).evaluate("\$lookup(Account.Order.Product, \"SKU\")")
         assertEquals(expected, actual)
     }
 
@@ -86,70 +87,22 @@ class TestObjectFunctions {
         val expected = TestResources.mapper.readTree(
             """
             {
-               "Product Name":[
-                  "Bowler Hat",
-                  "Trilby hat",
-                  "Bowler Hat",
-                  "Cloak"
-               ],
-               "ProductID":[
-                  858383,
-                  858236,
-                  858383,
-                  345664
-               ],
-               "SKU":[
-                  "0406654608",
-                  "0406634348",
-                  "040657863",
-                  "0406654603"
-               ],
-               "Description":[
-                  {
-                     "Colour":"Purple",
-                     "Width":300,
-                     "Height":200,
-                     "Depth":210,
-                     "Weight":0.75
-                  },
-                  {
-                     "Colour":"Orange",
-                     "Width":300,
-                     "Height":200,
-                     "Depth":210,
-                     "Weight":0.6
-                  },
-                  {   
-                     "Colour":"Purple",
-                     "Width":300,
-                     "Height":200,
-                     "Depth":210,
-                     "Weight":0.75
-                  },
-                  {  
-                      "Colour":"Black",
-                      "Width":30,
-                      "Height":20,
-                      "Depth":210,
-                      "Weight":2
-                  }
-               ],
-               "Price":[
-                  34.45,
-                  21.67,
-                  34.45,
-                  107.99
-               ],
-               "Quantity":[
-                 2,
-                 1,
-                 4,
-                 1
-               ]
+              "Product Name": "Cloak",
+              "ProductID": 345664,
+              "SKU": "0406654603",
+              "Description": {
+                "Colour": "Black",
+                "Width": 30,
+                "Height": 20,
+                "Depth": 210,
+                "Weight": 2
+              },
+              "Price": 107.99,
+              "Quantity": 1
             }
         """.trimIndent()
         )
-        val actual = JSong.of("\$merge(Account.Order.Product)").evaluate(TestResources.invoice)
+        val actual = Processor(TestResources.invoice).evaluate("\$merge(Account.Order.Product)")
         assertEquals(expected, actual)
     }
 
@@ -258,10 +211,10 @@ class TestObjectFunctions {
               {
                 "Quantity": 1
               }
-            ]
+           ]          
         """.trimIndent()
         )
-        val actual = JSong.of("\$spread(Account.Order.Product)").evaluate(TestResources.invoice)
+        val actual = Processor(TestResources.invoice).evaluate("\$spread(Account.Order.Product)")
         assertEquals(expected, actual)
     }
 
@@ -270,8 +223,8 @@ class TestObjectFunctions {
      */
     @Test
     fun `$type - array`() {
-        val expected = Functions.Type.ARRAY.descriptor
-        val actual = JSong.of("\$type($)").evaluate(TestResources.mapper.readTree("[]"))
+        val expected = Library.Type.ARRAY.descriptor
+        val actual = Processor(TestResources.mapper.readTree("[]")).evaluate("\$type($)")
         assertEquals(expected, actual)
     }
 
@@ -280,8 +233,8 @@ class TestObjectFunctions {
      */
     @Test
     fun `$type - boolean`() {
-        val expected = Functions.Type.BOOLEAN.descriptor
-        val actual = JSong.of("\$type($)").evaluate(TestResources.mapper.readTree("true"))
+        val expected = Library.Type.BOOLEAN.descriptor
+        val actual = Processor(TestResources.mapper.readTree("true")).evaluate("\$type($)")
         assertEquals(expected, actual)
     }
 
@@ -290,8 +243,8 @@ class TestObjectFunctions {
      */
     @Test
     fun `$type - null`() {
-        val expected = Functions.Type.NULL.descriptor
-        val actual = JSong.of("\$type($)").evaluate(TestResources.mapper.readTree("null"))
+        val expected = Library.Type.NULL.descriptor
+        val actual = Processor(TestResources.mapper.readTree("null")).evaluate("\$type($)")
         assertEquals(expected, actual)
     }
 
@@ -300,8 +253,8 @@ class TestObjectFunctions {
      */
     @Test
     fun `$type - number`() {
-        val expected = Functions.Type.NUMBER.descriptor
-        val actual = JSong.of("\$type($)").evaluate(TestResources.mapper.readTree(("3.14")))
+        val expected = Library.Type.NUMBER.descriptor
+        val actual = Processor(TestResources.mapper.readTree("3.14")).evaluate("\$type($)")
         assertEquals(expected, actual)
     }
 
@@ -310,8 +263,8 @@ class TestObjectFunctions {
      */
     @Test
     fun `$type - object`() {
-        val expected = Functions.Type.OBJECT.descriptor
-        val actual = JSong.of("\$type($)").evaluate(TestResources.mapper.readTree(("{}")))
+        val expected = Library.Type.OBJECT.descriptor
+        val actual = Processor(TestResources.mapper.readTree("{}")).evaluate("\$type($)")
         assertEquals(expected, actual)
     }
 
@@ -320,9 +273,10 @@ class TestObjectFunctions {
      */
     @Test
     fun `$type - string`() {
-        val expected = Functions.Type.STRING.descriptor
-        val actual = JSong.of("\$type($)")
-            .evaluate(TestResources.mapper.readTree(("\"God's in his heaven — All's right with the world.\"")))
+        val expected = Library.Type.STRING.descriptor
+        val actual = Processor(
+            TestResources.mapper.readTree("\"God's in his heaven — All's right with the world.\"")
+        ).evaluate("\$type($)")
         assertEquals(expected, actual)
     }
 

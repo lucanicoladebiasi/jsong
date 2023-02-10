@@ -1,11 +1,14 @@
 package org.jsong
 
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.IntNode
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 
-class RangesNode constructor(nodeFactory: JsonNodeFactory) : ArrayNode(nodeFactory) {
+class RangesNode constructor(
+    nodeFactory: JsonNodeFactory = ObjectMapper().nodeFactory
+) : ArrayNode(nodeFactory) {
 
     val indexes: ArrayNode
         get() {

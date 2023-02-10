@@ -16,10 +16,13 @@ class TestNumericFunctions {
      */
     @Test
     fun `$number`() {
-        assertEquals(JSong.of("5").evaluate(), JSong.of("\$number(\"5\")").evaluate())
+        assertEquals(
+            Processor().evaluate("5"),
+            Processor().evaluate("\$number(\"5\")")
+        )
 //        assertEquals(
-//            JSong.of("[1, 2, 3, 4, 5]").evaluate(),
-//            JSong.of("[\"1\", \"2\", \"3\", \"4\", \"5\"].\$number()").evaluate()
+//            Processor().evaluate("[1, 2, 3, 4, 5]").,
+//            Processor().evaluate("[\"1\", \"2\", \"3\", \"4\", \"5\"].\$number()").
 //        )
     }
 
@@ -28,8 +31,12 @@ class TestNumericFunctions {
      */
     @Test
     fun `$abs`() {
-        assertEquals(JSong.of("5").evaluate(), JSong.of("\$abs(5)").evaluate())
-        assertEquals(JSong.of("5").evaluate(), JSong.of("\$abs(-5)").evaluate())
+        assertEquals(
+            Processor().evaluate("5"),
+            Processor().evaluate("\$abs(5)"))
+        assertEquals(
+            Processor().evaluate("5"),
+            Processor().evaluate("\$abs(-5)"))
     }
 
     /**
@@ -37,10 +44,10 @@ class TestNumericFunctions {
      */
     @Test
     fun `$floor()`() {
-        assertEquals(JSong.of("5").evaluate(), JSong.of("\$floor(5)").evaluate())
-        assertEquals(JSong.of("5").evaluate(), JSong.of("\$floor(5.3)").evaluate())
-        assertEquals(JSong.of("5").evaluate(), JSong.of("\$floor(5.8)").evaluate())
-        assertEquals(JSong.of("-6").evaluate(), JSong.of("\$floor(-5.3)").evaluate())
+        assertEquals(Processor().evaluate("5"), Processor().evaluate("\$floor(5)"))
+        assertEquals(Processor().evaluate("5"), Processor().evaluate("\$floor(5.3)"))
+        assertEquals(Processor().evaluate("5"), Processor().evaluate("\$floor(5.8)"))
+        assertEquals(Processor().evaluate("-6"), Processor().evaluate("\$floor(-5.3)"))
     }
 
     /**
@@ -48,10 +55,10 @@ class TestNumericFunctions {
      */
     @Test
     fun `$ceil()`() {
-        assertEquals(JSong.of("5").evaluate(), JSong.of("\$ceil(5)").evaluate())
-        assertEquals(JSong.of("6").evaluate(), JSong.of("\$ceil(5.3)").evaluate())
-        assertEquals(JSong.of("6").evaluate(), JSong.of("\$ceil(5.8)").evaluate())
-        assertEquals(JSong.of("-5").evaluate(), JSong.of("\$ceil(-5.3)").evaluate())
+        assertEquals(Processor().evaluate("5"), Processor().evaluate("\$ceil(5)"))
+        assertEquals(Processor().evaluate("6"), Processor().evaluate("\$ceil(5.3)"))
+        assertEquals(Processor().evaluate("6"), Processor().evaluate("\$ceil(5.8)"))
+        assertEquals(Processor().evaluate("-5"), Processor().evaluate("\$ceil(-5.3)"))
     }
 
     /**
@@ -59,13 +66,13 @@ class TestNumericFunctions {
      */
     @Test
     fun `$round()`() {
-        assertEquals(JSong.of("123").evaluate(), JSong.of("\$round(123.456)").evaluate())
-        assertEquals(JSong.of("123.46").evaluate(), JSong.of("\$round(123.456, 2)").evaluate())
-        assertEquals(JSong.of("120").evaluate(), JSong.of("\$round(123.456, -1)").evaluate())
-        assertEquals(JSong.of("100").evaluate(), JSong.of("\$round(123.456, -2)").evaluate())
-        assertEquals(JSong.of("12").evaluate(), JSong.of("\$round(11.5)").evaluate())
-        assertEquals(JSong.of("12").evaluate(), JSong.of("\$round(12.5)").evaluate())
-        assertEquals(JSong.of("120").evaluate(), JSong.of("\$round(125, -1)").evaluate())
+        assertEquals(Processor().evaluate("123"), Processor().evaluate("\$round(123.456)"))
+        assertEquals(Processor().evaluate("123.46"), Processor().evaluate("\$round(123.456, 2)"))
+        assertEquals(Processor().evaluate("120"), Processor().evaluate("\$round(123.456, -1)"))
+        assertEquals(Processor().evaluate("100"), Processor().evaluate("\$round(123.456, -2)"))
+        assertEquals(Processor().evaluate("12"), Processor().evaluate("\$round(11.5)"))
+        assertEquals(Processor().evaluate("12"), Processor().evaluate("\$round(12.5)"))
+        assertEquals(Processor().evaluate("120"), Processor().evaluate("\$round(125, -1)"))
     }
 
     /**
@@ -73,9 +80,9 @@ class TestNumericFunctions {
      */
     @Test
     fun `$power()`() {
-        assertEquals(JSong.of("256").evaluate(), JSong.of("\$power(2, 8)").evaluate())
-        //assertEquals(JSong.of("1.414213562373"), JSong.of("\$power(2, 0.5)").evaluate().json)
-        //assertEquals(JSong.of("0.25"), JSong.of("\$power(2, -2)").evaluate().json)
+        assertEquals(Processor().evaluate("256"), Processor().evaluate("\$power(2, 8)"))
+        //assertEquals(Processor().evaluate("1.414213562373"), Processor().evaluate("\$power(2, 0.5)")..json)
+        //assertEquals(Processor().evaluate("0.25"), Processor().evaluate("\$power(2, -2)")..json)
     }
 
     /**
@@ -83,8 +90,8 @@ class TestNumericFunctions {
      */
     @Test
     fun `$sqrt()`() {
-        assertEquals(JSong.of("2").evaluate(), JSong.of("\$sqrt(4)").evaluate())
-        assertEquals(JSong.of("1.4142135623730951").evaluate(), JSong.of("\$sqrt(2)").evaluate())
+        assertEquals(Processor().evaluate("2"), Processor().evaluate("\$sqrt(4)"))
+        assertEquals(Processor().evaluate("1.4142135623730951"), Processor().evaluate("\$sqrt(2)"))
     }
 
     /**
@@ -92,7 +99,7 @@ class TestNumericFunctions {
      */
     @Test
     fun `$random()`() {
-        val expected = JSong.of("\$random()").evaluate()!!.decimalValue()
+        val expected = Processor().evaluate("\$random()")!!.decimalValue()
         assertTrue(BigDecimal.ZERO <= expected)
         assertTrue(expected < BigDecimal.ONE)
     }
@@ -103,24 +110,28 @@ class TestNumericFunctions {
     @Test
     @Disabled("todo: special formats")
     fun `$formatNumber()`() {
-        assertEquals(JSong.of("\"12,345.60\"").evaluate(), JSong.of("\$formatNumber(12345.6, '#,###.00')").evaluate())
         assertEquals(
-            JSong.of("\"12.346e2\"").evaluate(),
-            JSong.of("\$formatNumber(1234.5678, \"00.000e0\")").evaluate()
+            Processor().evaluate("\"12,345.60\""),
+            Processor().evaluate("\$formatNumber(12345.6, '#,###.00')"))
+        assertEquals(
+            Processor().evaluate("\"12.346e2\""),
+            Processor().evaluate("\$formatNumber(1234.5678, \"00.000e0\")")
         )
-        assertEquals(JSong.of("\"34.56\"").evaluate(), JSong.of("\$formatNumber(34.555, \"#0.00;(#0.00)\")").evaluate())
+        assertEquals(Processor().evaluate("\"34.56\""), Processor().evaluate("\$formatNumber(34.555, \"#0.00;(#0.00)\")"))
         assertEquals(
-            JSong.of("\"(34.56)\"").evaluate(),
-            JSong.of("\$formatNumber(-34.555, \"#0.00;(#0.00)\")").evaluate()
-        )
-        assertEquals(JSong.of("\"14%\"").evaluate(), JSong.of("\$formatNumber(0.14, \"01%\")").evaluate())
-        assertEquals(
-            JSong.of("\"140pm\"").evaluate(),
-            JSong.of("\$formatNumber(0.14, \"###pm\", {\"per-mille\": \"pm\"})").evaluate()
+            Processor().evaluate("\"(34.56)\""),
+            Processor().evaluate("\$formatNumber(-34.555, \"#0.00;(#0.00)\")")
         )
         assertEquals(
-            JSong.of("\"①②.③④⑥e②\"").evaluate(),
-            JSong.of(" \$formatNumber(1234.5678, \"①①.①①①e①\", {\"zero-digit\": \"\\u245f\"})").evaluate()
+            Processor().evaluate("\"14%\""),
+            Processor().evaluate("\$formatNumber(0.14, \"01%\")"))
+        assertEquals(
+            Processor().evaluate("\"140pm\""),
+            Processor().evaluate("\$formatNumber(0.14, \"###pm\", {\"per-mille\": \"pm\"})")
+        )
+        assertEquals(
+            Processor().evaluate("\"①②.③④⑥e②\""),
+            Processor().evaluate(" \$formatNumber(1234.5678, \"①①.①①①e①\", {\"zero-digit\": \"\\u245f\"})")
         )
     }
 
@@ -129,8 +140,12 @@ class TestNumericFunctions {
      */
     @Test
     fun `$formatBase()`() {
-        assertEquals(JSong.of("\"1100100\"").evaluate(), JSong.of("\$formatBase(100, 2)").evaluate())
-        assertEquals(JSong.of("\"9fb\"").evaluate(), JSong.of("\$formatBase(2555, 16)").evaluate())
+        assertEquals(
+            Processor().evaluate("\"1100100\""),
+            Processor().evaluate("\$formatBase(100, 2)"))
+        assertEquals(
+            Processor().evaluate("\"9fb\""),
+            Processor().evaluate("\$formatBase(2555, 16)"))
     }
 
     /**
@@ -140,12 +155,12 @@ class TestNumericFunctions {
     @Disabled("todo: parse numeric/roman words")
     fun `$formatInteger()`() {
         assertEquals(
-            JSong.of("\"two thousand, seven hundred and eighty-nine\"").evaluate(),
-            JSong.of("\$formatInteger(2789, 'w')").evaluate()
+            Processor().evaluate("\"two thousand, seven hundred and eighty-nine\""),
+            Processor().evaluate("\$formatInteger(2789, 'w')")
         )
         assertEquals(
-            JSong.of("\"MCMXCIX\"").evaluate(),
-            JSong.of("\$formatInteger(1999, 'I')").evaluate()
+            Processor().evaluate("\"MCMXCIX\""),
+            Processor().evaluate("\$formatInteger(1999, 'I')")
         )
     }
 
@@ -156,12 +171,12 @@ class TestNumericFunctions {
     @Disabled("todo: parse numeric/roman words")
     fun `$parseInteger()`() {
         assertEquals(
-            JSong.of("12476").evaluate(),
-            JSong.of("\$parseInteger(\"twelve thousand, four hundred and seventy-six\", 'w')").evaluate()
+            Processor().evaluate("12476"),
+            Processor().evaluate("\$parseInteger(\"twelve thousand, four hundred and seventy-six\", 'w')")
         )
         assertEquals(
-            JSong.of("12345678").evaluate(),
-            JSong.of("\$parseInteger('12,345,678', '#,##0')").evaluate()
+            Processor().evaluate("12345678"),
+            Processor().evaluate("\$parseInteger('12,345,678', '#,##0')")
         )
     }
 

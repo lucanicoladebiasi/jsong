@@ -18,8 +18,8 @@ import kotlin.reflect.KFunction
 import kotlin.reflect.full.memberFunctions
 
 class Processor(
-    val root: JsonNode? = null,
-    val mc: MathContext = MathContext.DECIMAL128,
+    private val root: JsonNode? = null,
+    private val mc: MathContext = MathContext.DECIMAL128,
     val om: ObjectMapper = ObjectMapper(),
     val random: Random = Random.Default,
     val time: Instant = Instant.now()
@@ -44,7 +44,7 @@ class Processor(
 
     private var isToReduce: Boolean = true
 
-    val lib: JSonataLFunctions = Library(this)
+    private val lib: JSonataLFunctions = Library(this)
 
     val nf: JsonNodeFactory = om.nodeFactory
 
@@ -121,7 +121,17 @@ class Processor(
         }
     }
 
-    fun stretch(array: ArrayNode, size: Int): ArrayNode {
+    private fun shrink(array: ArrayNode, predicates: BooleanArray): ArrayNode {
+        val value = nf.arrayNode()
+        predicates.forEachIndexed { index, predicate ->
+            if (predicate) {
+                value.add(array[index])
+            }
+        }
+        return value
+    }
+
+    private fun stretch(array: ArrayNode, size: Int): ArrayNode {
         val value = nf.arrayNode()
         val ratio = size / array.size()
         array.forEach { element ->
@@ -258,7 +268,6 @@ class Processor(
     override fun visitEq(ctx: JSongParser.EqContext): JsonNode? {
         val lhs = visit(ctx.lhs)
         val rhs = visit(ctx.rhs)
-        println("$lhs $rhs ${lhs==rhs}")
         return BooleanNode.valueOf(lhs == rhs)
     }
 
@@ -275,6 +284,7 @@ class Processor(
     override fun visitFilter(ctx: JSongParser.FilterContext): JsonNode? {
         val res = ArrayNode(nf)
         val lhs = expand(visit(ctx.lhs))
+        val prd = BooleanArray(lhs.size())
         lhs.forEachIndexed { index, context ->
             this.context = context
             indexStack.push(index)
@@ -283,21 +293,22 @@ class Processor(
                 is NumericNode -> {
                     val value = rhs.asInt()
                     val offset = if (value < 0) lhs.size() + value else value
-                    if (index == offset) {
+                    prd[index] = index == offset
+                    if (prd[index]) {
                         res.add(context)
                     }
                 }
 
                 is RangesNode -> {
-                    if (rhs.indexes.map { it.asInt() }.contains(index)) {
+                    prd[index] = rhs.indexes.map { it.asInt() }.contains(index)
+                    if (prd[index]) {
                         res.add(context)
                     }
                 }
 
                 else -> {
-                    val predicate = lib.boolean(rhs).asBoolean()
-                    println(predicate)
-                    if (predicate) {
+                    prd[index] = lib.boolean(rhs).asBoolean()
+                    if (prd[index]) {
                         res.add(context)
                     }
                 }
@@ -305,6 +316,9 @@ class Processor(
             }
             indexStack.pop()
             this.context = null
+        }
+        ctxMap.forEach { label, array ->
+            ctxMap[label] = shrink(array, prd)
         }
         return reduce(res)
     }
@@ -376,7 +390,6 @@ class Processor(
                 when (indexStack.isEmpty()) {
                     true -> value
                     else -> {
-                        println("$label[${indexStack.peek()}]=${value[indexStack.peek()]}")
                         value[indexStack.peek()]
                     }
                 }

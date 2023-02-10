@@ -387,12 +387,13 @@ class Processor(
         val value = ctxMap[label]
         return when {
             value != null -> {
-                when (indexStack.isEmpty()) {
-                    true -> value
-                    else -> {
-                        value[indexStack.peek()]
-                    }
-                }
+               when(indexStack.isEmpty()) {
+                   true -> value
+                   else -> {
+                       val index = indexStack.peek()
+                       value[index]
+                   }
+               }
             }
 
             else -> varMap[label]

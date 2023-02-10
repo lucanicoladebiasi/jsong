@@ -437,7 +437,6 @@ class TestPathOperators {
      */
     @Test
     fun `Context variable binding - join`() {
-        // library.loans@$l.books@$b[$l.isbn=$b.isbn].{"title": $b.title}
         val expression =
             "library.loans@\$L.books@\$B[\$L.isbn=\$B.isbn].{\"title\": \$B.title, \"customer\": \$L.customer}"
 
@@ -460,6 +459,7 @@ class TestPathOperators {
             ]   
             """.trimIndent()
         )
+
         val actual = Processor(TestResources.library).evaluate(expression)
         assertEquals(expected, actual)
     }

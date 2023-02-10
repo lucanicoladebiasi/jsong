@@ -9,10 +9,8 @@ class Test {
 
     @Test
     fun test() {
-        val expression =
-            "library.loans@\$L.books@\$B[(\$L.isbn)=(\$B.isbn)]"
-
-        val actual = Processor(TestResources.library).evaluate(expression)
+        val expression = "(\$volume := function(\$l, \$w, \$h){ \$l * \$w * \$h }; \$boolean(\$volume))"
+        val actual = Processor().evaluate(expression)!!.booleanValue()
         println(w.writeValueAsString(actual))
 
     }

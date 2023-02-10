@@ -22,38 +22,41 @@ exp
     //: lhs = exp '~>' rhs = exp                                          #chain
     //| '|' loc = exp ('|' upd = exp (',' del = exp)?)? '|'               #transform
     //| '^(' sort (',' sort)* ')'                                         #orderby
-    : REGEX                                                             #regex
-    | json                                                              #literal
-    | path                                                              #select
-    | '[' range (',' range)* ']'                                        #ranges
-    | exp'[' ']'                                                        #expand
-    | '$' label                                                         #lbl
-    | fun                                                               #function
-    | fun '(' (exp (',' exp)*)? ')'                                     #lambda
-    | '$' label ':=' exp                                                #define
-    | '$' label '(' (exp (',' exp)*)? ')'                               #call
+    : '(' exp (';' exp)*')'                                             #scope
 
     | lhs = exp'['  rhs = exp ']'                                       #filter
-    | lhs = exp '.' rhs = exp  (POS pos = label)? (CTX ctx = label)?    #map
+    | lhs = exp '.' rhs = exp  POS label                                #mappos
+    | lhs = exp '.' rhs = exp  CTX label                                #mapctx
+    | lhs = exp '.' rhs = exp                                           #map
 
-    | lhs = exp '='  rhs = exp                                          #eq
-
+    | lhs = exp '*' rhs = exp                                           #mul
+    | lhs = exp '/' rhs = exp                                           #div
+    | lhs = exp '%' rhs = exp                                           #mod
+    | lhs = exp '+' rhs = exp                                           #add
+    | lhs = exp '-' rhs = exp                                           #sub
+    | lhs = exp '&' rhs = exp                                           #concatenate
     | lhs = exp 'in' rhs = exp                                          #in
     | lhs = exp '>'  rhs = exp                                          #gt
     | lhs = exp '<'  rhs = exp                                          #lt
     | lhs = exp '>=' rhs = exp                                          #gte
     | lhs = exp '<=' rhs = exp                                          #lte
     | lhs = exp '!=' rhs = exp                                          #ne
-    | lhs = exp '&' rhs = exp                                           #concatenate
-    | lhs = exp '*' rhs = exp                                           #mul
-    | lhs = exp '/' rhs = exp                                           #div
-    | lhs = exp '%' rhs = exp                                           #mod
-    | lhs = exp '+' rhs = exp                                           #add
-    | lhs = exp '-' rhs = exp                                           #sub
+    | lhs = exp '='  rhs = exp                                          #eq
     | lhs = exp AND  rhs = exp                                          #and
     | lhs = exp OR   rhs = exp                                          #or
+
     | prd = exp '?' pos = exp ':' neg = exp                             #condition
-    | '(' exp (';' exp)*')'                                             #scope
+
+    | '$' label '(' (exp (',' exp)*)? ')'                               #call
+    | '$' label ':=' exp                                                #define
+    | '$' label                                                         #lbl
+    | fun '(' (exp (',' exp)*)? ')'                                     #lambda
+    | fun                                                               #function
+    | path                                                              #select
+    | exp'[' ']'                                                        #expand
+    | '[' range (',' range)* ']'                                        #ranges
+    | json                                                              #literal
+    | REGEX                                                             #regex
     ;
 
 fun

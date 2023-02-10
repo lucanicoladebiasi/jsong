@@ -11,15 +11,15 @@ import org.jsong.antlr.JSongParser
 import java.lang.reflect.InvocationTargetException
 import java.math.MathContext
 import java.time.Instant
-import java.util.ArrayDeque
+import java.util.*
 import kotlin.random.Random
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.full.memberFunctions
 
 class Processor(
-    val root: JsonNode? = null,
-    val mc: MathContext = MathContext.DECIMAL128,
+    private val root: JsonNode? = null,
+    private val mc: MathContext = MathContext.DECIMAL128,
     val om: ObjectMapper = ObjectMapper(),
     val random: Random = Random.Default,
     val time: Instant = Instant.now()
@@ -44,7 +44,7 @@ class Processor(
 
     private var isToReduce: Boolean = true
 
-    val lib: JSonataLFunctions = Library(this)
+    private val lib: JSonataLFunctions = Library(this)
 
     val nf: JsonNodeFactory = om.nodeFactory
 
@@ -121,7 +121,17 @@ class Processor(
         }
     }
 
-    fun stretch(array: ArrayNode, size: Int): ArrayNode {
+    private fun shrink(array: ArrayNode, predicates: BooleanArray): ArrayNode {
+        val value = nf.arrayNode()
+        predicates.forEachIndexed { index, predicate ->
+            if (predicate) {
+                value.add(array[index])
+            }
+        }
+        return value
+    }
+
+    private fun stretch(array: ArrayNode, size: Int): ArrayNode {
         val value = nf.arrayNode()
         val ratio = size / array.size()
         array.forEach { element ->
@@ -272,32 +282,33 @@ class Processor(
     }
 
     override fun visitFilter(ctx: JSongParser.FilterContext): JsonNode? {
-        println("<FLT ${ctx.lhs.text}")
         val res = ArrayNode(nf)
         val lhs = expand(visit(ctx.lhs))
+        val prd = BooleanArray(lhs.size())
         lhs.forEachIndexed { index, context ->
             this.context = context
             indexStack.push(index)
-            println(" FLT ${ctx.rhs.text} $index")
             val rhs = visit(ctx.rhs)
             when (rhs) {
                 is NumericNode -> {
                     val value = rhs.asInt()
                     val offset = if (value < 0) lhs.size() + value else value
-                    if (index == offset) {
+                    prd[index] = index == offset
+                    if (prd[index]) {
                         res.add(context)
                     }
                 }
 
                 is RangesNode -> {
-                    if (rhs.indexes.map { it.asInt() }.contains(index)) {
+                    prd[index] = rhs.indexes.map { it.asInt() }.contains(index)
+                    if (prd[index]) {
                         res.add(context)
                     }
                 }
 
                 else -> {
-                    val predicate = lib.boolean(rhs).asBoolean()
-                    if (predicate) {
+                    prd[index] = lib.boolean(rhs).asBoolean()
+                    if (prd[index]) {
                         res.add(context)
                     }
                 }
@@ -306,7 +317,9 @@ class Processor(
             indexStack.pop()
             this.context = null
         }
-        println(">FLT ${ctx.lhs.text}")
+        ctxMap.forEach { label, array ->
+            ctxMap[label] = shrink(array, prd)
+        }
         return reduce(res)
     }
 
@@ -374,16 +387,15 @@ class Processor(
         val value = ctxMap[label]
         return when {
             value != null -> {
-               when(indexStack.isEmpty()) {
-                   true -> value
-                   else -> {
-                       val size = indexStack.size
-                       val index = indexStack.peek()
-                       value[index]
-                   }
-               }
+                when (indexStack.isEmpty()) {
+                    true -> value
+                    else -> {
+                        value[indexStack.peek()]
+                    }
+                }
             }
-            else -> null
+
+            else -> varMap[label]
         }
     }
 
@@ -412,7 +424,31 @@ class Processor(
     }
 
     override fun visitMap(ctx: JSongParser.MapContext): JsonNode? {
-        println("<MAP ${ctx.lhs.text}")
+        val res = ArrayNode(nf)
+        val lhs = expand(visit(ctx.lhs))
+        when (lhs) {
+            is RangesNode -> lhs.indexes.forEach { context ->
+                this.context = context
+                when (val rhs = visit(ctx.rhs)) {
+                    is ArrayNode -> res.addAll(rhs)
+                    else -> rhs?.let { res.add(it) }
+                }
+            }
+
+            else -> lhs.forEachIndexed { index, context ->
+                this.context = context
+                indexStack.push(index)
+                when (val rhs = visit(ctx.rhs)) {
+                    is ArrayNode -> res.addAll(rhs)
+                    else -> rhs?.let { res.add(it) }
+                }
+                indexStack.pop()
+            }
+        }
+        return reduce(res)
+    }
+
+    override fun visitMapctx(ctx: JSongParser.MapctxContext): JsonNode? {
         var res = ArrayNode(nf)
         val lhs = expand(visit(ctx.lhs))
         when (lhs) {
@@ -427,7 +463,6 @@ class Processor(
             else -> lhs.forEachIndexed { index, context ->
                 this.context = context
                 indexStack.push(index)
-                println(" MAP ${ctx.rhs.text} $index")
                 when (val rhs = visit(ctx.rhs)) {
                     is ArrayNode -> res.addAll(rhs)
                     else -> rhs?.let { res.add(it) }
@@ -435,18 +470,15 @@ class Processor(
                 indexStack.pop()
             }
         }
-        if (ctx.ctx?.text != null) {
-            ctxMap.forEach { label, array ->
-                ctxMap[label] = stretch(array, res.size())
-            }
-            val ratio = res.size() / lhs.size()
-            ctxMap[ctx.ctx!!.text] = res
-            res = ArrayNode(nf)
-            for (i in 0 until ratio) {
-                res.addAll(lhs)
-            }
+        ctxMap.forEach { label, array ->
+            ctxMap[label] = stretch(array, res.size())
         }
-        println("MAP> ${ctx.lhs.text}")
+        val ratio = res.size() / lhs.size()
+        ctxMap[ctx.label().text] = res
+        res = ArrayNode(nf)
+        for (i in 0 until ratio) {
+            res.addAll(lhs)
+        }
         return reduce(res)
     }
 

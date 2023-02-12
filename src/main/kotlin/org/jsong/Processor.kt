@@ -50,7 +50,7 @@ class Processor(
 
     private val ctxMap = mutableMapOf<String, ArrayNode>()
 
-    //private val posMap = mutableMapOf<String, ArrayNode>()
+    private val posMap = mutableMapOf<String, ArrayNode>()
 
     private val varMap = mutableMapOf<String, JsonNode?>()
 
@@ -320,6 +320,9 @@ class Processor(
         ctxMap.forEach { label, array ->
             ctxMap[label] = shrink(array, prd)
         }
+        posMap.forEach { label, array ->
+            posMap[label] = shrink(array, prd)
+        }
         return reduce(res)
     }
 
@@ -384,19 +387,15 @@ class Processor(
 
     override fun visitLbl(ctx: JSongParser.LblContext): JsonNode? {
         val label = ctx.label().text
-        val value = ctxMap[label]
-        return when {
-            value != null -> {
-               when(indexStack.isEmpty()) {
-                   true -> value
-                   else -> {
-                       val index = indexStack.peek()
-                       value[index]
-                   }
-               }
+        return when(val array = posMap[label]) {
+            null -> when(@Suppress("NAME_SHADOWING") val array: ArrayNode? = ctxMap[label]) {
+                null -> varMap[label]
+                else -> when(indexStack.isEmpty()) {
+                    true -> array
+                    else -> array[indexStack.peek()]
+                }
             }
-
-            else -> varMap[label]
+            else -> IntNode(array.indexOf(context) + 1)
         }
     }
 
@@ -474,12 +473,47 @@ class Processor(
         ctxMap.forEach { label, array ->
             ctxMap[label] = stretch(array, res.size())
         }
+        posMap.forEach { label, array ->
+            posMap[label] = stretch(array, res.size())
+        }
         val ratio = res.size() / lhs.size()
         ctxMap[ctx.label().text] = res
         res = ArrayNode(nf)
         for (i in 0 until ratio) {
             res.addAll(lhs)
         }
+        return reduce(res)
+    }
+
+    override fun visitMappos(ctx: JSongParser.MapposContext): JsonNode? {
+        val res = ArrayNode(nf)
+        val lhs = expand(visit(ctx.lhs))
+        when (lhs) {
+            is RangesNode -> lhs.indexes.forEach { context ->
+                this.context = context
+                when (val rhs = visit(ctx.rhs)) {
+                    is ArrayNode -> res.addAll(rhs)
+                    else -> rhs?.let { res.add(it) }
+                }
+            }
+
+            else -> lhs.forEachIndexed { index, context ->
+                this.context = context
+                indexStack.push(index)
+                when (val rhs = visit(ctx.rhs)) {
+                    is ArrayNode -> res.addAll(rhs)
+                    else -> rhs?.let { res.add(it) }
+                }
+                indexStack.pop()
+            }
+        }
+        ctxMap.forEach { label, array ->
+            ctxMap[label] = stretch(array, res.size())
+        }
+        posMap.forEach { label, array ->
+            posMap[label] = stretch(array, res.size())
+        }
+        posMap[ctx.label().text] = res
         return reduce(res)
     }
 

@@ -7,7 +7,7 @@ plugins {
 }
 
 val antlrVersion = "4.9.3"
-val jacksonVersion = "2.13.3"
+val jacksonVersion = "2.14.1"
 val kotlinVersion = "1.7.10"
 
 group = "org.jsong"

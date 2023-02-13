@@ -15,10 +15,10 @@ operations and workflow definition.
 
 This implementation was created purely from the JSONata language specifications
 without any debt from any previous implementation, notably the 
-[JavaScript JSONata github repository](https://github.com/jsonata-js/jsonata)
-and
+[JavaScript JSONata](https://github.com/jsonata-js/jsonata)
+project and
 [IBM JSONata4Java](https://github.com/IBM/JSONata4Java)
-to allow the most permissive use of the code.
+project to allow the most permissive use of the code.
 
 The author of the project strongly believes
 

@@ -18,6 +18,17 @@ class TestOtherOperators {
     }
 
     /**
+     * https://docs.jsonata.org/other-operators#-chain
+     */
+    @Test
+    fun `Chain - single`() {
+        val expression = "Account.Order.Product.(Price * Quantity) ~> \$sum()"
+        val expected = Processor(TestResources.invoice).evaluate("\$sum(Account.Order.Product.(Price * Quantity))")
+        val actual = Processor(TestResources.invoice).evaluate(expression)
+        assertEquals(expected, actual)
+    }
+
+    /**
      * https://docs.jsonata.org/other-operators#--conditional
      */
     @Test

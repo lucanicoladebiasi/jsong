@@ -48,6 +48,7 @@ exp
     //| '^(' sort (',' sort)* ')'                                         #orderby
     : '(' exp (';' exp)*')'                                             #scope  // scp
 
+
     | lhs = exp'['  rhs = exp ']'                                       #filter // flt
     | lhs = exp '.' rhs = exp  POS label                                #mappos  // pos
     | lhs = exp '.' rhs = exp  CTX label                                #mapctx  // ctx
@@ -70,6 +71,7 @@ exp
     | lhs = exp OR   rhs = exp                                          #or
 
     | prd = exp '?' pos = exp ':' neg = exp                             #condition
+    | lhs = exp '~>' rhs = exp                                          #chain
 
     | '$' label '(' (exp (',' exp)*)? ')'                               #call
     | '$' label ':=' exp                                                #define

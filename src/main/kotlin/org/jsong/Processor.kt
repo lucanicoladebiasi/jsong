@@ -246,6 +246,11 @@ class Processor(
         }
     }
 
+    override fun visitChain(ctx: JSongParser.ChainContext): JsonNode? {
+        context = visit(ctx.lhs)
+        return visit(ctx.rhs)
+    }
+
     override fun visitConcatenate(ctx: JSongParser.ConcatenateContext): JsonNode {
         val sb = StringBuilder()
         visit(ctx.lhs)?.let { lhs ->

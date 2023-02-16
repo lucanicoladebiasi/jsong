@@ -1,6 +1,7 @@
 package org.jsong
 
 import com.fasterxml.jackson.databind.node.TextNode
+import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
@@ -25,6 +26,25 @@ class TestOtherOperators {
         val expression = "Account.Order.Product.(Price * Quantity) ~> \$sum()"
         val expected = Processor(TestResources.invoice).evaluate("\$sum(Account.Order.Product.(Price * Quantity))")
         val actual = Processor(TestResources.invoice).evaluate(expression)
+        assertEquals(expected, actual)
+    }
+
+    /**
+     * https://docs.jsonata.org/other-operators#-chain
+     */
+    @Test
+    fun `Chain - multiple`() {
+        @Language("JSON")
+        val json = TestResources.mapper.readTree("""
+            {
+              "Customer": {
+                "Email": "freddy@my-social.com"
+              }
+            }
+        """.trimIndent())
+        val expression = "Customer.Email  ~> \$substringAfter(\"@\") ~> \$substringBefore(\".\") ~> \$uppercase()"
+        val expected = Processor(json).evaluate("\$uppercase(\$substringBefore(\$substringAfter(Customer.Email, \"@\"), \".\"))")
+        val actual = Processor(json).evaluate(expression)
         assertEquals(expected, actual)
     }
 

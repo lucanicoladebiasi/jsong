@@ -39,6 +39,7 @@ import kotlin.random.Random
 import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
 import kotlin.reflect.full.memberFunctions
+import kotlin.reflect.javaType
 
 class Processor(
     private val root: JsonNode? = null,
@@ -102,14 +103,60 @@ class Processor(
         }
     }
 
-    private fun recall(type: KClass<*>, name: String, args: List<Any?>): KFunction<*> {
-        type.memberFunctions.filter { it.name == name }.forEach { function ->
-            if (function.parameters.size >= args.size - 1) {
-                return function
+//    private fun recall(type: KClass<*>, name: String, args: List<Any?>): KFunction<*> {
+//        type.memberFunctions.filter { it.name == name }.forEach { function ->
+//            //if (function.parameters.size >= args.size - 1) {
+//            if (function.parameters.size == args.size) {
+//                return function
+//            }
+//        }
+//        throw IllegalArgumentException("Function $name($args) not found.")
+//    }
+
+    @OptIn(ExperimentalStdlibApi::class)
+    private fun isCallable(
+        kFunction: KFunction<*>,
+        args: List<Any?>
+    ): Boolean {
+        var isCallable = true
+        for(index in 1 until kFunction.parameters.size) {
+            val kParameter = kFunction.parameters[index]
+            when(kFunction.parameters[index].isOptional) {
+                true ->  isCallable = isCallable && true
+                else -> when(index < args.size) {
+                    true -> {
+                        val arg = args[index]
+                        when(arg == null) {
+                            true -> isCallable = isCallable && kParameter.type.isMarkedNullable
+                            else -> isCallable = isCallable
+                                    && (kParameter.type.javaType as Class<*>).isAssignableFrom(arg::class.java)
+                        }
+                    }
+                    else -> return false
+                }
             }
         }
-        throw IllegalArgumentException("Function $args) not found.")
+        return isCallable
     }
+
+    private fun recall(
+        kClass: KClass<*>,
+        functionName: String,
+        args: List<Any?>
+    ): KFunction<*> {
+        kClass.memberFunctions
+            .filter { it.name == functionName }
+            .sortedByDescending { it.parameters.size }
+            .forEach { kFunction ->
+            if (isCallable(kFunction, args)) {
+                return kFunction
+            }
+        }
+        throw IllegalArgumentException(
+            "Function $functionName(${ args.subList(1, args.size).joinToString(", ")}) not found"
+        )
+    }
+
 
     private fun reduce(node: JsonNode?): JsonNode? {
         return if (isToReduce) when (node) {
@@ -218,24 +265,21 @@ class Processor(
 
             else -> {
                 val args = mutableListOf<Any?>()
-                args.add(lib)
                 val context = this.context
-                when (ctx.exp().isEmpty()) {
-                    true -> args.add(context)
-                    else -> ctx.exp().forEach { exp ->
-                        this.context = context
-                        args.add(visit(exp))
-                    }
+                ctx.exp().forEach { exp ->
+                    this.context = context
+                    args.add(visit(exp))
                 }
-                val kfun = recall(lib::class, ctx.label().text, args)
-                when {
-                    args.size > kfun.parameters.size -> while (args.size > kfun.parameters.size) {
-                        args.removeLast()
-                    }
-
-                    args.size < kfun.parameters.size -> while (args.size < kfun.parameters.size) {
-                        args.add(null)
-                    }
+                var kfun: KFunction<*>
+                args.add(0, lib)
+                try {
+                    kfun = recall(lib::class, ctx.label().text, args)
+                } catch (e: IllegalArgumentException) {
+                    args.add(1, context)
+                    kfun = recall(lib::class, ctx.label().text, args)
+                }
+                while (args.size < kfun.parameters.size) {
+                    args.add(null)
                 }
                 try {
                     kfun.call(*args.toTypedArray()) as JsonNode?
@@ -415,14 +459,15 @@ class Processor(
 
     override fun visitLbl(ctx: JSongParser.LblContext): JsonNode? {
         val label = ctx.label().text
-        return when(val array = posMap[label]) {
-            null -> when(@Suppress("NAME_SHADOWING") val array: ArrayNode? = ctxMap[label]) {
+        return when (val array = posMap[label]) {
+            null -> when (@Suppress("NAME_SHADOWING") val array: ArrayNode? = ctxMap[label]) {
                 null -> varMap[label]
-                else -> when(indexStack.isEmpty()) {
+                else -> when (indexStack.isEmpty()) {
                     true -> array
                     else -> array[indexStack.peek()]
                 }
             }
+
             else -> IntNode(array.indexOf(context) + 1)
         }
     }

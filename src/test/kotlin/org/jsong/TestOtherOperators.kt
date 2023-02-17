@@ -48,6 +48,14 @@ class TestOtherOperators {
         assertEquals(expected, actual)
     }
 
+    @Test
+    fun `Chain - functional`() {
+        val expression = "(\$uppertrim := \$trim ~> \$uppercase; \$uppertrim(\"   Hello    World   \")"
+        val expected = TextNode("HELLO WORLD")
+        val actual = Processor().evaluate(expression)
+        assertEquals(expected, actual)
+    }
+
     /**
      * https://docs.jsonata.org/other-operators#--conditional
      */

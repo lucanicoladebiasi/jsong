@@ -406,7 +406,11 @@ class Library(
     }
 
     // todo: implement limit
-    override fun replace(str: JsonNode, pattern: JsonNode, replacement: JsonNode, limit: JsonNode?): TextNode {
+    override fun replace(
+        str: JsonNode,
+        pattern: JsonNode,
+        replacement: JsonNode,
+        limit: JsonNode?): TextNode {
         val txt = string(str).textValue()
         val new = string(replacement).textValue()
         return TextNode(

@@ -58,7 +58,7 @@ interface JSonataLFunctions {
     /**
      * https://docs.jsonata.org/array-functions#sort
      */
-    fun sort(node: JsonNode, function: FunNode?): ArrayNode
+    fun sort(node: JsonNode, function: FunNode? = null): ArrayNode
 
     /**
      * https://docs.jsonata.org/array-functions#zip
@@ -186,7 +186,7 @@ interface JSonataLFunctions {
     /**
      * https://docs.jsonata.org/numeric-functions#formatnumber
      */
-    fun formatNumber(number: DecimalNode, picture: TextNode, options: TextNode?): TextNode
+    fun formatNumber(number: DecimalNode, picture: TextNode, options: TextNode? = null): TextNode
 
     /**
      * https://docs.jsonata.org/numeric-functions#number
@@ -320,7 +320,7 @@ interface JSonataLFunctions {
     /**
      * https://docs.jsonata.org/string-functions#join
      */
-    fun join(array: JsonNode, separator: JsonNode?): TextNode
+    fun join(array: JsonNode, separator: JsonNode? = null): TextNode
 
     /**
      * https://docs.jsonata.org/string-functions#length
@@ -335,22 +335,22 @@ interface JSonataLFunctions {
     /**
      * https://docs.jsonata.org/string-functions#join
      */
-    fun match(str: JsonNode, pattern: JsonNode, limit: JsonNode?): ArrayNode
+    fun match(str: JsonNode, pattern: JsonNode, limit: JsonNode? = null): ArrayNode
 
     /**
      * https://docs.jsonata.org/string-functions#pad
      */
-    fun pad(str: JsonNode, width: JsonNode, char: JsonNode?): TextNode
+    fun pad(str: JsonNode, width: JsonNode, char: JsonNode? = null): TextNode
 
     /**
      * https://docs.jsonata.org/string-functions#replace
      */
-    fun replace(str: JsonNode, pattern: JsonNode, replacement: JsonNode, limit: JsonNode?): TextNode
+    fun replace(str: JsonNode, pattern: JsonNode, replacement: JsonNode, limit: JsonNode? = null): TextNode
 
     /**
      * https://docs.jsonata.org/string-functions#split
      */
-    fun split(str: JsonNode, separator: JsonNode, limit: JsonNode?): ArrayNode
+    fun split(str: JsonNode, separator: JsonNode, limit: JsonNode? = null): ArrayNode
 
     /**
      * https://docs.jsonata.org/string-functions#string

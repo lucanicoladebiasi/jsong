@@ -121,7 +121,7 @@ class Processor(
         var isCallable = true
         for(index in 1 until kFunction.parameters.size) {
             val kParameter = kFunction.parameters[index]
-            when(kFunction.parameters[index].isOptional) {
+            when(kParameter.isOptional) {
                 true ->  isCallable = isCallable && true
                 else -> when(index < args.size) {
                     true -> {

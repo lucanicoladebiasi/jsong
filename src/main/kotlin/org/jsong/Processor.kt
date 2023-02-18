@@ -103,16 +103,6 @@ class Processor(
         }
     }
 
-//    private fun recall(type: KClass<*>, name: String, args: List<Any?>): KFunction<*> {
-//        type.memberFunctions.filter { it.name == name }.forEach { function ->
-//            //if (function.parameters.size >= args.size - 1) {
-//            if (function.parameters.size == args.size) {
-//                return function
-//            }
-//        }
-//        throw IllegalArgumentException("Function $name($args) not found.")
-//    }
-
     @OptIn(ExperimentalStdlibApi::class)
     private fun isCallable(
         kFunction: KFunction<*>,
@@ -318,9 +308,11 @@ class Processor(
     }
 
     override fun visitDefine(ctx: JSongParser.DefineContext): JsonNode? {
-        val res = visit(ctx.exp())
-        varMap[ctx.label().text] = res
-        return res
+        when(ctx.exp().text.contains("~>")) {
+            true -> varMap[ctx.label().text] = FunNode(listOf("context"), ctx.exp().text, nf)
+            else -> varMap[ctx.label().text] = visit(ctx.exp())
+        }
+        return varMap[ctx.label().text]
     }
 
     override fun visitDescendants(ctx: JSongParser.DescendantsContext): JsonNode? {

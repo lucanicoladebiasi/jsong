@@ -43,16 +43,14 @@ bool
     ;
 
 exp
-    //: lhs = exp '~>' rhs = exp                                          #chain
     //| '|' loc = exp ('|' upd = exp (',' del = exp)?)? '|'               #transform
     //| '^(' sort (',' sort)* ')'                                         #orderby
-    : '(' exp (';' exp)*')'                                             #scope  // scp
+    : '(' exp (';' exp)*')'                                             #scope
 
-
-    | lhs = exp'['  rhs = exp ']'                                       #filter // flt
-    | lhs = exp '.' rhs = exp  POS label                                #mappos  // pos
-    | lhs = exp '.' rhs = exp  CTX label                                #mapctx  // ctx
-    | lhs = exp '.' rhs = exp                                           #map     // map
+    | lhs = exp'['  rhs = exp ']'                                       #filter
+    | lhs = exp '.' rhs = exp  POS label                                #mappos
+    | lhs = exp '.' rhs = exp  CTX label                                #mapctx
+    | lhs = exp '.' rhs = exp                                           #map
 
     | lhs = exp '*' rhs = exp                                           #mul
     | lhs = exp '/' rhs = exp                                           #div

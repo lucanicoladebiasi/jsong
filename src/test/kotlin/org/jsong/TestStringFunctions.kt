@@ -219,7 +219,6 @@ class TestStringFunctions {
      * https://docs.jsonata.org/string-functions#pad
      */
     @Test
-    @Disabled("to do ~> operator")
     fun `$pad() - width and char`() {
         val expression = "\$formatBase(35, 2) ~> \$pad(-8, '0')"
         val expected = TestResources.mapper.readTree("\"00100011\"")
@@ -342,7 +341,6 @@ class TestStringFunctions {
      */
 
     @Test
-    @Disabled("to do ~> operator")
     fun `$join() - chain with separator`() {
         val expression = "\$split(\"too much, punctuation. hard; to read\", /[ ,.;]+/, 3) ~> \$join(', ')"
         val expected = TestResources.mapper.readTree("\"too, much, punctuation\"")
@@ -443,7 +441,6 @@ class TestStringFunctions {
      * https://docs.jsonata.org/string-functions#replace
      */
     @Test
-    @Disabled("to do implement functions")
     fun `$replace() - function`() {
         val expression = """
             (

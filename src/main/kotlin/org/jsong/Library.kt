@@ -89,16 +89,19 @@ class Library(
         return DecimalNode(number.decimalValue().abs())
     }
 
-    override fun append(node1: JsonNode, node2: JsonNode): ArrayNode {
-        val array1 = processor.expand(node1)
-        val array2 = processor.expand(node2)
+    /**
+     * See [JSonataLFunctions.append].
+     */
+    override fun append(array1: JsonNode, array2: JsonNode): ArrayNode {
+        val arr1 = processor.expand(array1)
+        val arr2 = processor.expand(array2)
         return when {
-            array1 is RangesNode && array2 is RangesNode -> {
-                RangesNode(processor.nf).addAll(array1).addAll(array2)
+            arr1 is RangesNode && arr2 is RangesNode -> {
+                RangesNode(processor.nf).addAll(arr1).addAll(arr2)
             }
 
             else -> {
-                processor.nf.arrayNode().addAll(array1).addAll(array2)
+                processor.nf.arrayNode().addAll(arr1).addAll(arr2)
             }
         }
     }
@@ -157,12 +160,15 @@ class Library(
         )
     }
 
-    override fun count(node: JsonNode): DecimalNode {
-        val array = processor.expand(node)
+    /**
+     * See [JSonataLFunctions.count].
+     */
+    override fun count(array: JsonNode): DecimalNode {
+        val arr = processor.expand(array)
         return DecimalNode(
-            when (array) {
-                is RangesNode -> array.indexes.size().toBigDecimal()
-                else -> array.size().toBigDecimal()
+            when (arr) {
+                is RangesNode -> arr.indexes.size().toBigDecimal()
+                else -> arr.size().toBigDecimal()
             }
         )
     }
@@ -175,9 +181,12 @@ class Library(
         return TextNode(URLDecoder.decode(string(str).textValue(), Charsets.UTF_8.toString()))
     }
 
-    override fun distinct(node: JsonNode): ArrayNode {
-        val array = processor.expand(node)
-        return processor.nf.arrayNode().addAll(array.toSet())
+    /**
+     * See [JSonataLFunctions.distinct].
+     */
+    override fun distinct(array: JsonNode): ArrayNode {
+        val arr = processor.expand(array)
+        return processor.nf.arrayNode().addAll(arr.toSet())
     }
 
     override fun each(obj: ObjectNode, function: FunNode): ArrayNode {
@@ -421,8 +430,11 @@ class Library(
         )
     }
 
-    override fun reverse(node: JsonNode): ArrayNode {
-        val array = processor.expand(node)
+    /**
+     * See [JSonataLFunctions.reverse].
+     */
+    override fun reverse(array: JsonNode): ArrayNode {
+        val array = processor.expand(array)
         return processor.nf.arrayNode().addAll(array.reversed())
     }
 
@@ -431,8 +443,11 @@ class Library(
         return DecimalNode(number.decimalValue().setScale(scale, RoundingMode.HALF_EVEN))
     }
 
-    override fun shuffle(node: JsonNode): ArrayNode {
-        val shuffled = when (val array = processor.expand(node)) {
+    /**
+     * See [JSonataLFunctions.shuffle].
+     */
+    override fun shuffle(array: JsonNode): ArrayNode {
+        val shuffled = when (val array = processor.expand(array)) {
             is RangesNode -> array.indexes.shuffled(processor.random)
             else -> array.shuffled(processor.random)
         }
@@ -447,7 +462,7 @@ class Library(
         TODO("Not yet implemented")
     }
 
-    override fun sort(node: JsonNode, function: FunNode?): ArrayNode {
+    override fun sort(array: JsonNode, function: FunNode?): ArrayNode {
         // val array = processor.expand(node)
         TODO("Not yet implemented")
     }

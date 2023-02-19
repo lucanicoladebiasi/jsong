@@ -31,6 +31,8 @@ import com.fasterxml.jackson.databind.node.TextNode
 /**
  * This class defines a JSONata [function](https://docs.jsonata.org/programming#functions).
  *
+ * Immutable.
+ *
  * @param args labels of the arguments.
  * @param body code of the function.
  * @param nf node factory used to create this [FunNode],

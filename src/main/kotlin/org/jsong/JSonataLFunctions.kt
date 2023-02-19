@@ -26,39 +26,82 @@ package org.jsong
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.*
 
+/**
+ * This interface defines the built-in functions library defined by the JSONata language.
+ *
+ * @see Library
+ */
 interface JSonataLFunctions {
 
     // https://docs.jsonata.org/array-functions
 
     /**
-     * https://docs.jsonata.org/array-functions#append
+     *
+     * Returns an array containing the values in [array1] followed by the values in [array2].
+     * If either parameter is not an array, then it is treated as a singleton array containing that value.
+     *
+     * @see [append](https://docs.jsonata.org/array-functions#append)
      */
-    fun append(node1: JsonNode, node2: JsonNode): ArrayNode
+    fun append(array1: JsonNode, array2: JsonNode): ArrayNode
 
     /**
-     * https://docs.jsonata.org/array-functions#count
+     * Returns the number of items in the [array] parameter.
+     * If the [array] parameter is not an array, but rather a value of another JSON type,
+     * then the parameter is treated as a singleton array containing that value, and this function returns `1`.
+     *
+     * If array is not specified, then the context value is used as the value of array.
+     *
+     * @see [count](https://docs.jsonata.org/array-functions#count)
      */
-    fun count(node: JsonNode): DecimalNode
+    fun count(array: JsonNode): DecimalNode
 
     /**
-     * https://docs.jsonata.org/array-functions#distinct
+     * Returns an [array] containing all the values from the array parameter,
+     * but with any duplicates removed.
+     *
+     * Values are tested for deep equality as if by using the
+     * [equality](https://docs.jsonata.org/comparison-operators#-equals) operator.
+     *
+     * @see [distinct](]https://docs.jsonata.org/array-functions#distinct)
      */
-    fun distinct(node: JsonNode): ArrayNode
+    fun distinct(array: JsonNode): ArrayNode
 
     /**
-     * https://docs.jsonata.org/array-functions#reverse
+     * Returns an [array] containing all the values from the array parameter, but in reverse order.
+     *
+     * @see [reverse](https://docs.jsonata.org/array-functions#reverse)
      */
-    fun reverse(node: JsonNode): ArrayNode
+    fun reverse(array: JsonNode): ArrayNode
 
     /**
-     * https://docs.jsonata.org/array-functions#shuffle
+     * Returns an array containing all the values from the [array] parameter,
+     * but shuffled into random order.
+     *
+     * @see [shuffle](https://docs.jsonata.org/array-functions#shuffle)
      */
-    fun shuffle(node: JsonNode): ArrayNode
+    fun shuffle(array: JsonNode): ArrayNode
 
     /**
-     * https://docs.jsonata.org/array-functions#sort
+     * Returns an array containing all the values in the [array] parameter, but sorted into order.
+     * If no function parameter is supplied, then the array parameter must contain only numbers or only strings,
+     * and they will be sorted in order of increasing number, or increasing unicode codepoint respectively.
+     *
+     * If a comparator [function] is supplied, then is must be a function that takes two parameters:
+     *
+     * `function(left, right)`
+     *
+     * This function gets invoked by the sorting algorithm to compare two values left and right.
+     * If the value of left should be placed after the value of right in the desired sort order,
+     * then the function must return Boolean `true` to indicate a swap.
+     * Otherwise, it must return `false`.
+     *
+     * @param array to sort.
+     * @param function sorting. `null` by default, it sorts numbers and strings in ascending order.
+     *
+     * @see [sort](https://docs.jsonata.org/array-functions#sort)
+     *
      */
-    fun sort(node: JsonNode, function: FunNode? = null): ArrayNode
+    fun sort(array: JsonNode, function: FunNode? = null): ArrayNode
 
     /**
      * https://docs.jsonata.org/array-functions#zip

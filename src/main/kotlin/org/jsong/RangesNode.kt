@@ -31,6 +31,8 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory
 /**
  * This class represents an array of [RangeNode] objects.
  *
+ * Immutable.
+ *
  * @param nf the node factory used to create this object,
  * by default set the the [JsonNodeFactory] of a new [ObjectMapper].
  */

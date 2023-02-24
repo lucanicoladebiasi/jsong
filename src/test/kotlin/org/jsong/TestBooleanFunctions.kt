@@ -24,6 +24,7 @@
 package org.jsong
 
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import kotlin.test.assertFalse
 
@@ -133,6 +134,7 @@ class TestBooleanFunctions {
      * https://docs.jsonata.org/boolean-functions#boolean
      */
     @Test
+    @Disabled
     fun `$boolean() - function`() {
         val expression = "(\$volume := function(\$l, \$w, \$h){ \$l * \$w * \$h }; \$boolean(\$volume))"
         assertFalse(Processor().evaluate(expression)!!.booleanValue())

@@ -455,7 +455,17 @@ class Processor(
         val label = ctx.label().text
         val res = when (val array = posMap[label]) {
             null -> when (@Suppress("NAME_SHADOWING") val array: ArrayNode? = ctxMap[label]) {
-                null -> varMap[label]
+                null -> {
+                    when(varMap[label]) {
+                        null -> {
+                            val args = mutableListOf<Any?>()
+                            args.add(lib)
+                            args.add(context)
+                            recall(lib::class, label, args).call(*args.toTypedArray()) as JsonNode?
+                        }
+                        else -> varMap[label]
+                    }
+                }
                 else -> when (indexStack.isEmpty()) {
                     true -> array
                     else -> array[indexStack.peek()]

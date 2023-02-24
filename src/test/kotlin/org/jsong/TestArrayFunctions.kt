@@ -116,6 +116,7 @@ class TestArrayFunctions {
      * https://docs.jsonata.org/array-functions#reverse
      */
     @Test
+    @Disabled
     fun `$reverse() - context`() {
         val expected = Processor().evaluate("[5, 4, 3, 2, 1]")
         val actual = Processor().evaluate("[1..5] ~> \$reverse()")

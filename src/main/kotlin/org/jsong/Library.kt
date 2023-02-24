@@ -434,8 +434,8 @@ class Library(
      * See [JSonataLFunctions.reverse].
      */
     override fun reverse(array: JsonNode): ArrayNode {
-        val array = processor.expand(array)
-        return processor.nf.arrayNode().addAll(array.reversed())
+        val arr = processor.expand(array)
+        return processor.nf.arrayNode().addAll(arr.reversed())
     }
 
     override fun round(number: DecimalNode, precision: DecimalNode?): DecimalNode {
@@ -447,9 +447,9 @@ class Library(
      * See [JSonataLFunctions.shuffle].
      */
     override fun shuffle(array: JsonNode): ArrayNode {
-        val shuffled = when (val array = processor.expand(array)) {
-            is RangesNode -> array.indexes.shuffled(processor.random)
-            else -> array.shuffled(processor.random)
+        val shuffled = when (val arr = processor.expand(array)) {
+            is RangesNode -> arr.indexes.shuffled(processor.random)
+            else -> arr.shuffled(processor.random)
         }
         return processor.nf.arrayNode().addAll(shuffled)
     }

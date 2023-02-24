@@ -103,35 +103,26 @@ class Processor(
         }
     }
 
-//    private fun recall(type: KClass<*>, name: String, args: List<Any?>): KFunction<*> {
-//        type.memberFunctions.filter { it.name == name }.forEach { function ->
-//            //if (function.parameters.size >= args.size - 1) {
-//            if (function.parameters.size == args.size) {
-//                return function
-//            }
-//        }
-//        throw IllegalArgumentException("Function $name($args) not found.")
-//    }
-
     @OptIn(ExperimentalStdlibApi::class)
     private fun isCallable(
         kFunction: KFunction<*>,
         args: List<Any?>
     ): Boolean {
         var isCallable = true
-        for(index in 1 until kFunction.parameters.size) {
+        for (index in 1 until kFunction.parameters.size) {
             val kParameter = kFunction.parameters[index]
-            when(kParameter.isOptional) {
-                true ->  isCallable = isCallable && true
-                else -> when(index < args.size) {
+            when (kParameter.isOptional) {
+                true -> isCallable = isCallable && true
+                else -> when (index < args.size) {
                     true -> {
                         val arg = args[index]
-                        when(arg == null) {
+                        when (arg == null) {
                             true -> isCallable = isCallable && kParameter.type.isMarkedNullable
                             else -> isCallable = isCallable
                                     && (kParameter.type.javaType as Class<*>).isAssignableFrom(arg::class.java)
                         }
                     }
+
                     else -> return false
                 }
             }
@@ -148,12 +139,12 @@ class Processor(
             .filter { it.name == functionName }
             .sortedByDescending { it.parameters.size }
             .forEach { kFunction ->
-            if (isCallable(kFunction, args)) {
-                return kFunction
+                if (isCallable(kFunction, args)) {
+                    return kFunction
+                }
             }
-        }
         throw IllegalArgumentException(
-            "Function $functionName(${ args.subList(1, args.size).joinToString(", ")}) not found"
+            "Function $functionName(${args.subList(1, args.size).joinToString(", ")}) not found"
         )
     }
 
@@ -259,6 +250,7 @@ class Processor(
                 ctx.exp().forEachIndexed { i, exp ->
                     this.context = context
                     varMap[function.args[i]] = visit(exp)
+                    this.context = varMap[function.args[i]]
                 }
                 return visit(JSongParser(CommonTokenStream(JSongLexer(CharStreams.fromString(function.body)))).jsong())
             }
@@ -318,9 +310,11 @@ class Processor(
     }
 
     override fun visitDefine(ctx: JSongParser.DefineContext): JsonNode? {
-        val res = visit(ctx.exp())
-        varMap[ctx.label().text] = res
-        return res
+        when (ctx.exp().text.contains("~>")) {
+            true -> varMap[ctx.label().text] = FunNode(listOf("context"), ctx.exp().text, nf)
+            else -> varMap[ctx.label().text] = visit(ctx.exp())
+        }
+        return varMap[ctx.label().text]
     }
 
     override fun visitDescendants(ctx: JSongParser.DescendantsContext): JsonNode? {
@@ -459,9 +453,19 @@ class Processor(
 
     override fun visitLbl(ctx: JSongParser.LblContext): JsonNode? {
         val label = ctx.label().text
-        return when (val array = posMap[label]) {
+        val res = when (val array = posMap[label]) {
             null -> when (@Suppress("NAME_SHADOWING") val array: ArrayNode? = ctxMap[label]) {
-                null -> varMap[label]
+                null -> {
+                    when(varMap[label]) {
+                        null -> {
+                            val args = mutableListOf<Any?>()
+                            args.add(lib)
+                            args.add(context)
+                            recall(lib::class, label, args).call(*args.toTypedArray()) as JsonNode?
+                        }
+                        else -> varMap[label]
+                    }
+                }
                 else -> when (indexStack.isEmpty()) {
                     true -> array
                     else -> array[indexStack.peek()]
@@ -469,6 +473,12 @@ class Processor(
             }
 
             else -> IntNode(array.indexOf(context) + 1)
+        }
+        return when (res) {
+            is FunNode -> {
+                visit(JSongParser(CommonTokenStream(JSongLexer(CharStreams.fromString(res.body)))).jsong())
+            }
+            else -> res
         }
     }
 

@@ -28,30 +28,57 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.node.TextNode
 
+/**
+ * This class defines a JSONata [function](https://docs.jsonata.org/programming#functions).
+ *
+ * Immutable.
+ *
+ * @param args labels of the arguments.
+ * @param body code of the function.
+ * @param nf node factory used to create this [FunNode],
+ * by default set to the [JsonNodeFactory] of a new [ObjectNode].
+ */
 class FunNode(
     args: List<String>,
     body: String,
-    nodeFactory: JsonNodeFactory = ObjectMapper().nodeFactory
+    nf: JsonNodeFactory = ObjectMapper().nodeFactory
 ) : ObjectNode(
-    nodeFactory,
+    nf,
     mapOf(
-        Pair(ARGS_TAG, nodeFactory.arrayNode().addAll(args.map { arg -> TextNode(arg) })),
+        Pair(ARGS_TAG, nf.arrayNode().addAll(args.map { arg -> TextNode(arg) })),
         Pair(BODY_TAG, TextNode(body))
     )
 ) {
 
     companion object {
 
-        const val ARGS_TAG = "args"
+        /**
+         * Tag of the [args] property of this [FunNode] represented as an
+         * [com.fasterxml.jackson.databind.node.ArrayNode] of [TextNode].
+         */
+        const val ARGS_TAG: String = "args"
 
+        /**
+         * Tag of the [body] property of this [FunNode] represented as [TextNode].
+         */
         const val BODY_TAG = "body"
 
     } //~ companion
 
+    /**
+     * @property args arguments of this function.
+     */
     val args get() = this[ARGS_TAG].map { arg -> arg.textValue() }
 
+    /**
+     * @property body code of the function.
+     */
     val body get() = (this[BODY_TAG] as TextNode).textValue()
 
+    /**
+     * Return `true` if this object represents the same function of [other].
+     * Two [FunNode] represents the same function if the [args] and [body]s are equals.
+     */
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -65,6 +92,9 @@ class FunNode(
         return true
     }
 
+    /**
+     * See [Any.hashCode].
+     */
     override fun hashCode(): Int {
         var result = super.hashCode()
         result = 31 * result + args.hashCode()
@@ -72,5 +102,4 @@ class FunNode(
         return result
     }
 
-
-}
+} //~ FunNode

@@ -28,10 +28,24 @@ import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.IntNode
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 
+/**
+ * This class represents an array of [RangeNode] objects.
+ *
+ * Immutable.
+ *
+ * @param nf the node factory used to create this object,
+ * by default set the the [JsonNodeFactory] of a new [ObjectMapper].
+ */
 class RangesNode constructor(
-    nodeFactory: JsonNodeFactory = ObjectMapper().nodeFactory
-) : ArrayNode(nodeFactory) {
+    nf: JsonNodeFactory = ObjectMapper().nodeFactory
+) : ArrayNode(nf) {
 
+    /**
+     * @property indexes array of integers between the lowest boundary and the higher of the represented ranges,
+     * ranges are merged if overlapping.
+     *
+     * See the JSONata [range](https://docs.jsonata.org/numeric-operators#-range) operator.
+     */
     val indexes: ArrayNode
         get() {
             val set = mutableSetOf<Int>()
@@ -47,4 +61,4 @@ class RangesNode constructor(
             return _nodeFactory.arrayNode().addAll(set.sorted().map { IntNode(it) })
         }
 
-}
+} //~ RangesNode

@@ -31,6 +31,8 @@ import com.fasterxml.jackson.databind.node.TextNode
  *
  * The constructor scans for flags/options and represent them in the [regex] property.
  *
+ * Immutable.
+ *
  * @param pattern in JSONata notation: the pattern is between [DELIMITER], flags follow.
  */
 class RegexNode(pattern: String): TextNode(pattern) {

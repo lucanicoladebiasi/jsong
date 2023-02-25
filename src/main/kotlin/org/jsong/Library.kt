@@ -185,8 +185,10 @@ class Library(
      * See [JSonataLFunctions.distinct].
      */
     override fun distinct(array: JsonNode): ArrayNode {
-        val arr = processor.expand(array)
-        return processor.nf.arrayNode().addAll(arr.toSet())
+        return processor.nf.arrayNode().addAll(when(array) {
+            is RangesNode -> array.indexes.toSet()
+            else -> processor.expand(array).toSet()
+        })
     }
 
     override fun each(obj: ObjectNode, function: FunNode): ArrayNode {
@@ -253,17 +255,23 @@ class Library(
 
 
     override fun join(array: JsonNode, separator: JsonNode?): TextNode {
-        val arr = processor.expand(array).map { string(it).textValue() }.toTypedArray()
+        val arr = when(array) {
+            is RangesNode -> array.indexes
+            else -> processor.expand(array)
+        }.map { string(it).textValue() }.toTypedArray()
         val sep = separator?.let { string(it).textValue() } ?: ""
         return TextNode(arr.joinToString(sep))
     }
 
-    override fun keys(arr: ArrayNode): ArrayNode {
+    override fun keys(array: ArrayNode): ArrayNode {
         val keys = mutableSetOf<String>()
-        arr.forEach { node ->
-            when (node) {
-                is ArrayNode -> keys.addAll(keys(node).map { it.textValue() })
-                is ObjectNode -> keys.addAll(keys(node).map { it.textValue() })
+        when(array) {
+            is RangesNode -> keys.addAll(keys(array.indexes).map { it.textValue() })
+            else -> array.forEach { node ->
+                when (node) {
+                    is ArrayNode -> keys.addAll(keys(node).map { it.textValue() })
+                    is ObjectNode -> keys.addAll(keys(node).map { it.textValue() })
+                }
             }
         }
         return processor.nf.arrayNode().addAll(keys.map { TextNode(it) })
@@ -330,9 +338,11 @@ class Library(
         return res
     }
 
-    override fun max(node: JsonNode): DecimalNode {
-        val array = processor.expand(node)
-        return DecimalNode(array.filterIsInstance<NumericNode>().maxOf { it.asDouble() }.toBigDecimal())
+    override fun max(array: JsonNode): DecimalNode {
+        return DecimalNode(when(array) {
+            is RangesNode -> array.indexes.maxOf{ it.asInt()}.toBigDecimal()
+            else -> processor.expand(array).filterIsInstance<NumericNode>().maxOf { it.asDouble() }.toBigDecimal()
+        })
     }
 
     override fun merge(array: ArrayNode): ObjectNode {
@@ -349,9 +359,11 @@ class Library(
         return DecimalNode(processor.time.toEpochMilli().toBigDecimal())
     }
 
-    override fun min(node: JsonNode): DecimalNode {
-        val array = processor.expand(node)
-        return DecimalNode(array.filterIsInstance<NumericNode>().minOf { it.asDouble() }.toBigDecimal())
+    override fun min(array: JsonNode): DecimalNode {
+        return DecimalNode(when(array) {
+            is RangesNode -> array.indexes.minOf{ it.asInt()}.toBigDecimal()
+            else -> processor.expand(array).filterIsInstance<NumericNode>().minOf { it.asDouble() }.toBigDecimal()
+        })
     }
 
     override fun not(arg: BooleanNode): BooleanNode {
@@ -434,8 +446,10 @@ class Library(
      * See [JSonataLFunctions.reverse].
      */
     override fun reverse(array: JsonNode): ArrayNode {
-        val array = processor.expand(array)
-        return processor.nf.arrayNode().addAll(array.reversed())
+        return processor.nf.arrayNode().addAll(when(array) {
+            is RangesNode -> array.indexes.reversed()
+            else -> processor.expand(array).reversed()
+        })
     }
 
     override fun round(number: DecimalNode, precision: DecimalNode?): DecimalNode {
@@ -447,11 +461,10 @@ class Library(
      * See [JSonataLFunctions.shuffle].
      */
     override fun shuffle(array: JsonNode): ArrayNode {
-        val shuffled = when (val array = processor.expand(array)) {
+        return processor.nf.arrayNode().addAll(when (array) {
             is RangesNode -> array.indexes.shuffled(processor.random)
-            else -> array.shuffled(processor.random)
-        }
-        return processor.nf.arrayNode().addAll(shuffled)
+            else -> processor.expand(array).shuffled(processor.random)
+        })
     }
 
     override fun sift(obj: ObjectNode, function: FunNode): JsonNode {
@@ -479,7 +492,7 @@ class Library(
 
     override fun spread(array: ArrayNode): ArrayNode {
         val res = processor.nf.arrayNode()
-        array.filterIsInstance<ObjectNode>().forEach { obj ->
+        processor.expand(array).filterIsInstance<ObjectNode>().forEach { obj ->
             res.addAll(spread(obj))
         }
         return res
@@ -565,18 +578,18 @@ class Library(
         return TextNode(string(str).textValue().uppercase())
     }
 
-    override fun zip(vararg nodes: JsonNode): ArrayNode {
-        val arrays = nodes.map { processor.expand(it) }
+    override fun zip(vararg arrays: JsonNode): ArrayNode {
+        val matrix = arrays.map { processor.expand(it) }
         var len = Int.MAX_VALUE
-        arrays.forEach { array ->
+        matrix.forEach { array ->
             len = min(len, array.size())
         }
         val res = processor.nf.arrayNode()
         for (i in 0 until len) {
             res.add(processor.nf.arrayNode())
-            for (j in arrays.indices) {
-                if (i < arrays[j].size()) {
-                    (res[i] as ArrayNode).add(arrays[j][i])
+            for (j in matrix.indices) {
+                if (i < matrix[j].size()) {
+                    (res[i] as ArrayNode).add(matrix[j][i])
                 }
             }
         }

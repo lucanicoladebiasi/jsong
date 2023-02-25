@@ -137,7 +137,10 @@ class TestBooleanFunctions {
     @Disabled
     fun `$boolean() - function`() {
         val expression = "(\$volume := function(\$l, \$w, \$h){ \$l * \$w * \$h }; \$boolean(\$volume))"
-        assertFalse(Processor().evaluate(expression)!!.booleanValue())
+        //val expression = "(\$volume := function(\$l, \$w, \$h){ \$l * \$w * \$h })"
+        val actual = Processor().evaluate(expression)
+        println(actual)
+        //assertFalse(Processor().evaluate(expression)!!.booleanValue())
     }
 
     /**

@@ -79,16 +79,15 @@ class Processor(
     private val varMap = mutableMapOf<String, JsonNode?>()
 
     private fun descendants(node: JsonNode?): ArrayNode {
-        val res = ArrayNode(nf)
+        val result = ArrayNode(nf)
         node?.fields()?.forEach { field ->
             if (field.value != null) {
-                res.addAll(descendants(field.value))
-                res.add(field.value)
+                result.addAll(descendants(field.value))
+                result.add(field.value)
             }
         }
-        return res
+        return result
     }
-
 
     fun evaluate(exp: String): JsonNode? {
         return visit(JSongParser(CommonTokenStream(JSongLexer(CharStreams.fromString(exp)))).jsong())
@@ -156,11 +155,11 @@ class Processor(
 
                 1 -> node[0]
                 else -> {
-                    val res = nf.arrayNode()
+                    val result = nf.arrayNode()
                     node.forEach { element ->
-                        reduce(element)?.let { res.add(it) }
+                        reduce(element)?.let { result.add(it) }
                     }
-                    res
+                    result
                 }
             }
 
@@ -210,13 +209,13 @@ class Processor(
     }
 
     override fun visitAll(ctx: JSongParser.AllContext): JsonNode? {
-        val res = ArrayNode(nf)
+        val result = ArrayNode(nf)
         if (context is ObjectNode) {
             context?.fields()?.forEach { field ->
-                res.add(field.value)
+                result.add(field.value)
             }
         }
-        return reduce(res)
+        return reduce(result)
     }
 
     override fun visitAnd(ctx: JSongParser.AndContext): JsonNode? {
@@ -226,11 +225,11 @@ class Processor(
     }
 
     override fun visitArray(ctx: JSongParser.ArrayContext): JsonNode {
-        val res = ArrayNode(nf)
+        val result = ArrayNode(nf)
         ctx.exp().forEach { exp ->
-            res.add(visit(exp))
+            result.add(visit(exp))
         }
-        return res
+        return result
     }
 
     override fun visitBool(ctx: JSongParser.BoolContext): JsonNode? {
@@ -318,11 +317,11 @@ class Processor(
     }
 
     override fun visitDescendants(ctx: JSongParser.DescendantsContext): JsonNode? {
-        val res = ArrayNode(nf)
+        val result = ArrayNode(nf)
         if (context is ObjectNode) {
-            res.addAll(descendants(context))
+            result.addAll(descendants(context))
         }
-        return reduce(res)
+        return reduce(result)
     }
 
     override fun visitDiv(ctx: JSongParser.DivContext): JsonNode {
@@ -338,9 +337,9 @@ class Processor(
     }
 
     override fun visitExpand(ctx: JSongParser.ExpandContext): JsonNode {
-        val res = expand(visit(ctx.exp()))
+        val result = expand(visit(ctx.exp()))
         isToReduce = false
-        return res
+        return result
     }
 
     override fun visitField(ctx: JSongParser.FieldContext): JsonNode? {
@@ -348,7 +347,7 @@ class Processor(
     }
 
     override fun visitFilter(ctx: JSongParser.FilterContext): JsonNode? {
-        val res = ArrayNode(nf)
+        val result = ArrayNode(nf)
         val lhs = expand(visit(ctx.lhs))
         val prd = BooleanArray(lhs.size())
         lhs.forEachIndexed { index, context ->
@@ -361,21 +360,21 @@ class Processor(
                     val offset = if (value < 0) lhs.size() + value else value
                     prd[index] = index == offset
                     if (prd[index]) {
-                        res.add(context)
+                        result.add(context)
                     }
                 }
 
                 is RangesNode -> {
                     prd[index] = rhs.indexes.map { it.asInt() }.contains(index)
                     if (prd[index]) {
-                        res.add(context)
+                        result.add(context)
                     }
                 }
 
                 else -> {
                     prd[index] = lib.boolean(rhs).asBoolean()
                     if (prd[index]) {
-                        res.add(context)
+                        result.add(context)
                     }
                 }
 
@@ -389,7 +388,7 @@ class Processor(
         posMap.forEach { label, array ->
             posMap[label] = shrink(array, prd)
         }
-        return reduce(res)
+        return reduce(result)
     }
 
     override fun visitFun(ctx: JSongParser.FunContext): FunNode {
@@ -406,25 +405,25 @@ class Processor(
     override fun visitGt(ctx: JSongParser.GtContext): JsonNode? {
         val lhs = visit(ctx.lhs)
         val rhs = visit(ctx.rhs)
-        val res = BooleanNode.valueOf(
+        val result = BooleanNode.valueOf(
             when {
                 lhs is NumericNode && rhs is NumericNode -> lhs.decimalValue() > rhs.decimalValue()
                 else -> lib.string(lhs).textValue() > lib.string(rhs).textValue()
             }
         )
-        return res
+        return result
     }
 
     override fun visitGte(ctx: JSongParser.GteContext): JsonNode? {
         val lhs = visit(ctx.lhs)
         val rhs = visit(ctx.rhs)
-        val res = BooleanNode.valueOf(
+        val result = BooleanNode.valueOf(
             when {
                 lhs is NumericNode && rhs is NumericNode -> lhs.decimalValue() >= rhs.decimalValue()
                 else -> lib.string(lhs).textValue() >= lib.string(rhs).textValue()
             }
         )
-        return res
+        return result
     }
 
     override fun visitIn(ctx: JSongParser.InContext): JsonNode? {
@@ -434,11 +433,11 @@ class Processor(
     }
 
     override fun visitJsong(ctx: JSongParser.JsongContext): JsonNode? {
-        var res: JsonNode? = null
+        var result: JsonNode? = null
         ctx.exp().forEach { exp ->
-            res = visit(exp)
+            result = visit(exp)
         }
-        return res
+        return result
     }
 
     override fun visitLambda(ctx: JSongParser.LambdaContext): JsonNode? {
@@ -453,68 +452,72 @@ class Processor(
 
     override fun visitLbl(ctx: JSongParser.LblContext): JsonNode? {
         val label = ctx.label().text
-        val res = when (val array = posMap[label]) {
-            null -> when (@Suppress("NAME_SHADOWING") val array: ArrayNode? = ctxMap[label]) {
+        val result = when (val positionalValue = posMap[label]) {
+            null -> when (val contextualValue: ArrayNode? = ctxMap[label]) {
                 null -> {
                     when(varMap[label]) {
                         null -> {
                             val args = mutableListOf<Any?>()
                             args.add(lib)
                             args.add(context)
-                            recall(lib::class, label, args).call(*args.toTypedArray()) as JsonNode?
+                            try {
+                                recall(lib::class, label, args).call(*args.toTypedArray()) as JsonNode?
+                            } catch (e: IllegalArgumentException) {
+                                null
+                            }
                         }
                         else -> varMap[label]
                     }
                 }
                 else -> when (indexStack.isEmpty()) {
-                    true -> array
-                    else -> array[indexStack.peek()]
+                    true -> contextualValue
+                    else -> contextualValue[indexStack.peek()]
                 }
             }
 
-            else -> IntNode(array.indexOf(context) + 1)
+            else -> IntNode(positionalValue.indexOf(context) + 1)
         }
-        return when (res) {
+        return when (result) {
             is FunNode -> {
-                visit(JSongParser(CommonTokenStream(JSongLexer(CharStreams.fromString(res.body)))).jsong())
+                visit(JSongParser(CommonTokenStream(JSongLexer(CharStreams.fromString(result.body)))).jsong())
             }
-            else -> res
+            else -> result
         }
     }
 
     override fun visitLt(ctx: JSongParser.LtContext): JsonNode? {
         val lhs = visit(ctx.lhs)
         val rhs = visit(ctx.rhs)
-        val res = BooleanNode.valueOf(
+        val result = BooleanNode.valueOf(
             when {
                 lhs is NumericNode && rhs is NumericNode -> lhs.decimalValue() < rhs.decimalValue()
                 else -> lib.string(lhs).textValue() < lib.string(rhs).textValue()
             }
         )
-        return res
+        return result
     }
 
     override fun visitLte(ctx: JSongParser.LteContext): JsonNode? {
         val lhs = visit(ctx.lhs)
         val rhs = visit(ctx.rhs)
-        val res = BooleanNode.valueOf(
+        val result = BooleanNode.valueOf(
             when {
                 lhs is NumericNode && rhs is NumericNode -> lhs.decimalValue() <= rhs.decimalValue()
                 else -> lib.string(lhs).textValue() <= lib.string(rhs).textValue()
             }
         )
-        return res
+        return result
     }
 
     override fun visitMap(ctx: JSongParser.MapContext): JsonNode? {
-        val res = ArrayNode(nf)
+        val result = ArrayNode(nf)
         val lhs = expand(visit(ctx.lhs))
         when (lhs) {
             is RangesNode -> lhs.indexes.forEach { context ->
                 this.context = context
                 when (val rhs = visit(ctx.rhs)) {
-                    is ArrayNode -> res.addAll(rhs)
-                    else -> rhs?.let { res.add(it) }
+                    is ArrayNode -> result.addAll(rhs)
+                    else -> rhs?.let { result.add(it) }
                 }
             }
 
@@ -522,24 +525,24 @@ class Processor(
                 this.context = context
                 indexStack.push(index)
                 when (val rhs = visit(ctx.rhs)) {
-                    is ArrayNode -> res.addAll(rhs)
-                    else -> rhs?.let { res.add(it) }
+                    is ArrayNode -> result.addAll(rhs)
+                    else -> rhs?.let { result.add(it) }
                 }
                 indexStack.pop()
             }
         }
-        return reduce(res)
+        return reduce(result)
     }
 
     override fun visitMapctx(ctx: JSongParser.MapctxContext): JsonNode? {
-        var res = ArrayNode(nf)
+        var result = ArrayNode(nf)
         val lhs = expand(visit(ctx.lhs))
         when (lhs) {
             is RangesNode -> lhs.indexes.forEach { context ->
                 this.context = context
                 when (val rhs = visit(ctx.rhs)) {
-                    is ArrayNode -> res.addAll(rhs)
-                    else -> rhs?.let { res.add(it) }
+                    is ArrayNode -> result.addAll(rhs)
+                    else -> rhs?.let { result.add(it) }
                 }
             }
 
@@ -547,36 +550,36 @@ class Processor(
                 this.context = context
                 indexStack.push(index)
                 when (val rhs = visit(ctx.rhs)) {
-                    is ArrayNode -> res.addAll(rhs)
-                    else -> rhs?.let { res.add(it) }
+                    is ArrayNode -> result.addAll(rhs)
+                    else -> rhs?.let { result.add(it) }
                 }
                 indexStack.pop()
             }
         }
         ctxMap.forEach { label, array ->
-            ctxMap[label] = stretch(array, res.size())
+            ctxMap[label] = stretch(array, result.size())
         }
         posMap.forEach { label, array ->
-            posMap[label] = stretch(array, res.size())
+            posMap[label] = stretch(array, result.size())
         }
-        val ratio = res.size() / lhs.size()
-        ctxMap[ctx.label().text] = res
-        res = ArrayNode(nf)
+        val ratio = result.size() / lhs.size()
+        ctxMap[ctx.label().text] = result
+        result = ArrayNode(nf)
         for (i in 0 until ratio) {
-            res.addAll(lhs)
+            result.addAll(lhs)
         }
-        return reduce(res)
+        return reduce(result)
     }
 
     override fun visitMappos(ctx: JSongParser.MapposContext): JsonNode? {
-        val res = ArrayNode(nf)
+        val result = ArrayNode(nf)
         val lhs = expand(visit(ctx.lhs))
         when (lhs) {
             is RangesNode -> lhs.indexes.forEach { context ->
                 this.context = context
                 when (val rhs = visit(ctx.rhs)) {
-                    is ArrayNode -> res.addAll(rhs)
-                    else -> rhs?.let { res.add(it) }
+                    is ArrayNode -> result.addAll(rhs)
+                    else -> rhs?.let { result.add(it) }
                 }
             }
 
@@ -584,20 +587,20 @@ class Processor(
                 this.context = context
                 indexStack.push(index)
                 when (val rhs = visit(ctx.rhs)) {
-                    is ArrayNode -> res.addAll(rhs)
-                    else -> rhs?.let { res.add(it) }
+                    is ArrayNode -> result.addAll(rhs)
+                    else -> rhs?.let { result.add(it) }
                 }
                 indexStack.pop()
             }
         }
         ctxMap.forEach { label, array ->
-            ctxMap[label] = stretch(array, res.size())
+            ctxMap[label] = stretch(array, result.size())
         }
         posMap.forEach { label, array ->
-            posMap[label] = stretch(array, res.size())
+            posMap[label] = stretch(array, result.size())
         }
-        posMap[ctx.label().text] = res
-        return reduce(res)
+        posMap[ctx.label().text] = result
+        return reduce(result)
     }
 
     override fun visitMod(ctx: JSongParser.ModContext): JsonNode {
@@ -627,13 +630,13 @@ class Processor(
     }
 
     override fun visitObj(ctx: JSongParser.ObjContext): JsonNode {
-        val res = ObjectNode(nf)
+        val result = ObjectNode(nf)
         ctx.pair().forEachIndexed { index, pair ->
             val key = visit(pair.key)?.asText() ?: index.toString()
             val value = visit(pair.value) ?: NullNode.instance
-            res.set<JsonNode>(key, value)
+            result.set<JsonNode>(key, value)
         }
-        return res
+        return result
     }
 
     override fun visitOr(ctx: JSongParser.OrContext): JsonNode? {
@@ -659,11 +662,11 @@ class Processor(
     }
 
     override fun visitRanges(ctx: JSongParser.RangesContext): JsonNode {
-        val res = RangesNode(nf)
+        val result = RangesNode(nf)
         ctx.range().forEach {
-            res.add(visit(it))
+            result.add(visit(it))
         }
-        return res
+        return result
     }
 
     override fun visitRegex(ctx: JSongParser.RegexContext): JsonNode {

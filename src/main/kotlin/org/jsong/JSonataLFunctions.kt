@@ -104,9 +104,15 @@ interface JSonataLFunctions {
     fun sort(array: JsonNode, function: FunNode? = null): ArrayNode
 
     /**
-     * https://docs.jsonata.org/array-functions#zip
+     * Returns a convolved (zipped) array containing grouped [arrays] of values from the `array1 ... arrayN`
+     * arguments from index 0, 1, 2, etc.
+     *
+     * This function accepts a variable number of arguments.
+     * The length of the returned array is equal to the length of the shortest array in the arguments.
+     *
+     * @see [zip](https://docs.jsonata.org/array-functions#zip)
      */
-    fun zip(vararg nodes: JsonNode): ArrayNode
+    fun zip(vararg arrays: JsonNode): ArrayNode
 
     // https://docs.jsonata.org/boolean-functions
 
@@ -186,12 +192,12 @@ interface JSonataLFunctions {
     /**
      * https://docs.jsonata.org/aggregation-functions#max
      */
-    fun max(node: JsonNode): DecimalNode
+    fun max(array: JsonNode): DecimalNode
 
     /**
      * https://docs.jsonata.org/aggregation-functions#min
      */
-    fun min(node: JsonNode): DecimalNode
+    fun min(array: JsonNode): DecimalNode
 
     /**
      * https://docs.jsonata.org/aggregation-functions#sum
@@ -283,7 +289,7 @@ interface JSonataLFunctions {
     /**
      * https://docs.jsonata.org/object-functions#keys
      */
-    fun keys(arr: ArrayNode): ArrayNode
+    fun keys(array: ArrayNode): ArrayNode
 
     /**
      * https://docs.jsonata.org/object-functions#keys

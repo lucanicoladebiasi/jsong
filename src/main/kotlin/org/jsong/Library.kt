@@ -387,6 +387,7 @@ class Library(
     override fun number(arg: JsonNode?): DecimalNode {
         return DecimalNode(
             when (arg) {
+                null -> BigDecimal.ZERO // todo: to remove in future version because not documented cast
                 is BooleanNode -> when (arg.booleanValue()) {
                     true -> BigDecimal.ONE
                     else -> BigDecimal.ZERO

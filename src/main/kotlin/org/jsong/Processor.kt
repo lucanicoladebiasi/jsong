@@ -450,6 +450,7 @@ class Processor(
         return visit(JSongParser(CommonTokenStream(JSongLexer(CharStreams.fromString(function.body)))).jsong())
     }
 
+    // todo: functions should have their map or have a single map and discrimite returns.
     override fun visitLbl(ctx: JSongParser.LblContext): JsonNode? {
         val label = ctx.label().text
         val result = when (val positionalValue = posMap[label]) {

@@ -113,9 +113,9 @@ class Library(
         return BooleanNode.TRUE
     }
 
-    override fun average(node: JsonNode): DecimalNode {
-        val array = processor.expand(node)
-        return DecimalNode(sum(array).decimalValue().divide(array.size().toBigDecimal()))
+    override fun average(array: JsonNode): DecimalNode {
+        val arr = processor.expand(array)
+        return DecimalNode(sum(arr).decimalValue().divide(arr.size().toBigDecimal()))
     }
 
     override fun base64decode(str: JsonNode): TextNode {
@@ -542,9 +542,9 @@ class Library(
         return TextNode(string(str).textValue().substringBefore(chars.textValue()))
     }
 
-    override fun sum(node: JsonNode): DecimalNode {
-        val array = processor.expand(node)
-        return DecimalNode(array.filterIsInstance<NumericNode>().sumOf { it.decimalValue() })
+    override fun sum(array: JsonNode): DecimalNode {
+        val arr = processor.expand(array)
+        return DecimalNode(arr.filterIsInstance<NumericNode>().sumOf { it.decimalValue() })
     }
 
     override fun toMillis(timestamp: TextNode, picture: TextNode?): DecimalNode {

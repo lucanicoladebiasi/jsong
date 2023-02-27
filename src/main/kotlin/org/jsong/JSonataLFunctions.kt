@@ -206,26 +206,83 @@ interface JSonataLFunctions {
     // https://docs.jsonata.org/higher-order-functions
 
     /**
+     * Returns an array containing only the values in the [array] parameter that satisfy the [function] predicate
+     * (i.e. function returns Boolean true when passed the value).
+     *
+     * The function that is supplied as the second parameter must have the following signature:
+     *
+     * `function(value [, index [, array]])`
+     *
+     * Each value in the input array is passed in as the first parameter in the supplied function.
+     * The index (position) of that value in the input array is passed in as the second parameter, if specified.
+     * The whole input array is passed in as the third parameter, if specified.
+     *
      * @see [filter](https://docs.jsonata.org/higher-order-functions#filter)
      */
     fun filter(array: ArrayNode, function: FunNode): ArrayNode
 
     /**
+     * Returns an array containing the results of applying the [function] parameter to each value in the [array]
+     * parameter.
+     *
+     * The function that is supplied as the second parameter must have the following signature:
+     *
+     * function(value [, index [, array]])
+     *
+     * Each value in the input array is passed in as the first parameter in the supplied function.
+     * The index (position) of that value in the input array is passed in as the second parameter, if specified.
+     * The whole input array is passed in as the third parameter, if specified.
+     *
      * @see [map](https://docs.jsonata.org/higher-order-functions#map)
      */
     fun map(array: ArrayNode, function: FunNode): ArrayNode
 
     /**
+     * Returns an aggregated value derived from applying the [function] parameter successively
+     * to each value in [array] in combination with the result of the previous application of the function.
+     *
+     * The function must accept at least two arguments,
+     * and behaves like an infix operator between each value within the array.
+     * The signature of this supplied function must be of the form:
+     *
+     * `myfunc($accumulator, $value[, $index[, $array]])`
+     *
      * @see [reduce](https://docs.jsonata.org/higher-order-functions#reduce)
      */
     fun reduce(array: ArrayNode, function: FunNode, init: FunNode): JsonNode
 
     /**
+     * Returns an object that contains only the key/value pairs from the [obj] parameter
+     * that satisfy the predicate function passed in as the second parameter.
+     *
+     * If [obj] is not specified, then the context value is used as the value of object.
+     * It is an error if object is not an object.
+     *
+     * The [function] that is supplied as the second parameter must have the following signature:
+     *
+     * `function(value [, key [, object]])`
+     *
+     * Each value in the input object is passed in as the first parameter in the supplied function.
+     * The key (property name) of that value in the input object is passed in as the second parameter, if specified.
+     * The whole input object is passed in as the third parameter, if specified.
+     *
      * @see [sift](https://docs.jsonata.org/higher-order-functions#reduce)
      */
     fun sift(obj: ObjectNode, function: FunNode): JsonNode
 
     /**
+     * Returns the one and only one value in the [array] parameter that satisfy the function predicate
+     * (i.e. function returns Boolean true when passed the value).
+     * Throws an exception if the number of matching values is not exactly one.
+     *
+     * The function that is supplied as the second parameter must have the following signature:
+     *
+     * `function(value [, index [, array]])`
+     *
+     * Each value in the input array is passed in as the first parameter in the supplied function.
+     * The index (position) of that value in the input array is passed in as the second parameter, if specified.
+     * The whole input array is passed in as the third parameter, if specified.
+     *
      * @see [single](https://docs.jsonata.org/higher-order-functions#single)
      */
     fun single(array: ArrayNode, function: FunNode): JsonNode
@@ -234,85 +291,197 @@ interface JSonataLFunctions {
     // https://docs.jsonata.org/aggregation-functions
 
     /**
-     * https://docs.jsonata.org/aggregation-functions#average
+     * Returns the mean value of an [array] of numbers.
+     *
+     * It is an error if the input array contains an item which isn't a number.
+     *
+     * @see [average](https://docs.jsonata.org/aggregation-functions#average)
      */
-    fun average(node: JsonNode): DecimalNode
+    fun average(array: JsonNode): DecimalNode
 
     /**
-     * https://docs.jsonata.org/aggregation-functions#max
+     * Returns the maximum number in an [array] of numbers.
+     *
+     * It is an error if the input array contains an item which isn't a number.
+     *
+     * @see [max](https://docs.jsonata.org/aggregation-functions#max)
      */
     fun max(array: JsonNode): DecimalNode
 
     /**
-     * https://docs.jsonata.org/aggregation-functions#min
+     * Returns the minimum number in an [array] of numbers.
+     *
+     * It is an error if the input array contains an item which isn't a number.
+     *
+     * @see [min](https://docs.jsonata.org/aggregation-functions#min)
      */
     fun min(array: JsonNode): DecimalNode
 
     /**
+     * Returns the arithmetic sum of an [array] of numbers.
+     *
+     * It is an error if the input array contains an item which isn't a number.
+     *
      * https://docs.jsonata.org/aggregation-functions#sum
      */
-    fun sum(node: JsonNode): DecimalNode
+    fun sum(array: JsonNode): DecimalNode
 
 
     // https://docs.jsonata.org/numeric-functions
 
     /**
-     * https://docs.jsonata.org/numeric-functions#abs
+     * Returns the absolute value of the [number] parameter,
+     * i.e. if the number is negative, it returns the positive value.
+     *
+     * If [number] is not specified (i.e. this function is invoked with no arguments),
+     * then the context value is used as the value of number.
+     *
+     * @see [abs]](https://docs.jsonata.org/numeric-functions#abs)
      */
     fun abs(number: DecimalNode): DecimalNode
 
     /**
-     * https://docs.jsonata.org/numeric-functions#ceil
+     * Returns the value of [number] rounded up to the nearest integer that is greater than or equal to number.
+     *
+     * If [number] is not specified (i.e. this function is invoked with no arguments),
+     * then the context value is used as the value of number.
+     *
+     * @see [ceil](https://docs.jsonata.org/numeric-functions#ceil)
      */
     fun ceil(number: DecimalNode): DecimalNode
 
     /**
-     * https://docs.jsonata.org/numeric-functions#floor
+     * Returns the value of [number] rounded down to the nearest integer that is smaller or equal to number.
+     *
+     * If [number] is not specified (i.e. this function is invoked with no arguments),
+     * then the context value is used as the value of number.
+     *
+     * @see [floor](https://docs.jsonata.org/numeric-functions#floor)
      */
     fun floor(number: DecimalNode): DecimalNode
 
     /**
-     * https://docs.jsonata.org/numeric-functions#formatbase
+     * Casts the [number] to a string and
+     * formats it to an integer represented in the number base specified by the [radix] argument.
+     *
+     * If [radix] is not specified, then it defaults to base 10.
+     * The [radix] parameter can be between 2 and 36, otherwise an error is thrown.
+     *
+     * @see [formatBase](https://docs.jsonata.org/numeric-functions#formatbase)
      */
     fun formatBase(number: DecimalNode, radix: DecimalNode? = null): TextNode
 
     /**
-     * https://docs.jsonata.org/numeric-functions#formatinteger
+     * Casts the [number] to a string and formats it to an integer representation as specified by the picture string.
+     *
+     * The behaviour of this function is consistent with the two-argument version of the
+     * [XPath/XQuery function fn:format-integer](https://www.w3.org/TR/xpath-functions-31/#func-format-integer)
+     * as defined in the XPath F&O 3.1 specification.
+     *
+     * The [picture] string parameter defines how the number is formatted and
+     * has the same syntax as `fn:format-integer`.
+     *
+     * @see [formatInteger](https://docs.jsonata.org/numeric-functions#formatinteger)
      */
     fun formatInteger(number: DecimalNode, picture: TextNode): TextNode
 
     /**
-     * https://docs.jsonata.org/numeric-functions#formatnumber
+     * Casts the [number] to a string and formats it to a decimal representation as specified by the picture string.
+     *
+     * The behaviour of this function is consistent with the
+     * [XPath/XQuery function fn:format-number](https://www.w3.org/TR/xpath-functions-31/#func-format-number)
+     * as defined in the XPath F&O 3.1 specification.
+     *
+     * The [picture] string parameter defines how the number is formatted and has the
+     * [same syntax](https://www.w3.org/TR/xpath-functions-31/#syntax-of-picture-string)
+     * as `fn:format-number`.
+     *
+     * The optional third argument [options] is used to override the default locale specific formatting characters
+     * such as the decimal separator.
+     * If supplied, this argument must be an object containing name/value pairs
+     * specified in the [decimal format](https://www.w3.org/TR/xpath-functions-31/#defining-decimal-format)
+     * section of the XPath F&O 3.1 specification.
+     *
+     * @see [formatNumber](https://docs.jsonata.org/numeric-functions#formatnumber)
      */
     fun formatNumber(number: DecimalNode, picture: TextNode, options: TextNode? = null): TextNode
 
     /**
-     * https://docs.jsonata.org/numeric-functions#number
+     * Casts the [arg] parameter to a number using the following casting rules
+     * * Numbers are unchanged;
+     * * Strings that contain a sequence of characters that represent a legal JSON number are converted to that number;
+     * * Hexadecimal numbers start with 0x, Octal numbers with 0o, binary numbers with 0b
+     * * Boolean `true` casts to 1, Boolean `false` casts to 0
+     * * All other values cause an error to be thrown.
+     *
+     * If [arg] is not specified (i.e. this function is invoked with no arguments),
+     * then the context value is used as the value of [arg].
+     *
+     * @see [number](https://docs.jsonata.org/numeric-functions#number)
      */
     fun number(arg: JsonNode?): DecimalNode
 
     /**
-     * https://docs.jsonata.org/numeric-functions#random
+     * Parses the contents of the [string] parameter to an integer (as a JSON number)
+     * using the format specified by the picture string.
+     *
+     * The [picture] string parameter has the same format as $[formatInteger].
+     * Although the XPath specification does not have an equivalent function for parsing integers,
+     * this capability has been added to JSONata.
+     *
+     * @see [parseInteger](https://docs.jsonata.org/numeric-functions#random)
      */
     fun parseInteger(string: TextNode, picture: TextNode): DecimalNode
 
     /**
-     * https://docs.jsonata.org/numeric-functions#power
+     * Returns the value of [base] raised to the [power] of exponent.
+     *
+     * If [base] is not specified (i.e. this function is invoked with one argument),
+     * then the context value is used as the value of base.
+     *
+     * An error is thrown if the values of base and exponent lead to a value
+     * that cannot be represented as a JSON number (e.g. Infinity, complex numbers)
+     *
+     * @see [power](https://docs.jsonata.org/numeric-functions#power)
      */
     fun power(base: DecimalNode, exponent: DecimalNode): DecimalNode
 
     /**
-     * https://docs.jsonata.org/numeric-functions#random
+     * Returns a pseudo random number greater than or equal to zero and less than one (0 ≤ n < 1).
+     *
+     * @see [random](https://docs.jsonata.org/numeric-functions#random)
      */
     fun random(): DecimalNode
 
     /**
-     * https://docs.jsonata.org/numeric-functions#round
+     * Returns the value of the [number] parameter rounded to
+     * the number of decimal places specified by the optional [precision] parameter.
+     *
+     * The [precision] parameter (which must be an integer) species
+     * the number of decimal places to be present in the rounded number.
+     * * If [precision] is not specified then it defaults to the value `0`
+     *   and the number is rounded to the nearest integer.
+     * * If [precision] is negative,
+     *   then its value specifies which column to round to on the left side of the decimal place.
+     *
+     * This function uses the [Round Half](https://en.wikipedia.org/wiki/Rounding#Round_half_to_even)
+     * to even strategy to decide which way to round numbers that fall exactly between two candidates
+     * at the specified precision.
+     * This strategy is commonly used in financial calculations and is the default rounding mode in IEEE 754.
+     *
+     * @see [random](https://docs.jsonata.org/numeric-functions#round)
      */
     fun round(number: DecimalNode, precision: DecimalNode? = null): DecimalNode
 
     /**
-     * https://docs.jsonata.org/numeric-functions#sqrt
+     * Returns the square root of the value of the [number] parameter.
+     *
+     * If [number] is not specified (i.e. this function is invoked with one argument),
+     * then the context value is used as the value of number.
+     *
+     * An error is thrown if the value of [number] is negative.
+     *
+     * @see [sqrt](https://docs.jsonata.org/numeric-functions#sqrt)
      */
     fun sqrt(number: DecimalNode): DecimalNode
 

@@ -90,7 +90,8 @@ class Processor(
     }
 
     fun evaluate(exp: String): JsonNode? {
-        return visit(JSongParser(CommonTokenStream(JSongLexer(CharStreams.fromString(exp)))).jsong())
+        val canon = exp.replace("\\s".toRegex() , " ")  // todo: ANTLR doesn't skip spaces
+        return visit(JSongParser(CommonTokenStream(JSongLexer(CharStreams.fromString(canon)))).jsong())
     }
 
     internal fun expand(node: JsonNode?): ArrayNode {

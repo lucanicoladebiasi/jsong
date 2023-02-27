@@ -174,7 +174,6 @@ class TestStringFunctions {
      * https://docs.jsonata.org/string-functions#trim
      */
     @Test
-    @Disabled("new line parsed as \$trim(\"World\"")
     fun `$trim() - new line`() {
         val expression = "\$trim(\" Hello \n World \")"
         val expected = TestResources.mapper.readTree("\"Hello World\"")

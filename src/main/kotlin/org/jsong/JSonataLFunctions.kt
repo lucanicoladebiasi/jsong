@@ -117,39 +117,88 @@ interface JSonataLFunctions {
     // https://docs.jsonata.org/boolean-functions
 
     /**
-    https://docs.jsonata.org/boolean-functions#boolean
+     * Casts the argument to a Boolean using the following rules:
+     *
+     * * Argument type	-> Result
+     *      * Boolean -> unchanged
+     *      * string: empty	-> `false`
+     *      * string: non-empty	-> `true`
+     *      * number: 0	-> `false`
+     *      * number: non-zero	-> `true`
+     *      * `null` -> `false`
+     *      * array: empty	-> `false`
+     *      * array: contains a member that casts to `true` -> `true`
+     *      * array: all members cast to `false` ->	`false`
+     *      * object: empty	-> `false`
+     *      * object: non-empty	-> `true`
+     *      * function	-> `false`
+     *
+     * @see [boolean](https://docs.jsonata.org/boolean-functions#boolean)
      */
     fun boolean(arg: JsonNode?): BooleanNode
 
     /**
-     * https://docs.jsonata.org/boolean-functions#boolean
+     * Returns boolean NOT on the [arg].
+     *
+     * @param arg is first cast to a boolean.
+     *
+     * @see [not](https://docs.jsonata.org/boolean-functions#not)
      */
     fun not(arg: BooleanNode): BooleanNode
 
     /**
+     * Returns `true` if the [arg] expression evaluates to a value,
+     * or `false` if the expression does not match anything (e.g. a path to a non-existent field reference).
      *
+     * @see [exists](https://docs.jsonata.org/boolean-functions#exists)
      */
     fun exists(arg: JsonNode?): BooleanNode
 
     // https://docs.jsonata.org/date-time-functions
 
     /**
-     * https://docs.jsonata.org/date-time-functions#frommillis
+     * Convert the [number] representing milliseconds since the Unix Epoch (1 January, 1970 UTC)
+     * to a formatted string representation of the timestamp as specified by the picture string.
+     *
+     * @param picture   If omitted, then the timestamp is formatted in the ISO 8601 format.
+     *                  If the optional string is supplied, then the timestamp is formatted
+     *                  occording to the representation specified in that string.
+     *
+     * @param timezone  If supplied, then the formatted timestamp will be in that timezone.
+     *                  The timezone string should be in the format `±HHMM`,
+     *                  where `±` is either the plus or minus sign and `HHMM`
+     *                  is the offset in hours and minutes from UTC.
+     *                  Positive offset for timezones east of UTC, negative offset for timezones west of UTC.
+     *
+     * @see [fromMillis]](https://docs.jsonata.org/date-time-functions#frommillis)
      */
     fun fromMillis(number: DecimalNode, picture: TextNode? = null, timezone: TextNode? = null): TextNode
 
     /**
-     * https://docs.jsonata.org/date-time-functions#millis
+     * @see [millis](https://docs.jsonata.org/date-time-functions#millis)
      */
     fun millis(): DecimalNode
 
     /**
-     * https://docs.jsonata.org/date-time-functions#now
+     * Generates a UTC timestamp in ISO 8601 compatible format and returns it as a string.
+     * All invocations of $now() within an evaluation of an expression will all return the same timestamp value.
+     *
+     * @param picture   If supplied, then the current timestamp is formatted as described by the [fromMillis] function.
+     *
+     * @see [now](https://docs.jsonata.org/date-time-functions#now)
      */
     fun now(picture: TextNode? = null, timezone: TextNode? = null): TextNode
 
     /**
-     * https://docs.jsonata.org/date-time-functions#tomillis
+     * Convert a timestamp string to the number of milliseconds since the Unix Epoch (1 January, 1970 UTC) as a number.
+     *
+     * @param timestamp If not specified, then the format of the timestamp is assumed to be ISO 8601.
+     *                  An error is thrown if the string is not in the correct format.
+     *
+     * @param picture   If specified, then the format is assumed to be described by this picture string using the
+     *                  [same syntax as the XPath/XQuery function](https://www.w3.org/TR/xpath-functions-31/#date-picture-string) specification.
+     *
+     * @see [toMillis](https://docs.jsonata.org/date-time-functions#tomillis)
      */
     fun toMillis(timestamp: TextNode, picture: TextNode? = null): DecimalNode
 
@@ -157,27 +206,27 @@ interface JSonataLFunctions {
     // https://docs.jsonata.org/higher-order-functions
 
     /**
-     * https://docs.jsonata.org/higher-order-functions#filter
+     * @see [filter](https://docs.jsonata.org/higher-order-functions#filter)
      */
     fun filter(array: ArrayNode, function: FunNode): ArrayNode
 
     /**
-     * https://docs.jsonata.org/higher-order-functions#map
+     * @see [map](https://docs.jsonata.org/higher-order-functions#map)
      */
     fun map(array: ArrayNode, function: FunNode): ArrayNode
 
     /**
-     * https://docs.jsonata.org/higher-order-functions#reduce
+     * @see [reduce](https://docs.jsonata.org/higher-order-functions#reduce)
      */
     fun reduce(array: ArrayNode, function: FunNode, init: FunNode): JsonNode
 
     /**
-     * https://docs.jsonata.org/higher-order-functions#reduce
+     * @see [sift](https://docs.jsonata.org/higher-order-functions#reduce)
      */
     fun sift(obj: ObjectNode, function: FunNode): JsonNode
 
     /**
-     * https://docs.jsonata.org/higher-order-functions#single
+     * @see [single](https://docs.jsonata.org/higher-order-functions#single)
      */
     fun single(array: ArrayNode, function: FunNode): JsonNode
 

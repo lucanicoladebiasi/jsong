@@ -41,6 +41,13 @@ import kotlin.reflect.KFunction
 import kotlin.reflect.full.memberFunctions
 import kotlin.reflect.javaType
 
+/**
+ *
+ *
+ *
+ * LHS and `lhs` refer to the Left Hand Side of a binary expression.
+ * RHS and `rhs` refer to the Right Hand Side of a binary expression.
+ */
 class Processor(
     private val root: JsonNode? = null,
     private val mc: MathContext = MathContext.DECIMAL128,
@@ -68,7 +75,7 @@ class Processor(
 
     private var isToReduce: Boolean = true
 
-    private val lib: JSonataLFunctions = Library(this)
+    private val lib: JSonataFunctions = Library(this)
 
     val nf: JsonNodeFactory = om.nodeFactory
 
@@ -641,45 +648,96 @@ class Processor(
         return result
     }
 
-    override fun visitOr(ctx: JSongParser.OrContext): JsonNode? {
+    /**
+     * Return the [BooleanNode] from the [ctx] content defined as
+     *
+     * `| lhs = exp OR   rhs = exp                      #or`
+     *
+     * LHS an RHS are converted to booleans calling [JSonataFunctions.boolean].
+     *
+     */
+    override fun visitOr(
+        ctx: JSongParser.OrContext
+    ): BooleanNode {
         val lhs = lib.boolean(visit(ctx.lhs))
         val rhs = lib.boolean(visit(ctx.rhs))
         return BooleanNode.valueOf(lhs.booleanValue() || rhs.booleanValue())
     }
 
-    override fun visitRange(ctx: JSongParser.RangeContext): JsonNode {
-        val min = visit(ctx.min)
-        val max = visit(ctx.max)
-        return RangeNode.of(
-            when (min) {
-                is DecimalNode -> min.decimalValue()
-                else -> lib.string(min).textValue().toBigDecimal()
-            },
-            when (max) {
-                is DecimalNode -> max.decimalValue()
-                else -> lib.string(max).textValue().toBigDecimal()
-            },
-            nf
-        )
+    /**
+     * Return the [RangeNode] from the [ctx] content defined as
+     *
+     * ```
+     * range
+     *     : min = exp '..' max = exp
+     *     ;
+     * ```
+     *
+     * The `min` and `max` limits are converted to numbers calling [JSonataFunctions.number].
+     *
+     * @see visitRanges
+     */
+    override fun visitRange(
+        ctx: JSongParser.RangeContext
+    ): RangeNode {
+        val min = lib.number(visit(ctx.min))
+        val max = lib.number(visit(ctx.max))
+        return RangeNode.of(min.decimalValue(), max.decimalValue(), nf)
     }
 
-    override fun visitRanges(ctx: JSongParser.RangesContext): JsonNode {
+    /**
+     * Return the [RangesNode] from the [ctx] content defined as
+     *
+     * `| '[' range (',' range)* ']'                        #ranges`
+     *
+     * @see visitRange
+     */
+    override fun visitRanges(
+        ctx: JSongParser.RangesContext
+    ): RangesNode {
         val result = RangesNode(nf)
-        ctx.range().forEach {
-            result.add(visit(it))
+        ctx.range().forEach { range ->
+            result.add(visit(range))
         }
         return result
     }
 
-    override fun visitRegex(ctx: JSongParser.RegexContext): JsonNode {
+    /**
+     * Return the [RegexNode] from the [ctx] content defined as
+     *
+     * `| REGEX                                         #regex`
+     *
+     */
+    override fun visitRegex(
+        ctx: JSongParser.RegexContext
+    ): RegexNode {
         return RegexNode(ctx.REGEX().text)
     }
 
-    override fun visitRoot(ctx: JSongParser.RootContext): JsonNode? {
+    /**
+     * Return the root of the evaluated expression.
+     *
+     * @return [JsonNode] can be `null`.
+     *
+     * @see evaluate
+     */
+    override fun visitRoot(
+        ctx: JSongParser.RootContext
+    ): JsonNode? {
         return root
     }
 
-    override fun visitScope(ctx: JSongParser.ScopeContext): JsonNode? {
+    /**
+     * Return the last context from the [ctx] content defined as
+     *
+     * `| '(' exp (';' exp)* ')'`
+     *
+     * @return [JsonNode] can be `null`.
+     *
+     */
+    override fun visitScope(
+        ctx: JSongParser.ScopeContext
+    ): JsonNode? {
         val context = this.context
         ctx.exp().forEach { exp ->
             this.context = context
@@ -688,15 +746,37 @@ class Processor(
         return this.context
     }
 
-    override fun visitSub(ctx: JSongParser.SubContext): JsonNode {
+    /**
+     * Return the [DecimalNode] from [ctx] context defined as
+     *
+     * `| lhs = exp '-' rhs = exp                       #sub`
+     *
+     * LHS and RHS are cast to numbers.
+     *
+     * @see [JSonataFunctions.number]
+     */
+    override fun visitSub(
+        ctx: JSongParser.SubContext
+    ): DecimalNode {
         val lhs = lib.number(visit(ctx.lhs))
         val rhs = lib.number(visit(ctx.rhs))
         return DecimalNode(lhs.decimalValue().subtract(rhs.decimalValue()))
     }
 
-    override fun visitText(ctx: JSongParser.TextContext): JsonNode {
+    /**
+     * Return the [TextNode] from the [ctx] content defined as
+     *
+     * ```
+     * txt
+     *     : STRING
+     *     ;
+     * ```
+     */
+    override fun visitTxt(
+        ctx: JSongParser.TxtContext
+    ): TextNode {
         return TextNode(ctx.text.substring(1, ctx.text.length - 1))
     }
 
-}
+} //~ Processor
 

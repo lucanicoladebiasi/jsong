@@ -31,7 +31,7 @@ import com.fasterxml.jackson.databind.node.*
  *
  * @see Library
  */
-interface JSonataLFunctions {
+interface JSonataFunctions {
 
     // https://docs.jsonata.org/array-functions
 

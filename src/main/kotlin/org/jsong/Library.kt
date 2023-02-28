@@ -38,7 +38,7 @@ import java.util.*
 
 class Library(
     private val processor: Processor
-) : JSonataLFunctions {
+) : JSonataFunctions {
 
     companion object {
 
@@ -90,7 +90,7 @@ class Library(
     }
 
     /**
-     * See [JSonataLFunctions.append].
+     * See [JSonataFunctions.append].
      */
     override fun append(array1: JsonNode, array2: JsonNode): ArrayNode {
         val arr1 = processor.expand(array1)
@@ -161,7 +161,7 @@ class Library(
     }
 
     /**
-     * See [JSonataLFunctions.count].
+     * See [JSonataFunctions.count].
      */
     override fun count(array: JsonNode): DecimalNode {
         val arr = processor.expand(array)
@@ -182,7 +182,7 @@ class Library(
     }
 
     /**
-     * See [JSonataLFunctions.distinct].
+     * See [JSonataFunctions.distinct].
      */
     override fun distinct(array: JsonNode): ArrayNode {
         return processor.nf.arrayNode().addAll(when(array) {
@@ -444,7 +444,7 @@ class Library(
     }
 
     /**
-     * See [JSonataLFunctions.reverse].
+     * See [JSonataFunctions.reverse].
      */
     override fun reverse(array: JsonNode): ArrayNode {
         return processor.nf.arrayNode().addAll(when(array) {
@@ -459,7 +459,7 @@ class Library(
     }
 
     /**
-     * See [JSonataLFunctions.shuffle].
+     * See [JSonataFunctions.shuffle].
      */
     override fun shuffle(array: JsonNode): ArrayNode {
         return processor.nf.arrayNode().addAll(when (array) {

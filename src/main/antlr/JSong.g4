@@ -29,15 +29,15 @@ grammar JSong;
 }
 
 jsong
-    : exp* EOF
+    : exp? EOF
     ;
 
-array
+arr
     : '[' exp (',' exp)* ']'
     | '[' ']'
     ;
 
-bool
+boo
     : TRUE
     | FALSE
     ;
@@ -45,66 +45,64 @@ bool
 exp
     //| '|' loc = exp ('|' upd = exp (',' del = exp)?)? '|'               #transform
     //| '^(' sort (',' sort)* ')'                                         #orderby
-    : '(' exp (';' exp)*')'                                             #scope
+    : '(' exp (';' exp)*')'                         #scope
+    | lhs = exp'['  rhs = exp ']'                   #filter
+    | lhs = exp '.' rhs = exp  POS lbl              #mappos
+    | lhs = exp '.' rhs = exp  CTX lbl              #mapctx
+    | lhs = exp '.' rhs = exp                       #map
 
-    | lhs = exp'['  rhs = exp ']'                                       #filter
-    | lhs = exp '.' rhs = exp  POS label                                #mappos
-    | lhs = exp '.' rhs = exp  CTX label                                #mapctx
-    | lhs = exp '.' rhs = exp                                           #map
+    | lhs = exp '*' rhs = exp                       #mul
+    | lhs = exp '/' rhs = exp                       #div
+    | lhs = exp '%' rhs = exp                       #mod
+    | lhs = exp '+' rhs = exp                       #add
+    | lhs = exp '-' rhs = exp                       #sub
+    | lhs = exp '&' rhs = exp                       #app
+    | lhs = exp 'in' rhs = exp                      #in
+    | lhs = exp '>'  rhs = exp                      #gt
+    | lhs = exp '<'  rhs = exp                      #lt
+    | lhs = exp '>=' rhs = exp                      #gte
+    | lhs = exp '<=' rhs = exp                      #lte
+    | lhs = exp '!=' rhs = exp                      #ne
+    | lhs = exp '='  rhs = exp                      #eq
+    | lhs = exp AND  rhs = exp                      #and
+    | lhs = exp OR   rhs = exp                      #or
 
-    | lhs = exp '*' rhs = exp                                           #mul
-    | lhs = exp '/' rhs = exp                                           #div
-    | lhs = exp '%' rhs = exp                                           #mod
-    | lhs = exp '+' rhs = exp                                           #add
-    | lhs = exp '-' rhs = exp                                           #sub
-    | lhs = exp '&' rhs = exp                                           #concatenate
-    | lhs = exp 'in' rhs = exp                                          #in
-    | lhs = exp '>'  rhs = exp                                          #gt
-    | lhs = exp '<'  rhs = exp                                          #lt
-    | lhs = exp '>=' rhs = exp                                          #gte
-    | lhs = exp '<=' rhs = exp                                          #lte
-    | lhs = exp '!=' rhs = exp                                          #ne
-    | lhs = exp '='  rhs = exp                                          #eq
-    | lhs = exp AND  rhs = exp                                          #and
-    | lhs = exp OR   rhs = exp                                          #or
+    | prd = exp '?' pos = exp ':' neg = exp         #ife
+    | lhs = exp '~>' rhs = exp                      #chain
 
-    | prd = exp '?' pos = exp ':' neg = exp                             #condition
-    | lhs = exp '~>' rhs = exp                                          #chain
-
-    | '$' label '(' (exp (',' exp)*)? ')'                               #call
-    | '$' label ':=' exp                                                #define
-    | '$' label                                                         #lbl
-    | fun '(' (exp (',' exp)*)? ')'                                     #lambda
-    | fun                                                               #function
-    | path                                                              #select
-    | exp'[' ']'                                                        #expand
-    | '[' range (',' range)* ']'                                        #ranges
-    | json                                                              #literal
-    | REGEX                                                             #regex
+    | (fun  ('$' lbl)) '(' (exp (',' exp)*)? ')'    #call
+    | '$' lbl ':=' exp                              #set
+    | '$' lbl                                       #recall
+    | fun                                           #define
+    | path                                          #select
+    | exp'[' ']'                                    #array
+    | '[' range (',' range)* ']'                        #ranges
+    | json                                          #literal
+    | REGEX                                         #regex
     ;
 
 fun
-    :  ('fun'|'function') '(' ('$' label (',' '$' label)*)? ')' '{' exp '}'
+    :  ('fun'|'function') '(' ('$' lbl (',' '$' lbl)*)? ')' '{' exp '}'
     ;
 
 json
-    : array
+    : arr
     | obj
-    | bool
-    | nihil
-    | number
-    | text
+    | boo
+    | nil
+    | num
+    | txt
     ;
 
-label
+lbl
     : LABEL
     ;
 
-nihil
+nil
     : NULL
     ;
 
-number
+num
     : NUMBER
     ;
 
@@ -114,7 +112,7 @@ obj
     ;
 
 pair
-    : key = exp ':' value = exp
+    : key = exp ':' val = exp
     ;
 
 path
@@ -123,7 +121,7 @@ path
     | '%'   #parent
     | '*'   #all
     | '**'  #descendants
-    | label #field
+    | lbl   #field
     ;
 
 range
@@ -131,12 +129,12 @@ range
     ;
 
 sort
-    : '<' exp   #ascending
-    | '>' exp   #descending
-    | exp       #default
+    : '<' exp   #asc
+    | '>' exp   #des
+    | exp       #asc
     ;
 
-text
+txt
     : STRING
     ;
 
@@ -166,5 +164,3 @@ fragment HEX: [0-9a-fA-F];
 fragment SAFECODEPOINT: ~ ["\\\u0000-\u001F];
 
 WS: [ \t\n\r]+ -> skip;
-
-

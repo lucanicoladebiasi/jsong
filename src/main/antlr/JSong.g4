@@ -70,9 +70,9 @@ exp
     | prd = exp '?' pos = exp ':' neg = exp         #ife
     | lhs = exp '~>' rhs = exp                      #chain
 
-    | (fun  ('$' lbl)) '(' (exp (',' exp)*)? ')'    #call
+    | '$' lbl '(' (exp (',' exp)*)? ')'             #call
     | '$' lbl ':=' exp                              #set
-    | '$' lbl                                       #recall
+    | '$' lbl                                       #get
     | fun                                           #define
     | path                                          #select
     | exp'[' ']'                                    #expand

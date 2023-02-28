@@ -31,36 +31,47 @@ import org.antlr.v4.runtime.CommonTokenStream
 import org.jsong.antlr.JSongBaseVisitor
 import org.jsong.antlr.JSongLexer
 import org.jsong.antlr.JSongParser
-import java.lang.reflect.InvocationTargetException
 import java.math.MathContext
 import java.time.Instant
 import java.util.*
 import kotlin.random.Random
-import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
-import kotlin.reflect.full.memberFunctions
 import kotlin.reflect.javaType
 
 /**
  *
- *
- *
  * LHS and `lhs` refer to the Left Hand Side of a binary expression.
  * RHS and `rhs` refer to the Right Hand Side of a binary expression.
+ *
+ * The methods prefixed with `visit` override the ANTLR visiting pattern:
+ * the documentation shows the matched pattern from [JSong.g4]() rules.
+ * If the matched pattern begins with the `|`, the pattern is a fragment of a rule with multiple alternatives.
  */
 class Processor(
-    private val root: JsonNode? = null,
-    private val mc: MathContext = MathContext.DECIMAL128,
-    val om: ObjectMapper = ObjectMapper(),
+    val root: JsonNode? = null,
+    val varMap: MutableMap<String, JsonNode?> = mutableMapOf(),
+    val mathContext: MathContext = MathContext.DECIMAL128,
+    val objectMapper: ObjectMapper = ObjectMapper(),
     val random: Random = Random.Default,
-    val time: Instant = Instant.now()
+    val time: Instant = Instant.now(),
+    val lib: JSONataFunctionLibrary = Library(objectMapper, random, time)
 ) : JSongBaseVisitor<JsonNode?>() {
 
     companion object {
 
+        /**
+         * Character used to wrap a field name escaping JSONata lexer rules.
+         *
+         * @see normalizeFieldName
+         */
         private const val BACKTICK = '`'
 
-        private fun normalizeFieldName(tag: String): String {
+        /**
+         * Return the field name from [tag] removing the first and the last characters of both are [BACKTICK].
+         */
+        private fun normalizeFieldName(
+            tag: String
+        ): String {
             return when {
                 tag[0] == BACKTICK && tag[tag.length - 1] == BACKTICK -> tag.substring(1, tag.length - 1)
                 else -> tag
@@ -75,18 +86,48 @@ class Processor(
 
     private var isToReduce: Boolean = true
 
-    private val lib: JSONataFunctionLibrary = Library(this)
-
-    val nf: JsonNodeFactory = om.nodeFactory
-
     private val ctxMap = mutableMapOf<String, ArrayNode>()
 
     private val posMap = mutableMapOf<String, ArrayNode>()
 
-    private val varMap = mutableMapOf<String, JsonNode?>()
+    /**
+     * Return an arguments list evaluating a list of JSONata expressions,
+     * the arguments list is used to call a function.
+     *
+     * @param expList list of JSONata expressions.
+     *
+     * @return [List] of [JsonNode] elements, elements can be `null`.
+     *
+     * @see call
+     * @see visitCall
+     */
+    private fun args(
+        expList: List<JSongParser.ExpContext>
+    ): List<JsonNode?> {
+        val argList = mutableListOf<JsonNode?>()
+        val context = this.context  // Save the context, following evaluation could change it.
+        expList.forEach { exp ->
+            this.context = context  // Set the context to the saved value.
+            argList.add(visit(exp))
+        }
+        this.context = context      // Set the context to the saved value.
+        return argList
+    }
+
+    private fun call(
+        func: FunctionNode,
+        args: List<JsonNode?>
+    ): JsonNode? {
+        val varMap = mutableMapOf<String, JsonNode?>()
+        varMap.putAll(this.varMap)
+        args.forEachIndexed { index, node ->
+            varMap[func.args[index]] = node
+        }
+        return Processor(context, varMap, mathContext, objectMapper, random, time, lib).evaluate(func.body)
+    }
 
     private fun descendants(node: JsonNode?): ArrayNode {
-        val result = ArrayNode(nf)
+        val result = ArrayNode(objectMapper.nodeFactory)
         node?.fields()?.forEach { field ->
             if (field.value != null) {
                 result.addAll(descendants(field.value))
@@ -97,18 +138,28 @@ class Processor(
     }
 
     fun evaluate(exp: String): JsonNode? {
-        val canon = exp.replace("\\s".toRegex() , " ")  // todo: ANTLR doesn't skip spaces
+        val canon = exp.replace("\\s".toRegex(), " ")  // todo: ANTLR doesn't skip spaces
         return visit(JSongParser(CommonTokenStream(JSongLexer(CharStreams.fromString(canon)))).jsong())
     }
 
-    internal fun expand(node: JsonNode?): ArrayNode {
+    /**
+     * Return an [ArrayNode]
+     * * empty if [node] is null,
+     * * being a [RangesNode] instance if [node] is a [RangesNode] instance,
+     * * having the [node] element if [node] isn't an array,
+     * * the [node] itself if it is a not empty array.
+     */
+    private fun expand(
+        node: JsonNode?
+    ): ArrayNode {
         return when (node) {
-            null -> ArrayNode(nf)
-            is RangeNode -> RangesNode(nf).add(node)
+            null -> objectMapper.nodeFactory.arrayNode()
+            is RangeNode -> RangesNode(objectMapper.nodeFactory).add(node)
             is ArrayNode -> node
-            else -> ArrayNode(nf).add(node)
+            else -> objectMapper.nodeFactory.arrayNode().add(node)
         }
     }
+
 
     @OptIn(ExperimentalStdlibApi::class)
     private fun isCallable(
@@ -137,23 +188,23 @@ class Processor(
         return isCallable
     }
 
-    private fun recall(
-        kClass: KClass<*>,
-        functionName: String,
-        args: List<Any?>
-    ): KFunction<*> {
-        kClass.memberFunctions
-            .filter { it.name == functionName }
-            .sortedByDescending { it.parameters.size }
-            .forEach { kFunction ->
-                if (isCallable(kFunction, args)) {
-                    return kFunction
-                }
-            }
-        throw IllegalArgumentException(
-            "Function $functionName(${args.subList(1, args.size).joinToString(", ")}) not found"
-        )
-    }
+//    private fun recall(
+//        kClass: KClass<*>,
+//        functionName: String,
+//        args: List<Any?>
+//    ): KFunction<*> {
+//        kClass.memberFunctions
+//            .filter { it.name == functionName }
+//            .sortedByDescending { it.parameters.size }
+//            .forEach { kFunction ->
+//                if (isCallable(kFunction, args)) {
+//                    return kFunction
+//                }
+//            }
+//        throw IllegalArgumentException(
+//            "Function $functionName(${args.subList(1, args.size).joinToString(", ")}) not found"
+//        )
+//    }
 
 
     private fun reduce(node: JsonNode?): JsonNode? {
@@ -163,7 +214,7 @@ class Processor(
 
                 1 -> node[0]
                 else -> {
-                    val result = nf.arrayNode()
+                    val result = objectMapper.nodeFactory.arrayNode()
                     node.forEach { element ->
                         reduce(element)?.let { result.add(it) }
                     }
@@ -190,7 +241,7 @@ class Processor(
     }
 
     private fun shrink(array: ArrayNode, predicates: BooleanArray): ArrayNode {
-        val value = nf.arrayNode()
+        val value = objectMapper.nodeFactory.arrayNode()
         predicates.forEachIndexed { index, predicate ->
             if (predicate) {
                 value.add(array[index])
@@ -200,7 +251,7 @@ class Processor(
     }
 
     private fun stretch(array: ArrayNode, size: Int): ArrayNode {
-        val value = nf.arrayNode()
+        val value = objectMapper.nodeFactory.arrayNode()
         val ratio = size / array.size()
         array.forEach { element ->
             for (i in 0 until ratio) {
@@ -217,7 +268,7 @@ class Processor(
     }
 
     override fun visitAll(ctx: JSongParser.AllContext): JsonNode? {
-        val result = ArrayNode(nf)
+        val result = ArrayNode(objectMapper.nodeFactory)
         if (context is ObjectNode) {
             context?.fields()?.forEach { field ->
                 result.add(field.value)
@@ -244,7 +295,7 @@ class Processor(
     }
 
     override fun visitArr(ctx: JSongParser.ArrContext): JsonNode {
-        val result = ArrayNode(nf)
+        val result = ArrayNode(objectMapper.nodeFactory)
         ctx.exp().forEach { exp ->
             result.add(visit(exp))
         }
@@ -260,53 +311,80 @@ class Processor(
 
     }
 
-    override fun visitCall(ctx: JSongParser.CallContext): JsonNode? {
-        return when (val function = varMap[ctx.lbl().text]) {
-
-            is FunNode -> {
-                val context = this.context
-                ctx.exp().forEachIndexed { i, exp ->
-                    this.context = context
-                    varMap[function.args[i]] = visit(exp)
-                    this.context = varMap[function.args[i]]
-                }
-                return visit(JSongParser(CommonTokenStream(JSongLexer(CharStreams.fromString(function.body)))).jsong())
-            }
-
+    /**
+     * Return the [JsonNode] from [ctx] content matching
+     *
+     * `'$' lbl '(' (exp (',' exp)*)? ')'             #call`
+     *
+     * where `lbl` is the name of the function to call.
+     *
+     * @return the [JsonNode] can be `null`.
+     *
+     * @throws FunctionNotFoundException if no function has the `lbl` name.
+     *
+     * @see call
+     */
+    @Throws(FunctionNotFoundException::class)
+    override fun visitCall(
+        ctx: JSongParser.CallContext
+    ): JsonNode? {
+        val fqn = ctx.lbl().text
+        return when(val func = varMap[fqn]) {
+            null -> throw FunctionNotFoundException(fqn)
             else -> {
-                val args = mutableListOf<Any?>()
-                val context = this.context
-                ctx.exp().forEach { exp ->
-                    this.context = context
-                    args.add(visit(exp))
-                }
-                var kfun: KFunction<*>
-                args.add(0, lib)
-                try {
-                    kfun = recall(lib::class, ctx.lbl().text, args)
-                } catch (e: IllegalArgumentException) {
-                    args.add(1, context)
-                    kfun = recall(lib::class, ctx.lbl().text, args)
-                }
-                while (args.size < kfun.parameters.size) {
-                    args.add(null)
-                }
-                try {
-                    kfun.call(*args.toTypedArray()) as JsonNode?
-                } catch (e: InvocationTargetException) {
-                    throw e.targetException
+                val args = args(ctx.exp())
+                when(func) {
+                    is FunctionNode -> call(func, args)
+                    else -> throw FunctionNotFoundException(fqn)
                 }
             }
         }
     }
 
+//    override fun visitCall(ctx: JSongParser.CallContext): JsonNode? {
+//        return when (val function = varMap[ctx.lbl().text]) {
+//
+//            is FunctionNode -> {
+//                val context = this.context
+//                ctx.exp().forEachIndexed { i, exp ->
+//                    this.context = context
+//                    varMap[function.args[i]] = visit(exp)
+//                    this.context = varMap[function.args[i]]
+//                }
+//                return visit(JSongParser(CommonTokenStream(JSongLexer(CharStreams.fromString(function.body)))).jsong())
+//            }
+//
+//            else -> {
+//                val args = mutableListOf<Any?>()
+//                val context = this.context
+//                ctx.exp().forEach { exp ->
+//                    this.context = context
+//                    args.add(visit(exp))
+//                }
+//                var kfun: KFunction<*>
+//                args.add(0, lib)
+//                try {
+//                    kfun = recall(lib::class, ctx.lbl().text, args)
+//                } catch (e: IllegalArgumentException) {
+//                    args.add(1, context)
+//                    kfun = recall(lib::class, ctx.lbl().text, args)
+//                }
+//                while (args.size < kfun.parameters.size) {
+//                    args.add(null)
+//                }
+//                try {
+//                    kfun.call(*args.toTypedArray()) as JsonNode?
+//                } catch (e: InvocationTargetException) {
+//                    throw e.targetException
+//                }
+//            }
+//        }
+//    }
+
     override fun visitChain(ctx: JSongParser.ChainContext): JsonNode? {
         context = visit(ctx.lhs)
         return visit(ctx.rhs)
     }
-
-
-
 
 
     override fun visitContext(ctx: JSongParser.ContextContext): JsonNode? {
@@ -318,7 +396,7 @@ class Processor(
     }
 
     override fun visitDescendants(ctx: JSongParser.DescendantsContext): JsonNode? {
-        val result = ArrayNode(nf)
+        val result = ArrayNode(objectMapper.nodeFactory)
         if (context is ObjectNode) {
             result.addAll(descendants(context))
         }
@@ -328,7 +406,7 @@ class Processor(
     override fun visitDiv(ctx: JSongParser.DivContext): JsonNode {
         val lhs = lib.number(visit(ctx.lhs))
         val rhs = lib.number(visit(ctx.rhs))
-        return DecimalNode(lhs.decimalValue().divide(rhs.decimalValue(), mc))
+        return DecimalNode(lhs.decimalValue().divide(rhs.decimalValue(), mathContext))
     }
 
     override fun visitEq(ctx: JSongParser.EqContext): JsonNode? {
@@ -336,7 +414,6 @@ class Processor(
         val rhs = visit(ctx.rhs)
         return BooleanNode.valueOf(lhs == rhs)
     }
-
 
 
     override fun visitExpand(ctx: JSongParser.ExpandContext): JsonNode {
@@ -350,7 +427,7 @@ class Processor(
     }
 
     override fun visitFilter(ctx: JSongParser.FilterContext): JsonNode? {
-        val result = ArrayNode(nf)
+        val result = ArrayNode(objectMapper.nodeFactory)
         val lhs = expand(visit(ctx.lhs))
         val prd = BooleanArray(lhs.size())
         lhs.forEachIndexed { index, context ->
@@ -394,11 +471,37 @@ class Processor(
         return reduce(result)
     }
 
-    override fun visitFun(ctx: JSongParser.FunContext): FunNode {
-        return FunNode(
+    /**
+     * Return the [FunctionNode] from [ctx] content matching
+     *
+     * ```
+     * fun
+     *     :  ('fun'|'function') '(' ('$' lbl (',' '$' lbl)*)? ')' '{' exp '}'
+     *     ;
+     * ```.
+     */
+    override fun visitFun(
+        ctx: JSongParser.FunContext
+    ): FunctionNode {
+        return FunctionNode(
             ctx.lbl().map { lbl -> lbl.text },
             ctx.exp().text
         )
+    }
+
+    /**
+     * Return the [JsonNode] from [ctx] content matching
+     *
+     * `| '$' lbl                                       #recall`.
+     *
+     * @return the [JsonNode] mapped in [varMap] with the `lbl` key, it can be `null`.
+     *
+     * @see visitSet
+     */
+    override fun visitGet(
+        ctx: JSongParser.GetContext
+    ): JsonNode? {
+        return varMap[ctx.lbl().text]
     }
 
     override fun visitGt(ctx: JSongParser.GtContext): JsonNode? {
@@ -458,40 +561,7 @@ class Processor(
 //    }
 
     // todo: functions should have their map or have a single map and discrimite returns.
-    override fun visitRecall(ctx: JSongParser.RecallContext): JsonNode? {
-        val label = ctx.lbl().text
-        val result = when (val positionalValue = posMap[label]) {
-            null -> when (val contextualValue: ArrayNode? = ctxMap[label]) {
-                null -> {
-                    when(varMap[label]) {
-                        null -> {
-                            val args = mutableListOf<Any?>()
-                            args.add(lib)
-                            args.add(context)
-                            try {
-                                recall(lib::class, label, args).call(*args.toTypedArray()) as JsonNode?
-                            } catch (e: IllegalArgumentException) {
-                                null
-                            }
-                        }
-                        else -> varMap[label]
-                    }
-                }
-                else -> when (indexStack.isEmpty()) {
-                    true -> contextualValue
-                    else -> contextualValue[indexStack.peek()]
-                }
-            }
 
-            else -> IntNode(positionalValue.indexOf(context) + 1)
-        }
-        return when (result) {
-            is FunNode -> {
-                visit(JSongParser(CommonTokenStream(JSongLexer(CharStreams.fromString(result.body)))).jsong())
-            }
-            else -> result
-        }
-    }
 
     override fun visitLt(ctx: JSongParser.LtContext): JsonNode? {
         val lhs = visit(ctx.lhs)
@@ -518,7 +588,7 @@ class Processor(
     }
 
     override fun visitMap(ctx: JSongParser.MapContext): JsonNode? {
-        val result = ArrayNode(nf)
+        val result =objectMapper.nodeFactory.arrayNode()
         val lhs = expand(visit(ctx.lhs))
         when (lhs) {
             is RangesNode -> lhs.indexes.forEach { context ->
@@ -543,7 +613,7 @@ class Processor(
     }
 
     override fun visitMapctx(ctx: JSongParser.MapctxContext): JsonNode? {
-        var result = ArrayNode(nf)
+        var result = objectMapper.nodeFactory.arrayNode()
         val lhs = expand(visit(ctx.lhs))
         when (lhs) {
             is RangesNode -> lhs.indexes.forEach { context ->
@@ -572,7 +642,7 @@ class Processor(
         }
         val ratio = result.size() / lhs.size()
         ctxMap[ctx.lbl().text] = result
-        result = ArrayNode(nf)
+        result = ArrayNode(objectMapper.nodeFactory)
         for (i in 0 until ratio) {
             result.addAll(lhs)
         }
@@ -580,7 +650,7 @@ class Processor(
     }
 
     override fun visitMappos(ctx: JSongParser.MapposContext): JsonNode? {
-        val result = ArrayNode(nf)
+        val result = objectMapper.nodeFactory.arrayNode()
         val lhs = expand(visit(ctx.lhs))
         when (lhs) {
             is RangesNode -> lhs.indexes.forEach { context ->
@@ -617,32 +687,93 @@ class Processor(
         return DecimalNode(lhs.decimalValue().remainder(rhs.decimalValue()))
     }
 
-    override fun visitMul(ctx: JSongParser.MulContext): JsonNode {
+    /**
+     * Return the [DecimalNode] from the [ctx] content matching
+     *
+     * `| lhs = exp '*' rhs = exp                       #mul`
+     *
+     * LHS an RHS are converted to numbers calling [JSONataFunctionLibrary.number].
+     *
+     * @return LHS **multiplied** by RHS.
+     */
+    override fun visitMul(ctx: JSongParser.MulContext): DecimalNode {
         val lhs = lib.number(visit(ctx.lhs))
         val rhs = lib.number(visit(ctx.rhs))
         return DecimalNode(lhs.decimalValue().multiply(rhs.decimalValue()))
     }
 
-    override fun visitNe(ctx: JSongParser.NeContext): JsonNode? {
+    /**
+     * Return the [BooleanNode] from the [ctx] content matching
+     *
+     * `| lhs = exp '!=' rhs = exp                      #ne`
+     *
+     * LHS an RHS are converted to booleans calling [JSONataFunctionLibrary.boolean].
+     *
+     * @return `true` if LHS and RHS are **not equal**.
+     */
+    override fun visitNe(
+        ctx: JSongParser.NeContext
+    ): BooleanNode {
         val lhs = visit(ctx.lhs)
         val rhs = visit(ctx.rhs)
         return BooleanNode.valueOf(lhs != rhs)
     }
 
-    override fun visitNil(ctx: JSongParser.NilContext): JsonNode? {
+    /**
+     * Return the [NullNode] instance from the [ctx] content matching
+     *
+     * ```
+     * nil
+     *     : NULL
+     *     ;
+     * ```
+     */
+    override fun visitNil(
+        ctx: JSongParser.NilContext
+    ): JsonNode? {
         return NullNode.instance
     }
 
-    override fun visitNum(ctx: JSongParser.NumContext): JsonNode {
+    /**
+     * Return the [DecimalNode] from the [ctx] content matching
+     *
+     * ```
+     * num
+     *     : NUMBER
+     *     ;
+     * ```
+     */
+    override fun visitNum(
+        ctx: JSongParser.NumContext
+    ): DecimalNode {
         return DecimalNode(ctx.text.toBigDecimal())
     }
 
+    /**
+     * Return the [ObjectNode] from the [ctx] content matching
+     *
+     * ```
+     * obj
+     *     : '{' pair (',' pair)* '}'
+     *     | '{' '}'
+     *     ;
+     *
+     * pair
+     *     : key = exp ':' value = exp
+     *     ;
+     * ```
+     * The `key` of each `pair` is cast to string calling [JSONataFunctionLibrary.string];
+     * if `key` is `null` the index of the `pair` property of `obj` is used.
+     *
+     * If the `value` of `pair` is `null` then is set to [NullNode].
+     *
+     */
     override fun visitObj(
         ctx: JSongParser.ObjContext
     ): ObjectNode {
-        val result = ObjectNode(nf)
+        val result = ObjectNode(objectMapper.nodeFactory)
         ctx.pair().forEachIndexed { index, pair ->
-            val key = visit(pair.key)?.asText() ?: index.toString()
+            val key = visit(pair.key)?.let { lib.string(it).asText() } ?: index.toString()
             val value = visit(pair.value) ?: NullNode.instance
             result.set<JsonNode>(key, value)
         }
@@ -650,11 +781,13 @@ class Processor(
     }
 
     /**
-     * Return the [BooleanNode] from the [ctx] content defined as
+     * Return the [BooleanNode] from the [ctx] content matching
      *
      * `| lhs = exp OR   rhs = exp                      #or`
      *
      * LHS an RHS are converted to booleans calling [JSONataFunctionLibrary.boolean].
+     *
+     * @return `true` if LHS or RHS is true.
      *
      */
     override fun visitOr(
@@ -666,7 +799,7 @@ class Processor(
     }
 
     /**
-     * Return the [RangeNode] from the [ctx] content defined as
+     * Return the [RangeNode] from the [ctx] content matching
      *
      * ```
      * range
@@ -683,11 +816,11 @@ class Processor(
     ): RangeNode {
         val min = lib.number(visit(ctx.min))
         val max = lib.number(visit(ctx.max))
-        return RangeNode.of(min.decimalValue(), max.decimalValue(), nf)
+        return RangeNode.of(min.decimalValue(), max.decimalValue(), objectMapper.nodeFactory)
     }
 
     /**
-     * Return the [RangesNode] from the [ctx] content defined as
+     * Return the [RangesNode] from the [ctx] content matching
      *
      * `| '[' range (',' range)* ']'                        #ranges`
      *
@@ -696,15 +829,16 @@ class Processor(
     override fun visitRanges(
         ctx: JSongParser.RangesContext
     ): RangesNode {
-        val result = RangesNode(nf)
+        val result = RangesNode(objectMapper.nodeFactory)
         ctx.range().forEach { range ->
             result.add(visit(range))
         }
         return result
     }
 
+
     /**
-     * Return the [RegexNode] from the [ctx] content defined as
+     * Return the [RegexNode] from the [ctx] content matching
      *
      * `| REGEX                                         #regex`
      *
@@ -729,7 +863,7 @@ class Processor(
     }
 
     /**
-     * Return the last context from the [ctx] content defined as
+     * Return the last context from the [ctx] content matching
      *
      * `| '(' exp (';' exp)* ')'`
      *
@@ -748,28 +882,31 @@ class Processor(
     }
 
     /**
-     * Return the [JsonNode]
+     * Return the [JsonNode] from [ctx] content matching
      *
-     * `| '$' lbl ':=' exp                              #set`
+     * `| '$' lbl ':=' exp                              #set`.
      *
-     * @return [JsonNode] can be `null`.
+     * @return the [JsonNode] result of `exp` evaluation, it can be `null`:
+     *         the returned value is stored in the [varMap] with `lbl` key.
+     *
+     * @see visitGet
      */
     override fun visitSet(
         ctx: JSongParser.SetContext
     ): JsonNode? {
-        when (ctx.exp().text.contains("~>")) {
-            true -> varMap[ctx.lbl().text] = FunNode(listOf("context"), ctx.exp().text, nf)
-            else -> varMap[ctx.lbl().text] = visit(ctx.exp())
+        return visit(ctx.exp()).also {
+            varMap[ctx.lbl().text] = it
         }
-        return varMap[ctx.lbl().text]
     }
 
     /**
-     * Return the [DecimalNode] from [ctx] context defined as
+     * Return the [DecimalNode] from [ctx] content matching
      *
-     * `| lhs = exp '-' rhs = exp                       #sub`
+     * `| lhs = exp '-' rhs = exp                       #sub`.
      *
-     * LHS and RHS are cast to numbers.
+     * LHS and RHS are cast to numbers calling [JSONataFunctionLibrary.number].
+     *
+     * @return LHS - RHS.
      *
      * @see [JSONataFunctionLibrary.number]
      */
@@ -782,13 +919,13 @@ class Processor(
     }
 
     /**
-     * Return the [TextNode] from the [ctx] content defined as
+     * Return the [TextNode] from the [ctx] content matching
      *
      * ```
      * txt
      *     : STRING
      *     ;
-     * ```
+     * ```.
      */
     override fun visitTxt(
         ctx: JSongParser.TxtContext

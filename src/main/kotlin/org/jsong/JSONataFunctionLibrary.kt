@@ -114,7 +114,7 @@ interface JSONataFunctionLibrary {
      * @see [sort](https://docs.jsonata.org/array-functions#sort)
      *
      */
-    fun sort(array: JsonNode, function: FunNode? = null): ArrayNode
+    fun sort(array: JsonNode, function: FunctionNode? = null): ArrayNode
 
     /**
      * Returns a convolved (zipped) array containing grouped [arrays] of values from the `array1 ... arrayN`
@@ -232,7 +232,7 @@ interface JSONataFunctionLibrary {
      *
      * @see [filter](https://docs.jsonata.org/higher-order-functions#filter)
      */
-    fun filter(array: ArrayNode, function: FunNode): ArrayNode
+    fun filter(array: ArrayNode, function: FunctionNode): ArrayNode
 
     /**
      * Returns an array containing the results of applying the [function] parameter to each value in the [array]
@@ -248,7 +248,7 @@ interface JSONataFunctionLibrary {
      *
      * @see [map](https://docs.jsonata.org/higher-order-functions#map)
      */
-    fun map(array: ArrayNode, function: FunNode): ArrayNode
+    fun map(array: ArrayNode, function: FunctionNode): ArrayNode
 
     /**
      * Returns an aggregated value derived from applying the [function] parameter successively
@@ -262,7 +262,7 @@ interface JSONataFunctionLibrary {
      *
      * @see [reduce](https://docs.jsonata.org/higher-order-functions#reduce)
      */
-    fun reduce(array: ArrayNode, function: FunNode, init: FunNode): JsonNode
+    fun reduce(array: ArrayNode, function: FunctionNode, init: FunctionNode): JsonNode
 
     /**
      * Returns an object that contains only the key/value pairs from the [obj] parameter
@@ -281,7 +281,7 @@ interface JSONataFunctionLibrary {
      *
      * @see [sift](https://docs.jsonata.org/higher-order-functions#reduce)
      */
-    fun sift(obj: ObjectNode, function: FunNode): JsonNode
+    fun sift(obj: ObjectNode, function: FunctionNode): JsonNode
 
     /**
      * Returns the one and only one value in the [array] parameter that satisfy the function predicate
@@ -298,7 +298,7 @@ interface JSONataFunctionLibrary {
      *
      * @see [single](https://docs.jsonata.org/higher-order-functions#single)
      */
-    fun single(array: ArrayNode, function: FunNode): JsonNode
+    fun single(array: ArrayNode, function: FunctionNode): JsonNode
 
 
     // https://docs.jsonata.org/aggregation-functions
@@ -522,7 +522,7 @@ interface JSONataFunctionLibrary {
      *
      * @see [each](https://docs.jsonata.org/object-functions#each)
      */
-    fun each(obj: ObjectNode, function: FunNode): ArrayNode
+    fun each(obj: ObjectNode, function: FunctionNode): ArrayNode
 
     /**
      * Deliberately throws an error with an optional [message].

@@ -35,10 +35,10 @@ import com.fasterxml.jackson.databind.node.TextNode
  *
  * @param args labels of the arguments.
  * @param body code of the function.
- * @param nf node factory used to create this [FunNode],
+ * @param nf node factory used to create this [FunctionNode],
  * by default set to the [JsonNodeFactory] of a new [ObjectNode].
  */
-class FunNode(
+class FunctionNode(
     args: List<String>,
     body: String,
     nf: JsonNodeFactory = ObjectMapper().nodeFactory
@@ -53,13 +53,13 @@ class FunNode(
     companion object {
 
         /**
-         * Tag of the [args] property of this [FunNode] represented as an
+         * Tag of the [args] property of this [FunctionNode] represented as an
          * [com.fasterxml.jackson.databind.node.ArrayNode] of [TextNode].
          */
         const val ARGS_TAG: String = "args"
 
         /**
-         * Tag of the [body] property of this [FunNode] represented as [TextNode].
+         * Tag of the [body] property of this [FunctionNode] represented as [TextNode].
          */
         const val BODY_TAG = "body"
 
@@ -77,14 +77,14 @@ class FunNode(
 
     /**
      * Return `true` if this object represents the same function of [other].
-     * Two [FunNode] represents the same function if the [args] and [body]s are equals.
+     * Two [FunctionNode] represents the same function if the [args] and [body]s are equals.
      */
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
         if (!super.equals(other)) return false
 
-        other as FunNode
+        other as FunctionNode
 
         if (args != other.args) return false
         if (body != other.body) return false

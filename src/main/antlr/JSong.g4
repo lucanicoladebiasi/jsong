@@ -75,8 +75,8 @@ exp
     | '$' lbl                                       #recall
     | fun                                           #define
     | path                                          #select
-    | exp'[' ']'                                    #array
-    | '[' range (',' range)* ']'                        #ranges
+    | exp'[' ']'                                    #expand
+    | '[' range (',' range)* ']'                    #ranges
     | json                                          #literal
     | REGEX                                         #regex
     ;
@@ -112,7 +112,7 @@ obj
     ;
 
 pair
-    : key = exp ':' val = exp
+    : key = exp ':' value = exp
     ;
 
 path

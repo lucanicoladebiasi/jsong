@@ -38,7 +38,7 @@ import java.util.*
 
 class Library(
     private val processor: Processor
-) : JSonataFunctions {
+) : JSONataFunctionLibrary {
 
     companion object {
 
@@ -90,7 +90,7 @@ class Library(
     }
 
     /**
-     * See [JSonataFunctions.append].
+     * See [JSONataFunctionLibrary.append].
      */
     override fun append(array1: JsonNode, array2: JsonNode): ArrayNode {
         val arr1 = processor.expand(array1)
@@ -161,7 +161,7 @@ class Library(
     }
 
     /**
-     * See [JSonataFunctions.count].
+     * See [JSONataFunctionLibrary.count].
      */
     override fun count(array: JsonNode): DecimalNode {
         val arr = processor.expand(array)
@@ -182,7 +182,7 @@ class Library(
     }
 
     /**
-     * See [JSonataFunctions.distinct].
+     * See [JSONataFunctionLibrary.distinct].
      */
     override fun distinct(array: JsonNode): ArrayNode {
         return processor.nf.arrayNode().addAll(when(array) {
@@ -195,8 +195,8 @@ class Library(
         TODO("Not yet implemented")
     }
 
-    override fun error(message: JsonNode) {
-        throw Error(message.textValue())
+    override fun error(message: JsonNode?) {
+        throw message?.let { Error(it.textValue()) } ?: Error()
     }
 
     override fun exists(arg: JsonNode?): BooleanNode {
@@ -444,7 +444,7 @@ class Library(
     }
 
     /**
-     * See [JSonataFunctions.reverse].
+     * See [JSONataFunctionLibrary.reverse].
      */
     override fun reverse(array: JsonNode): ArrayNode {
         return processor.nf.arrayNode().addAll(when(array) {
@@ -459,7 +459,7 @@ class Library(
     }
 
     /**
-     * See [JSonataFunctions.shuffle].
+     * See [JSONataFunctionLibrary.shuffle].
      */
     override fun shuffle(array: JsonNode): ArrayNode {
         return processor.nf.arrayNode().addAll(when (array) {

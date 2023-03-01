@@ -73,6 +73,7 @@ exp
     | '$' lbl '(' (exp (',' exp)*)? ')'             #call
     | '$' lbl ':=' exp                              #set
     | '$' lbl                                       #get
+    | fun '(' (exp (',' exp)*)? ')'                 #lambda
     | fun                                           #define
     | path                                          #select
     | exp'[' ']'                                    #expand

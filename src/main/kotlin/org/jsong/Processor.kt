@@ -35,7 +35,9 @@ import java.math.MathContext
 import java.time.Instant
 import java.util.*
 import kotlin.random.Random
+import kotlin.reflect.KClass
 import kotlin.reflect.KFunction
+import kotlin.reflect.full.memberFunctions
 import kotlin.reflect.javaType
 
 /**
@@ -100,6 +102,7 @@ class Processor(
      *
      * @see call
      * @see visitCall
+     * @see visitLambda
      */
     private fun args(
         expList: List<JSongParser.ExpContext>
@@ -114,6 +117,15 @@ class Processor(
         return argList
     }
 
+    /**
+     * Return the result of calling the [func] function with the [args] parameters.
+     *
+     * @return [JsonNode] can be `null`.
+     *
+     * @see args
+     * @see visitCall
+     * @see visitLambda
+     */
     private fun call(
         func: FunctionNode,
         args: List<JsonNode?>
@@ -125,6 +137,43 @@ class Processor(
         }
         return Processor(context, varMap, mathContext, objectMapper, random, time, lib).evaluate(func.body)
     }
+
+    private fun call(
+        lib: KClass<*>,
+        name: String,
+        args: List<Any?>
+    ): JsonNode? {
+        try {
+            val method = lib.java.getMethod(name, *args.map { arg -> arg?.let { it::class.java } }.toTypedArray())
+            return when(val result = method.invoke(lib.java, *args.toTypedArray())) {
+                null -> null
+                is JsonNode -> result
+                else -> objectMapper.valueToTree(result)
+            }
+        } catch (e: NoSuchMethodException) {
+            throw FunctionNotFoundException(e.message!!)
+        } catch (e: NullPointerException) {
+            throw FunctionNotFoundException(e.message!!)
+        }
+    }
+
+    //    private fun recall(
+//        kClass: KClass<*>,
+//        functionName: String,
+//        args: List<Any?>
+//    ): KFunction<*> {
+//        kClass.memberFunctions
+//            .filter { it.name == functionName }
+//            .sortedByDescending { it.parameters.size }
+//            .forEach { kFunction ->
+//                if (isCallable(kFunction, args)) {
+//                    return kFunction
+//                }
+//            }
+//        throw IllegalArgumentException(
+//            "Function $functionName(${args.subList(1, args.size).joinToString(", ")}) not found"
+//        )
+//    }
 
     private fun descendants(node: JsonNode?): ArrayNode {
         val result = ArrayNode(objectMapper.nodeFactory)
@@ -187,25 +236,6 @@ class Processor(
         }
         return isCallable
     }
-
-//    private fun recall(
-//        kClass: KClass<*>,
-//        functionName: String,
-//        args: List<Any?>
-//    ): KFunction<*> {
-//        kClass.memberFunctions
-//            .filter { it.name == functionName }
-//            .sortedByDescending { it.parameters.size }
-//            .forEach { kFunction ->
-//                if (isCallable(kFunction, args)) {
-//                    return kFunction
-//                }
-//            }
-//        throw IllegalArgumentException(
-//            "Function $functionName(${args.subList(1, args.size).joinToString(", ")}) not found"
-//        )
-//    }
-
 
     private fun reduce(node: JsonNode?): JsonNode? {
         return if (isToReduce) when (node) {
@@ -314,17 +344,22 @@ class Processor(
     /**
      * Return the [JsonNode] from [ctx] content matching
      *
-     * `'$' lbl '(' (exp (',' exp)*)? ')'             #call`
+     * `| '$' lbl '(' (exp (',' exp)*)? ')'             #call`
      *
      * where `lbl` is the name of the function to call.
      *
      * @return the [JsonNode] can be `null`.
      *
      * @throws FunctionNotFoundException if no function has the `lbl` name.
+     * @throws NotAFunctionException if the `lbl` resolves in a node that is not a function.
      *
+     * @see args
      * @see call
      */
-    @Throws(FunctionNotFoundException::class)
+    @Throws(
+        FunctionNotFoundException::class,
+        FunctionTypeException::class
+    )
     override fun visitCall(
         ctx: JSongParser.CallContext
     ): JsonNode? {
@@ -335,7 +370,7 @@ class Processor(
                 val args = args(ctx.exp())
                 when(func) {
                     is FunctionNode -> call(func, args)
-                    else -> throw FunctionNotFoundException(fqn)
+                    else -> throw FunctionTypeException.forNode(func)
                 }
             }
         }
@@ -474,11 +509,7 @@ class Processor(
     /**
      * Return the [FunctionNode] from [ctx] content matching
      *
-     * ```
-     * fun
-     *     :  ('fun'|'function') '(' ('$' lbl (',' '$' lbl)*)? ')' '{' exp '}'
-     *     ;
-     * ```.
+     * `fun:  ('fun'|'function') '(' ('$' lbl (',' '$' lbl)*)? ')' '{' exp '}';`.
      */
     override fun visitFun(
         ctx: JSongParser.FunContext
@@ -550,18 +581,42 @@ class Processor(
         return ctx.exp()?.let { exp -> visit(exp) }
     }
 
-//    override fun visitLambda(ctx: JSongParser.LambdaContext): JsonNode? {
-//        val function = visitFun(ctx.`fun`())
-//        val context = this.context
-//        ctx.exp().forEachIndexed { i, exp ->
-//            this.context = context
-//            varMap[function.args[i]] = visit(exp)
-//        }
-//        return visit(JSongParser(CommonTokenStream(JSongLexer(CharStreams.fromString(function.body)))).jsong())
-//    }
-
-    // todo: functions should have their map or have a single map and discrimite returns.
-
+    /**
+     * Return the [JsonNode] from [ctx] content matching
+     *
+     * `| fun '(' (exp (',' exp)*)? ')'                 #lambda`
+     *
+     * where fun is
+     *
+     * `fun:  ('fun'|'function') '(' ('$' lbl (',' '$' lbl)*)? ')' '{' exp '}';`.
+     *
+     * @return the [JsonNode] can be `null`.
+     *
+     * @throws FunctionNotFoundException if no function has the `lbl` name.
+     * @throws FunctionTypeException if the `lbl` resolves in a node that is not a function.
+     *
+     * @see args
+     * @see call
+     * @see visitFun
+     */
+    @Throws(
+        FunctionNotFoundException::class,
+        FunctionTypeException::class
+    )
+    override fun visitLambda(
+        ctx: JSongParser.LambdaContext
+    ): JsonNode? {
+        return when(val func = visit(ctx.`fun`())) {
+            null -> throw FunctionNotFoundException(ctx.`fun`().text)
+            else -> {
+                val args = args(ctx.exp())
+                when(func) {
+                    is FunctionNode -> call(func, args)
+                    else -> throw FunctionTypeException.forNode(func)
+                }
+            }
+        }
+    }
 
     override fun visitLt(ctx: JSongParser.LtContext): JsonNode? {
         val lhs = visit(ctx.lhs)
@@ -690,7 +745,7 @@ class Processor(
     /**
      * Return the [DecimalNode] from the [ctx] content matching
      *
-     * `| lhs = exp '*' rhs = exp                       #mul`
+     * `| lhs = exp '*' rhs = exp                       #mul`.
      *
      * LHS an RHS are converted to numbers calling [JSONataFunctionLibrary.number].
      *
@@ -722,11 +777,7 @@ class Processor(
     /**
      * Return the [NullNode] instance from the [ctx] content matching
      *
-     * ```
-     * nil
-     *     : NULL
-     *     ;
-     * ```
+     * `nil: NULL;`.
      */
     override fun visitNil(
         ctx: JSongParser.NilContext
@@ -737,11 +788,7 @@ class Processor(
     /**
      * Return the [DecimalNode] from the [ctx] content matching
      *
-     * ```
-     * num
-     *     : NUMBER
-     *     ;
-     * ```
+     * `num: NUMBER;`
      */
     override fun visitNum(
         ctx: JSongParser.NumContext
@@ -783,7 +830,7 @@ class Processor(
     /**
      * Return the [BooleanNode] from the [ctx] content matching
      *
-     * `| lhs = exp OR   rhs = exp                      #or`
+     * `| lhs = exp OR   rhs = exp                      #or`.
      *
      * LHS an RHS are converted to booleans calling [JSONataFunctionLibrary.boolean].
      *
@@ -840,7 +887,7 @@ class Processor(
     /**
      * Return the [RegexNode] from the [ctx] content matching
      *
-     * `| REGEX                                         #regex`
+     * `| REGEX                                         #regex`.
      *
      */
     override fun visitRegex(

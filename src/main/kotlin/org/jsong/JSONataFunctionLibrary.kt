@@ -49,7 +49,6 @@ interface JSONataFunctionLibrary {
     // https://docs.jsonata.org/array-functions
 
     /**
-     *
      * Returns an array containing the values in [array1] followed by the values in [array2].
      * If either parameter is not an array, then it is treated as a singleton array containing that value.
      *
@@ -114,7 +113,7 @@ interface JSONataFunctionLibrary {
      * @see [sort](https://docs.jsonata.org/array-functions#sort)
      *
      */
-    fun sort(array: JsonNode, function: FunctionNode? = null): ArrayNode
+    fun sort(array: JsonNode, function: JsonNode? = null): ArrayNode
 
     /**
      * Returns a convolved (zipped) array containing grouped [arrays] of values from the `array1 ... arrayN`
@@ -175,7 +174,7 @@ interface JSONataFunctionLibrary {
      *
      * @param picture   If omitted, then the timestamp is formatted in the ISO 8601 format.
      *                  If the optional string is supplied, then the timestamp is formatted
-     *                  occording to the representation specified in that string.
+     *                  according to the representation specified in that string.
      *
      * @param timezone  If supplied, then the formatted timestamp will be in that timezone.
      *                  The timezone string should be in the format `±HHMM`,

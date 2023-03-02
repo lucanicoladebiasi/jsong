@@ -159,7 +159,6 @@ class TestArrayFunctions {
     /**
      * https://docs.jsonata.org/array-functions#zip
      */
-    @Disabled("todo: zip function")
     @Test
     fun `$zip() - pair`() {
         val expected = Processor().evaluate("[[1,4] ,[2,5], [3,6]]")
@@ -170,7 +169,6 @@ class TestArrayFunctions {
     /**
      * https://docs.jsonata.org/array-functions#zip
      */
-    @Disabled("todo: zip function")
     @Test
     fun `$zip() - triplet`() {
         val expected = Processor().evaluate("[[1,4,7], [2,5,8]]")

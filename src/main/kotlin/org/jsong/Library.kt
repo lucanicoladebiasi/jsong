@@ -94,6 +94,9 @@ class Library(
 
     /**
      * See [JSONataFunctionLibrary.append].
+     *
+     * @param array1 is cast to [ArrayNode] calling [expand].
+     * @param array2 is cast to [ArrayNode] calling [expand].
      */
     override fun append(array1: JsonNode, array2: JsonNode): ArrayNode {
         val arr1 = expand(array1)
@@ -165,6 +168,8 @@ class Library(
 
     /**
      * See [JSONataFunctionLibrary.count].
+     *
+     * @param array is cast to [ArrayNode] calling [expand].
      */
     override fun count(array: JsonNode): DecimalNode {
         val arr = expand(array)
@@ -186,6 +191,8 @@ class Library(
 
     /**
      * See [JSONataFunctionLibrary.distinct].
+     *
+     * @param array is cast to [ArrayNode] calling [expand].
      */
     override fun distinct(array: JsonNode): ArrayNode {
         return objectMapper.nodeFactory.arrayNode().addAll(when(array) {
@@ -474,6 +481,8 @@ class Library(
 
     /**
      * See [JSONataFunctionLibrary.reverse].
+     *
+     * @param array is cast to [ArrayNode] calling [expand].
      */
     override fun reverse(array: JsonNode): ArrayNode {
         return objectMapper.nodeFactory.arrayNode().addAll(when(array) {
@@ -489,6 +498,8 @@ class Library(
 
     /**
      * See [JSONataFunctionLibrary.shuffle].
+     *
+     * @param array is cast to [ArrayNode] calling
      */
     override fun shuffle(array: JsonNode): ArrayNode {
         return objectMapper.nodeFactory.arrayNode().addAll(when (array) {
@@ -505,9 +516,11 @@ class Library(
         TODO("Not yet implemented")
     }
 
-    override fun sort(array: JsonNode, function: FunctionNode?): ArrayNode {
-        // val array = expand(node)
-        TODO("Not yet implemented")
+    /**
+     * See [JSONataFunctionLibrary.sort].
+     */
+    override fun sort(array: JsonNode, function: JsonNode?): ArrayNode {
+        TODO("Check function is FunctionNode")
     }
 
     override fun split(str: JsonNode, separator: JsonNode, limit: JsonNode?): ArrayNode {
@@ -613,6 +626,11 @@ class Library(
         return TextNode(string(str).textValue().uppercase())
     }
 
+    /**
+     * See [JSONataFunctionLibrary.zip].
+     *
+     * @param arrays elements are cast with [expand].
+     */
     override fun zip(vararg arrays: JsonNode): ArrayNode {
         val matrix = arrays.map { expand(it) }
         var len = Int.MAX_VALUE
@@ -631,5 +649,5 @@ class Library(
         return result
     }
 
-}
+} //~ Library
 

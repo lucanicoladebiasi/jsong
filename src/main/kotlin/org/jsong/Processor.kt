@@ -35,10 +35,7 @@ import java.math.MathContext
 import java.time.Instant
 import java.util.*
 import kotlin.random.Random
-import kotlin.reflect.KClass
-import kotlin.reflect.KFunction
 import kotlin.reflect.full.memberFunctions
-import kotlin.reflect.javaType
 
 /**
  *
@@ -98,7 +95,9 @@ class Processor(
      *
      * @param expList list of JSONata expressions.
      *
-     * @return [List] of [JsonNode] elements, elements can be `null`.
+     * @return [MutableList] of [JsonNode] elements,
+     *         is mutable to allow to inject default context,
+     *         elements can be `null`.
      *
      * @see call
      * @see visitCall
@@ -106,7 +105,7 @@ class Processor(
      */
     private fun args(
         expList: List<JSongParser.ExpContext>
-    ): List<JsonNode?> {
+    ): MutableList<JsonNode?> {
         val argList = mutableListOf<JsonNode?>()
         val context = this.context  // Save the context, following evaluation could change it.
         expList.forEach { exp ->
@@ -138,42 +137,44 @@ class Processor(
         return Processor(context, varMap, mathContext, objectMapper, random, time, lib).evaluate(func.body)
     }
 
+    /**
+     * Return the result if calling the [name] method of the [lib] interface with the [args] parameters.
+     *
+     * @return [JsonNode] can be `null`.
+     *
+     * @throws FunctionNotFoundException if [name] ( [args] ) method is not found in [lib].
+     *
+     * @see args
+     * @see visitCall
+     */
+    @Throws(
+        FunctionNotFoundException::class
+    )
     private fun call(
-        lib: KClass<*>,
+        lib: JSONataFunctionLibrary,
         name: String,
-        args: List<Any?>
+        args: MutableList<JsonNode?>
     ): JsonNode? {
+        if (args.isEmpty()) {
+          args.add(context)
+        }
         try {
-            val method = lib.java.getMethod(name, *args.map { arg -> arg?.let { it::class.java } }.toTypedArray())
-            return when(val result = method.invoke(lib.java, *args.toTypedArray())) {
+            val method = lib::class.memberFunctions.first { name == it.name }
+            val result = when(method.parameters.last().isVararg) {
+                true -> method.call(lib, args.toTypedArray())
+                else -> method.call(lib, *args.toTypedArray())
+            }
+            return when(result) {
                 null -> null
                 is JsonNode -> result
                 else -> objectMapper.valueToTree(result)
             }
-        } catch (e: NoSuchMethodException) {
+        } catch (e: IllegalArgumentException) {
             throw FunctionNotFoundException(e.message!!)
         } catch (e: NullPointerException) {
             throw FunctionNotFoundException(e.message!!)
         }
     }
-
-    //    private fun recall(
-//        kClass: KClass<*>,
-//        functionName: String,
-//        args: List<Any?>
-//    ): KFunction<*> {
-//        kClass.memberFunctions
-//            .filter { it.name == functionName }
-//            .sortedByDescending { it.parameters.size }
-//            .forEach { kFunction ->
-//                if (isCallable(kFunction, args)) {
-//                    return kFunction
-//                }
-//            }
-//        throw IllegalArgumentException(
-//            "Function $functionName(${args.subList(1, args.size).joinToString(", ")}) not found"
-//        )
-//    }
 
     private fun descendants(node: JsonNode?): ArrayNode {
         val result = ArrayNode(objectMapper.nodeFactory)
@@ -210,32 +211,32 @@ class Processor(
     }
 
 
-    @OptIn(ExperimentalStdlibApi::class)
-    private fun isCallable(
-        kFunction: KFunction<*>,
-        args: List<Any?>
-    ): Boolean {
-        var isCallable = true
-        for (index in 1 until kFunction.parameters.size) {
-            val kParameter = kFunction.parameters[index]
-            when (kParameter.isOptional) {
-                true -> isCallable = isCallable && true
-                else -> when (index < args.size) {
-                    true -> {
-                        val arg = args[index]
-                        when (arg == null) {
-                            true -> isCallable = isCallable && kParameter.type.isMarkedNullable
-                            else -> isCallable = isCallable
-                                    && (kParameter.type.javaType as Class<*>).isAssignableFrom(arg::class.java)
-                        }
-                    }
-
-                    else -> return false
-                }
-            }
-        }
-        return isCallable
-    }
+//    @OptIn(ExperimentalStdlibApi::class)
+//    private fun isCallable(
+//        kFunction: KFunction<*>,
+//        args: List<Any?>
+//    ): Boolean {
+//        var isCallable = true
+//        for (index in 1 until kFunction.parameters.size) {
+//            val kParameter = kFunction.parameters[index]
+//            when (kParameter.isOptional) {
+//                true -> isCallable = isCallable && true
+//                else -> when (index < args.size) {
+//                    true -> {
+//                        val arg = args[index]
+//                        when (arg == null) {
+//                            true -> isCallable = isCallable && kParameter.type.isMarkedNullable
+//                            else -> isCallable = isCallable
+//                                    && (kParameter.type.javaType as Class<*>).isAssignableFrom(arg::class.java)
+//                        }
+//                    }
+//
+//                    else -> return false
+//                }
+//            }
+//        }
+//        return isCallable
+//    }
 
     private fun reduce(node: JsonNode?): JsonNode? {
         return if (isToReduce) when (node) {
@@ -351,7 +352,7 @@ class Processor(
      * @return the [JsonNode] can be `null`.
      *
      * @throws FunctionNotFoundException if no function has the `lbl` name.
-     * @throws NotAFunctionException if the `lbl` resolves in a node that is not a function.
+     * @throws FunctionTypeException if the `lbl` resolves in a node that is not a function.
      *
      * @see args
      * @see call
@@ -364,14 +365,12 @@ class Processor(
         ctx: JSongParser.CallContext
     ): JsonNode? {
         val fqn = ctx.lbl().text
-        return when(val func = varMap[fqn]) {
-            null -> throw FunctionNotFoundException(fqn)
-            else -> {
-                val args = args(ctx.exp())
-                when(func) {
-                    is FunctionNode -> call(func, args)
-                    else -> throw FunctionTypeException.forNode(func)
-                }
+        val args = args(ctx.exp())
+        return when (val func = varMap[fqn]) {
+            null -> call(lib, fqn, args)
+            else -> when (func) {
+                is FunctionNode -> call(func, args)
+                else -> throw FunctionTypeException.forNode(func)
             }
         }
     }
@@ -606,11 +605,11 @@ class Processor(
     override fun visitLambda(
         ctx: JSongParser.LambdaContext
     ): JsonNode? {
-        return when(val func = visit(ctx.`fun`())) {
+        return when (val func = visit(ctx.`fun`())) {
             null -> throw FunctionNotFoundException(ctx.`fun`().text)
             else -> {
                 val args = args(ctx.exp())
-                when(func) {
+                when (func) {
                     is FunctionNode -> call(func, args)
                     else -> throw FunctionTypeException.forNode(func)
                 }
@@ -643,7 +642,7 @@ class Processor(
     }
 
     override fun visitMap(ctx: JSongParser.MapContext): JsonNode? {
-        val result =objectMapper.nodeFactory.arrayNode()
+        val result = objectMapper.nodeFactory.arrayNode()
         val lhs = expand(visit(ctx.lhs))
         when (lhs) {
             is RangesNode -> lhs.indexes.forEach { context ->

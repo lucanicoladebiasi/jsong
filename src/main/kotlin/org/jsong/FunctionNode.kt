@@ -105,7 +105,7 @@ class FunctionNode(
     /**
      * Return the text describing this function node in the form
      *
-     * `fun(arg[, arg]) { body }
+     * `fun(arg[, arg]) { body }`.
      */
     override fun toString(): String {
         return "fun${args.joinToString(", ", "(", ")")} { $body }"

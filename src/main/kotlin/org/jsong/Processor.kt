@@ -126,8 +126,7 @@ class Processor(
      * @see visitLambda
      */
     private fun call(
-        func: FunctionNode,
-        args: List<JsonNode?>
+        func: FunctionNode, args: List<JsonNode?>
     ): JsonNode? {
         val varMap = mutableMapOf<String, JsonNode?>()
         varMap.putAll(this.varMap)
@@ -151,23 +150,21 @@ class Processor(
         FunctionNotFoundException::class
     )
     private fun call(
-        lib: JSONataFunctionLibrary,
-        name: String,
-        args: MutableList<JsonNode?>
+        lib: JSONataFunctionLibrary, name: String, args: MutableList<JsonNode?>
     ): JsonNode? {
-        if (args.isEmpty()) {
-          args.add(context)
-        }
         try {
             val method = lib::class.memberFunctions.first { name == it.name }
-            while(args.size < method.parameters.size -1) {
-                args.add(null)  // Fill missing args with `null`.
+            if (method.parameters.size > 1 && args.isEmpty()) {
+                args.add(context)
             }
-            val result = when(method.parameters.last().isVararg) {
+            while (args.size < method.parameters.size - 1) {
+                    args.add(null)  // Fill missing args with `null`.
+            }
+            val result = when (method.parameters.last().isVararg) {
                 true -> method.call(lib, args.toTypedArray())
                 else -> method.call(lib, *args.toTypedArray())
             }
-            return when(result) {
+            return when (result) {
                 null -> null
                 is JsonNode -> result
                 else -> objectMapper.valueToTree(result)
@@ -361,8 +358,7 @@ class Processor(
      * @see call
      */
     @Throws(
-        FunctionNotFoundException::class,
-        FunctionTypeException::class
+        FunctionNotFoundException::class, FunctionTypeException::class
     )
     override fun visitCall(
         ctx: JSongParser.CallContext
@@ -517,8 +513,7 @@ class Processor(
         ctx: JSongParser.FunContext
     ): FunctionNode {
         return FunctionNode(
-            ctx.lbl().map { lbl -> lbl.text },
-            ctx.exp().text
+            ctx.lbl().map { lbl -> lbl.text }, ctx.exp().text
         )
     }
 
@@ -602,8 +597,7 @@ class Processor(
      * @see visitFun
      */
     @Throws(
-        FunctionNotFoundException::class,
-        FunctionTypeException::class
+        FunctionNotFoundException::class, FunctionTypeException::class
     )
     override fun visitLambda(
         ctx: JSongParser.LambdaContext

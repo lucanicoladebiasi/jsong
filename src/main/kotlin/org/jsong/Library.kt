@@ -235,8 +235,23 @@ class Library(
         return TextNode(URLEncoder.encode(str.textValue(), Charsets.UTF_8.toString()))
     }
 
-    override fun eval(expr: JsonNode, context: JsonNode?): JsonNode? {
-        TODO("return Processor(context).evaluate(string(expr).textValue())")
+    /**
+     * See [JSONataFunctionLibrary.eval].
+     *
+     * This function creates a new processor to evaluate [expr],
+     * inheriting [mathContext], [objectMapper], [random], [time] and this [JSONataFunctionLibrary].
+     * The processor evaluating [expr] has its own variable registry.
+     *
+     * @param expr  to evaluate as a JSONata/JSong expression, cast to string calling [JSONataFunctionLibrary.string].
+     *
+     * @param context of the [expr] evaluation, it can be `null`.
+     */
+    override fun eval(
+        expr: JsonNode,
+        context: JsonNode?
+    ): JsonNode? {
+        return Processor(context, mutableMapOf(), mathContext, objectMapper, random, time, this)
+            .evaluate(string(expr).asText())
     }
 
     override fun exists(arg: JsonNode?): BooleanNode {

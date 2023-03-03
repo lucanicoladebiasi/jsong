@@ -48,7 +48,7 @@ class FunctionNode(
         Pair(ARGS_TAG, nf.arrayNode().addAll(args.map { arg -> TextNode(arg) })),
         Pair(BODY_TAG, TextNode(body))
     )
-) {
+) { //~ FunNode
 
     companion object {
 
@@ -102,4 +102,13 @@ class FunctionNode(
         return result
     }
 
-} //~ FunNode
+    /**
+     * Return the text describing this function node in the form
+     *
+     * `fun(arg[, arg]) { body }
+     */
+    override fun toString(): String {
+        return "fun${args.joinToString(", ", "(", ")")} { $body }"
+    }
+
+} //~ FunctionNode

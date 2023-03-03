@@ -53,7 +53,7 @@ class Processor(
     val objectMapper: ObjectMapper = ObjectMapper(),
     val random: Random = Random.Default,
     val time: Instant = Instant.now(),
-    val lib: JSONataFunctionLibrary = Library(objectMapper, random, time)
+    val lib: JSONataFunctionLibrary = Library(mathContext, objectMapper, random, time)
 ) : JSongBaseVisitor<JsonNode?>() {
 
     companion object {
@@ -160,6 +160,9 @@ class Processor(
         }
         try {
             val method = lib::class.memberFunctions.first { name == it.name }
+            while(args.size < method.parameters.size -1) {
+                args.add(null)  // Fill missing args with `null`.
+            }
             val result = when(method.parameters.last().isVararg) {
                 true -> method.call(lib, args.toTypedArray())
                 else -> method.call(lib, *args.toTypedArray())

@@ -512,6 +512,10 @@ class Processor(
         return when {
             result == null -> null
             posSet.contains(label) -> IntNode(result.indexOf(context) + 1)
+            ctxSet.contains(label) -> when (indexStack.isEmpty()) {
+                    true -> result
+                    else -> result[indexStack.peek()]
+            }
             else -> result
         }
     }

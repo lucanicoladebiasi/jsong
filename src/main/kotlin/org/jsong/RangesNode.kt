@@ -33,12 +33,12 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory
  *
  * Immutable.
  *
- * @param nf the node factory used to create this object,
+ * @param nodeFactory the node factory used to create this object,
  * by default set the the [JsonNodeFactory] of a new [ObjectMapper].
  */
 class RangesNode constructor(
-    nf: JsonNodeFactory = ObjectMapper().nodeFactory
-) : ArrayNode(nf) {
+    nodeFactory: JsonNodeFactory = ObjectMapper().nodeFactory
+) : ArrayNode(nodeFactory) {
 
     /**
      * @property indexes array of integers between the lowest boundary and the higher of the represented ranges,

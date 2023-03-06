@@ -42,15 +42,16 @@ boo
     | FALSE
     ;
 
+ctx
+    : '@$' lbl
+    ;
+
 exp
     //| '|' loc = exp ('|' upd = exp (',' del = exp)?)? '|'               #transform
     //| '^(' sort (',' sort)* ')'                                         #orderby
     : '(' exp (';' exp)*')'                         #scope
     | lhs = exp'['  rhs = exp ']'                   #filter
-    | lhs = exp '.' rhs = exp  POS lbl              #mappos
-    | lhs = exp '.' rhs = exp  CTX lbl              #mapctx
-    | lhs = exp '.' rhs = exp                       #map
-
+    | lhs = exp '.' rhs = exp ctx? pos?             #map
     | lhs = exp '*' rhs = exp                       #mul
     | lhs = exp '/' rhs = exp                       #div
     | lhs = exp '%' rhs = exp                       #mod
@@ -66,10 +67,8 @@ exp
     | lhs = exp '='  rhs = exp                      #eq
     | lhs = exp AND  rhs = exp                      #and
     | lhs = exp OR   rhs = exp                      #or
-
-    | prd = exp '?' pos = exp ':' neg = exp         #ife
+    | prd = exp '?' yes = exp ':' no = exp          #ife
     | lhs = exp '~>' rhs = exp                      #chain
-
     | '$' lbl '(' (exp (',' exp)*)? ')'             #call
     | '$' lbl ':=' exp                              #set
     | '$' lbl                                       #get
@@ -125,6 +124,10 @@ path
     | lbl   #field
     ;
 
+pos
+  : '#$' lbl
+  ;
+
 range
     : min = exp '..' max = exp
     ;
@@ -149,8 +152,7 @@ FALSE: 'false';
 
 REGEX: '/' (.)+? '/' 'i'? 'm'?;
 
-CTX: '@$';
-POS: '#$';
+
 
 LABEL: ([a-zA-Z][0-9a-zA-Z]*) | ('`' (.)+? '`');
 

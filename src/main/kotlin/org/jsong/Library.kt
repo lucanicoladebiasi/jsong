@@ -95,8 +95,15 @@ class Library(
         UNDEFINED(TextNode("undefined"))
     }
 
-    override fun abs(number: DecimalNode): DecimalNode {
-        return DecimalNode(number.decimalValue().abs())
+    /**
+     * See [JSONataFunctionLibrary.abs].
+     *
+     * @param number cast calling [JSONataFunctionLibrary.number].
+     */
+    override fun abs(
+        number: DecimalNode
+    ): DecimalNode {
+        return DecimalNode(number(number).decimalValue().abs())
     }
 
     /**
@@ -122,26 +129,63 @@ class Library(
         }
     }
 
-    override fun assert(condition: JsonNode, message: JsonNode): BooleanNode {
+    /**
+     * See [JSONataFunctionLibrary.assert].
+     *
+     * @param condition is cast calling [JSONataFunctionLibrary.boolean].
+     * @param message is cast calling [JsonNode.textValue].
+     *
+     * @throws AssertionError if [condition] result to be `true`.
+     */
+    @Throws (
+        AssertionError::class
+    )
+    override fun assert(
+        condition: JsonNode,
+        message: JsonNode
+    ): BooleanNode {
         if (!boolean(condition).booleanValue()) {
             throw AssertionError(string(message).textValue())
         }
         return BooleanNode.TRUE
     }
 
-    override fun average(array: JsonNode): DecimalNode {
+    /**
+     * See [JSONataFunctionLibrary.average].
+     *
+     * @see sum
+     */
+    override fun average(
+        array: JsonNode
+    ): DecimalNode {
         val arr = expand(array)
         return DecimalNode(sum(arr).decimalValue().divide(arr.size().toBigDecimal()))
     }
 
-    override fun base64decode(str: JsonNode): TextNode {
+    /**
+     * See [JSONataFunctionLibrary.base64decode].
+     *
+     * @param str cast to string calling [JSONataFunctionLibrary.string].
+     */
+    override fun base64decode(
+        str: JsonNode
+    ): TextNode {
         return TextNode(Base64.getDecoder().decode(string(str).textValue()).toString(Charsets.UTF_8))
     }
 
-    override fun base64encode(str: JsonNode): TextNode {
+    /**
+     * See [JSONataFunctionLibrary.base64encode].
+     *
+     * @param str cast to string calling [JSONataFunctionLibrary.string].
+     */
+    override fun base64encode(
+        str: JsonNode): TextNode {
         return TextNode(Base64.getEncoder().encodeToString(string(str).textValue().toByteArray()))
     }
 
+    /**
+     * See [JSONataFunctionLibrary.boolean].
+     */
     override fun boolean(
         arg: JsonNode?
     ): BooleanNode {

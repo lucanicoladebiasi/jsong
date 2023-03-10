@@ -40,6 +40,8 @@ import kotlin.reflect.full.memberFunctions
 
 /**
  *
+ * `exp` refers to the expression evaluated, `exp` has `exp` sub-expressions according the grammar defined in the
+ * `JSong.g4` file.
  * LHS and `lhs` refer to the Left Hand Side of a binary expression.
  * RHS and `rhs` refer to the Right Hand Side of a binary expression.
  *
@@ -47,8 +49,28 @@ import kotlin.reflect.full.memberFunctions
  * the documentation shows the matched pattern from [JSong.g4]() rules.
  * If the matched pattern begins with the `|`, the pattern is a fragment of a rule with multiple alternatives.
  *
+ * **NOTE: Not thread safe.**
+ *
+ * @property root node going to be evaluated calling [evaluate].
+ * If `null` [evaluate] processes its expression, possibly returning a [JsonNode] not `null`.
+ *
  * @property varMap registry of the variables, those can be inherited when this `Processor` is created
  * or registered when [evaluate]expression is called.
+ * Empty by default.
+ *
+ * @property mathContext used to operate with `BigDecimal` class.
+ * [MathContext.DECIMAL128] by default.
+ *
+ * @property objectMapper used to parse JSON expressions and create [JsonNode] objects.
+ *
+ * @property random source of randomness, used in the [lib] instance.
+ *
+ * @property time instant used when [evaluate] processes its expression and [root].
+ *
+ * @property lib implementation of [JSONataFunctionLibrary] providing the
+ * [JSONata Function Library](https://docs.jsonata.org/overview.html),
+ * by default, [mathContext], [objectMapper], [random] and [time] are used to create a new [Library]
+ * instance for this processor.
  */
 class Processor(
     val root: JsonNode? = null,
@@ -83,15 +105,35 @@ class Processor(
 
     } //~ companion
 
+    /**
+     * Reference to the context, [root] first, then the result of previous `exp` evaluation.
+     *
+     * See the [$ operator](https://docs.jsonata.org/simple).
+     */
     private var context = root
 
+    /**
+     * Store the index when [visitFilter] and [visitMap] ([visitMapctx], [visitMappos])  iterate and retrieve
+     * variables stored in [varMap].
+     */
     private val indexStack = ArrayDeque<Int>()
 
+    /**
+     * Flag if the result of each `exp` calling a `visit` method must be [reduce]d.
+     *
+     * See [Sequence](https://docs.jsonata.org/processing#sequences) and
+     * [Array constructors](https://docs.jsonata.org/construction#array-constructors) in the JSONata documentation.
+     */
     private var isToReduce: Boolean = true
 
-    //private val ctxMap = mutableMapOf<String, ArrayNode>()
-
     /**
+     * Register the
+     * [Context variable binding](https://docs.jsonata.org/path-operators#-context-variable-binding)
+     * in [varMap].
+     *
+     * @see visitCtx
+     * @see visitLbl
+     * @see visitMapctx
      *
      */
     private val ctxSet = mutableSetOf<String>()
@@ -102,6 +144,8 @@ class Processor(
      * in [varMap].
      *
      * @see visitLbl
+     * @see visitMappos
+     * @see visitPos
      *
      */
     private val posSet = mutableSetOf<String>()
@@ -638,7 +682,7 @@ class Processor(
     }
 
     override fun visitMap(ctx: JSongParser.MapContext): JsonNode? {
-        var result = objectMapper.nodeFactory.arrayNode()
+        val result = objectMapper.nodeFactory.arrayNode()
         val lhs = expand(visit(ctx.lhs))
         when (lhs) {
             is RangesNode -> lhs.indexes.forEach { context ->
@@ -663,7 +707,7 @@ class Processor(
     }
 
     override fun visitMapctx(ctx: JSongParser.MapctxContext): JsonNode? {
-        var result = objectMapper.nodeFactory.arrayNode()
+        val result = objectMapper.nodeFactory.arrayNode()
         val lhs = expand(visit(ctx.lhs))
         when (lhs) {
             is RangesNode -> lhs.indexes.forEach { context ->
@@ -688,7 +732,7 @@ class Processor(
     }
 
     override fun visitMappos(ctx: JSongParser.MapposContext): JsonNode? {
-        var result = objectMapper.nodeFactory.arrayNode()
+        val result = objectMapper.nodeFactory.arrayNode()
         val lhs = expand(visit(ctx.lhs))
         when (lhs) {
             is RangesNode -> lhs.indexes.forEach { context ->

@@ -51,7 +51,9 @@ exp
     //| '^(' sort (',' sort)* ')'                                         #orderby
     : '(' exp (';' exp)*')'                         #scope
     | lhs = exp'['  rhs = exp ']'                   #filter
-    | lhs = exp '.' rhs = exp ctx? pos?             #map
+    | lhs = exp '.' rhs = exp pos                   #mappos
+    | lhs = exp '.' rhs = exp ctx                   #mapctx
+    | lhs = exp '.' rhs = exp                       #map
     | lhs = exp '*' rhs = exp                       #mul
     | lhs = exp '/' rhs = exp                       #div
     | lhs = exp '%' rhs = exp                       #mod

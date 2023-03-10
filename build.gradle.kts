@@ -9,6 +9,7 @@ plugins {
 val antlrVersion = "4.9.3"
 val jacksonVersion = "2.14.1"
 val kotlinVersion = "1.7.10"
+val junitVersion = "1.9.2"
 
 group = "org.jsong"
 version = "1.0-SNAPSHOT"
@@ -21,6 +22,7 @@ dependencies {
     antlr("org.antlr:antlr4:$antlrVersion")
     implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
     implementation("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
+    testImplementation("org.junit.jupiter:junit-jupiter:$junitVersion")
     testImplementation(kotlin("test"))
 }
 

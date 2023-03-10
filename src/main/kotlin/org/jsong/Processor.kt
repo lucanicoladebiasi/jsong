@@ -177,7 +177,7 @@ class Processor(
                 args.add(context)
             }
             while (args.size < method.parameters.size - 1) {
-                    args.add(null)  // Fill missing args with `null`.
+                args.add(null)  // Fill missing args with `null`.
             }
             val result = when (method.parameters.last().isVararg) {
                 true -> method.call(lib, args.toTypedArray())
@@ -422,7 +422,9 @@ class Processor(
 
     override fun visitEq(ctx: JSongParser.EqContext): JsonNode? {
         val lhs = visit(ctx.lhs)
+        println(lhs?.textValue())
         val rhs = visit(ctx.rhs)
+        println(rhs?.textValue())
         return BooleanNode.valueOf(lhs == rhs)
     }
 
@@ -444,7 +446,9 @@ class Processor(
         lhs.forEachIndexed { index, context ->
             this.context = context
             indexStack.push(index)
+            println("INDEX $index")
             val rhs = visit(ctx.rhs)
+            println("$rhs")
             when (rhs) {
                 is NumericNode -> {
                     val value = rhs.asInt()
@@ -513,9 +517,10 @@ class Processor(
             result == null -> null
             posSet.contains(label) -> IntNode(result.indexOf(context) + 1)
             ctxSet.contains(label) -> when (indexStack.isEmpty()) {
-                    true -> result
-                    else -> result[indexStack.peek()]
+                true -> result
+                else -> result[indexStack.peek()]
             }
+
             else -> result
         }
     }
@@ -654,12 +659,57 @@ class Processor(
                 indexStack.pop()
             }
         }
-        ctx.pos()?.let {    // To be processed before `ctx` because te latter changes `result`.
-            visitPos(it, result)
+        return reduce(result)
+    }
+
+    override fun visitMapctx(ctx: JSongParser.MapctxContext): JsonNode? {
+        var result = objectMapper.nodeFactory.arrayNode()
+        val lhs = expand(visit(ctx.lhs))
+        when (lhs) {
+            is RangesNode -> lhs.indexes.forEach { context ->
+                this.context = context
+                when (val rhs = visit(ctx.rhs)) {
+                    is ArrayNode -> result.addAll(rhs)
+                    else -> rhs?.let { result.add(it) }
+                }
+            }
+
+            else -> lhs.forEachIndexed { index, context ->
+                this.context = context
+                indexStack.push(index)
+                when (val rhs = visit(ctx.rhs)) {
+                    is ArrayNode -> result.addAll(rhs)
+                    else -> rhs?.let { result.add(it) }
+                }
+                indexStack.pop()
+            }
         }
-        ctx.ctx()?.let {
-            result = visitCtx(it, lhs, result)
+        return reduce(visitCtx(ctx.ctx(), lhs, result))
+    }
+
+    override fun visitMappos(ctx: JSongParser.MapposContext): JsonNode? {
+        var result = objectMapper.nodeFactory.arrayNode()
+        val lhs = expand(visit(ctx.lhs))
+        when (lhs) {
+            is RangesNode -> lhs.indexes.forEach { context ->
+                this.context = context
+                when (val rhs = visit(ctx.rhs)) {
+                    is ArrayNode -> result.addAll(rhs)
+                    else -> rhs?.let { result.add(it) }
+                }
+            }
+
+            else -> lhs.forEachIndexed { index, context ->
+                this.context = context
+                indexStack.push(index)
+                when (val rhs = visit(ctx.rhs)) {
+                    is ArrayNode -> result.addAll(rhs)
+                    else -> rhs?.let { result.add(it) }
+                }
+                indexStack.pop()
+            }
         }
+        visitPos(ctx.pos(), result)
         return reduce(result)
     }
 

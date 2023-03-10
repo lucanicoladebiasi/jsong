@@ -39,6 +39,9 @@ import kotlin.random.Random
 import kotlin.reflect.full.memberFunctions
 
 /**
+ * This class [evaluate] an expression expressed in the
+ * [JSONata](https://docs.jsonata.org/overview.html) language and the JSong grammatical extensions
+ * as defined in the `JSong.g4` [ANTLR](https://www.antlr.org/) grammar.
  *
  * `exp` refers to the expression evaluated, `exp` has `exp` sub-expressions according the grammar defined in the
  * `JSong.g4` file.
@@ -187,7 +190,8 @@ class Processor(
      * @see visitLambda
      */
     private fun call(
-        func: FunctionNode, args: List<JsonNode?>
+        func: FunctionNode,
+        args: List<JsonNode?>
     ): JsonNode? {
         val varMap = mutableMapOf<String, JsonNode?>()
         varMap.putAll(this.varMap)
@@ -241,7 +245,10 @@ class Processor(
         }
     }
 
-    private fun descendants(node: JsonNode?): ArrayNode {
+    // todo
+    private fun descendants(
+        node: JsonNode?
+    ): ArrayNode {
         val result = ArrayNode(objectMapper.nodeFactory)
         node?.fields()?.forEach { field ->
             if (field.value != null) {
@@ -253,7 +260,7 @@ class Processor(
     }
 
     fun evaluate(exp: String): JsonNode? {
-        val canon = exp.replace("\\s".toRegex(), " ")  // todo: ANTLR doesn't skip spaces
+        val canon = exp.replace("\\s".toRegex(), " ")  // TODO: ANTLR doesn't skip spaces correctly.
         return visit(JSongParser(CommonTokenStream(JSongLexer(CharStreams.fromString(canon)))).jsong())
     }
 

@@ -221,8 +221,8 @@ class Processor(
     ): JsonNode? {
         try {
             val method = lib::class.memberFunctions.first { name == it.name }
-            if (method.parameters.size > 1 && args.isEmpty()) {
-                args.add(context)
+            if (method.parameters.size -1 > 0 && args.size < method.parameters.size -1) {
+                args.add(0, context)
             }
             while (args.size < method.parameters.size - 1) {
                 args.add(null)  // Fill missing args with `null`.

@@ -221,7 +221,8 @@ class Processor(
     ): JsonNode? {
         try {
             val method = lib::class.memberFunctions.first { name == it.name }
-            if (method.parameters.size -1 > 0 && args.size < method.parameters.size -1) {
+            val requiredParameters = method.parameters.filter { it.isOptional == false }.size -1
+            if (requiredParameters > 0 && args.size < requiredParameters) {
                 args.add(0, context)
             }
             while (args.size < method.parameters.size - 1) {
@@ -264,7 +265,15 @@ class Processor(
         return result
     }
 
-    fun evaluate(exp: String): JsonNode? {
+    /**
+     * Return the result of this [Processor] evaluating `exp`,
+     * the result can be `null`.
+     *
+     * If [root] is not `null`, this method evaluates [exp] applied to the [root] context.
+     */
+    fun evaluate(
+        exp: String
+    ): JsonNode? {
         val canon = exp.replace("\\s".toRegex(), " ")  // TODO: ANTLR doesn't skip spaces correctly.
         return visit(JSongParser(CommonTokenStream(JSongLexer(CharStreams.fromString(canon)))).jsong())
     }
@@ -287,8 +296,16 @@ class Processor(
         }
     }
 
-
-    private fun reduce(node: JsonNode?): JsonNode? {
+    /**
+     * Return a [JsonNode]
+     * * `null` if [node] is `null`,
+     * * 'null` if [node] is an empty [ArrayNode],
+     * * `node[0]` if [node] is an [ArrayNode] having a single element,
+     * * [node] if none of the above conditions are true.
+     */
+    private fun reduce(
+        node: JsonNode?
+    ): JsonNode? {
         return if (isToReduce) when (node) {
             is ArrayNode -> when (node.size()) {
                 0 -> null
@@ -307,7 +324,14 @@ class Processor(
         } else node
     }
 
-    private fun select(node: JsonNode?, fieldName: String): JsonNode? {
+    /**
+     * Return
+     * @see visitField
+     */
+    private fun select(
+        node: JsonNode?,
+        fieldName: String
+    ): JsonNode? {
         return when (node) {
             is ObjectNode -> {
                 val field = normalizeFieldName(fieldName)
@@ -769,44 +793,6 @@ class Processor(
         return reduce(result)
     }
 
-//    override fun visitMapctx(ctx: JSongParser.MapctxContext): JsonNode? {
-//        var result = objectMapper.nodeFactory.arrayNode()
-//        val lhs = expand(visit(ctx.lhs))
-//        when (lhs) {
-//            is RangesNode -> lhs.indexes.forEach { context ->
-//                this.context = context
-//                when (val rhs = visit(ctx.rhs)) {
-//                    is ArrayNode -> result.addAll(rhs)
-//                    else -> rhs?.let { result.add(it) }
-//                }
-//            }
-//
-//            else -> lhs.forEachIndexed { index, context ->
-//                this.context = context
-//                indexStack.push(index)
-//                when (val rhs = visit(ctx.rhs)) {
-//                    is ArrayNode -> result.addAll(rhs)
-//                    else -> rhs?.let { result.add(it) }
-//                }
-//                indexStack.pop()
-//            }
-//        }
-//        ctxMap.forEach { label, array ->
-//            ctxMap[label] = stretch(array, result.size())
-//        }
-//        posMap.forEach { label, array ->
-//            posMap[label] = stretch(array, result.size())
-//        }
-//        val ratio = result.size() / lhs.size()
-//        ctxMap[ctx.lbl().text] = result
-//        result = objectMapper.nodeFactory.arrayNode()
-//        for (i in 0 until ratio) {
-//            result.addAll(lhs)
-//        }
-//        return reduce(result)
-//    }
-
-
     /**
      * Return the [DecimalNode] from the [ctx] content matching
      *
@@ -1049,8 +1035,13 @@ class Processor(
     override fun visitSet(
         ctx: JSongParser.SetContext
     ): JsonNode? {
-        return visit(ctx.exp()).also {
-            varMap[ctx.lbl().text] = it
+        return when(ctx.exp().text.contains("~>")) {
+            true -> FunctionNode(listOf("$"), ctx.exp().text, objectMapper.nodeFactory).also {
+                varMap[ctx.lbl().text] = it
+            }
+            else -> visit(ctx.exp()).also {
+                varMap[ctx.lbl().text] = it
+            }
         }
     }
 

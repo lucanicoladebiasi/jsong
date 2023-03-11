@@ -245,11 +245,16 @@ class Processor(
         }
     }
 
-    // todo
+    /**
+     * Return the [ArrayNode] having as elements
+     * each node belonging to the subtree having `node` as root.
+     *
+     * @see visitDescendants
+     */
     private fun descendants(
         node: JsonNode?
     ): ArrayNode {
-        val result = ArrayNode(objectMapper.nodeFactory)
+        val result = objectMapper.nodeFactory.arrayNode()
         node?.fields()?.forEach { field ->
             if (field.value != null) {
                 result.addAll(descendants(field.value))
@@ -344,7 +349,7 @@ class Processor(
     }
 
     override fun visitAll(ctx: JSongParser.AllContext): JsonNode? {
-        val result = ArrayNode(objectMapper.nodeFactory)
+        val result = objectMapper.nodeFactory.arrayNode()
         if (context is ObjectNode) {
             context?.fields()?.forEach { field ->
                 result.add(field.value)
@@ -371,7 +376,7 @@ class Processor(
     }
 
     override fun visitArr(ctx: JSongParser.ArrContext): JsonNode {
-        val result = ArrayNode(objectMapper.nodeFactory)
+        val result = objectMapper.nodeFactory.arrayNode()
         ctx.exp().forEach { exp ->
             result.add(visit(exp))
         }
@@ -446,7 +451,7 @@ class Processor(
         varMap[ctx.lbl().text] = rhs
         ctxSet.add(ctx.lbl().text)
         val ratio = rhs.size() / lhs.size()
-        val result = ArrayNode(objectMapper.nodeFactory)
+        val result = objectMapper.nodeFactory.arrayNode()
         for (i in 0 until ratio) {
             result.addAll(lhs)
         }
@@ -458,7 +463,7 @@ class Processor(
     }
 
     override fun visitDescendants(ctx: JSongParser.DescendantsContext): JsonNode? {
-        val result = ArrayNode(objectMapper.nodeFactory)
+        val result = objectMapper.nodeFactory.arrayNode()
         if (context is ObjectNode) {
             result.addAll(descendants(context))
         }
@@ -491,7 +496,7 @@ class Processor(
     }
 
     override fun visitFilter(ctx: JSongParser.FilterContext): JsonNode? {
-        val result = ArrayNode(objectMapper.nodeFactory)
+        val result = objectMapper.nodeFactory.arrayNode()
         val lhs = expand(visit(ctx.lhs))
         val predicate = BooleanArray(lhs.size())
         lhs.forEachIndexed { index, context ->
@@ -794,7 +799,7 @@ class Processor(
 //        }
 //        val ratio = result.size() / lhs.size()
 //        ctxMap[ctx.lbl().text] = result
-//        result = ArrayNode(objectMapper.nodeFactory)
+//        result = objectMapper.nodeFactory.arrayNode()
 //        for (i in 0 until ratio) {
 //            result.addAll(lhs)
 //        }

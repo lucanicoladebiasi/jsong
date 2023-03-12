@@ -328,7 +328,12 @@ class Processor(
     }
 
     /**
-     * Return
+     * Return the [JsonNode] named [fieldName] part of [node] elements.
+     * It can be `null` if
+     * * [node] is `null`;
+     * * [node] is not [ObjectNode].
+     * * [node] hasn't any element named [fieldName].
+     *
      * @see visitField
      */
     private fun select(
@@ -348,7 +353,17 @@ class Processor(
         }
     }
 
-    private fun shrink(array: ArrayNode, predicates: BooleanArray): ArrayNode {
+    /**
+     * Return an [ArrayNode] coping the [array]`[i]` element if [predicates]`[i]` is `true`.
+     *
+     * @see stretch
+     * @see visitFilter
+     */
+    @Suppress("KDocUnresolvedReference")
+    private fun shrink(
+        array: ArrayNode,
+        predicates: BooleanArray
+    ): ArrayNode {
         val value = objectMapper.nodeFactory.arrayNode()
         predicates.forEachIndexed { index, predicate ->
             if (predicate) {
@@ -358,7 +373,18 @@ class Processor(
         return value
     }
 
-    private fun stretch(array: ArrayNode, size: Int): ArrayNode {
+    /**
+     * Return an [ArrayNode] node where each element of [array] is replicated [size] / size-of-[array]
+     * hence the returned array is [size] long.
+     *
+     * @see shrink
+     * @see visitCtx
+     * @see visitPos
+     */
+    private fun stretch(
+        array: ArrayNode,
+        size: Int
+    ): ArrayNode {
         val value = objectMapper.nodeFactory.arrayNode()
         val ratio = size / array.size()
         array.forEach { element ->
@@ -369,13 +395,35 @@ class Processor(
         return value
     }
 
-    override fun visitAdd(ctx: JSongParser.AddContext): JsonNode {
+    /**
+     * Return the [DecimalNode] from the [ctx] content matching
+     *
+     * ` | lhs = exp '+' rhs = exp                       #add`.
+     *
+     * @return the [sum](https://docs.jsonata.org/numeric-operators#-addition)
+     * of `lhs` plus `rhs` cast calling [JSONataFunctionLibrary.number].
+     */
+    override fun visitAdd(
+        ctx: JSongParser.AddContext
+    ): DecimalNode {
         val lhs = lib.number(visit(ctx.lhs))
         val rhs = lib.number(visit(ctx.rhs))
         return DecimalNode(lhs.decimalValue().add(rhs.decimalValue()))
     }
 
-    override fun visitAll(ctx: JSongParser.AllContext): JsonNode? {
+    /**
+     * Return the [JsonNode] from [ctx] content matching
+     *
+     *  ` | '*'   #all`.
+     *
+     *  @return an [ArrayNode] with all the elements properties of the [context] if the [context] is an [ObjectNode],
+     *  else `null`.
+     *
+     *  See [Wildcard](https://docs.jsonata.org/path-operators#-wildcard).
+     */
+    override fun visitAll(
+        ctx: JSongParser.AllContext
+    ): JsonNode? {
         val result = objectMapper.nodeFactory.arrayNode()
         if (context is ObjectNode) {
             context?.fields()?.forEach { field ->
@@ -385,13 +433,33 @@ class Processor(
         return reduce(result)
     }
 
-    override fun visitAnd(ctx: JSongParser.AndContext): JsonNode? {
+    /**
+     * Return the [BooleanNode] from [ctx] matching
+     *
+     * ` | lhs = exp '+' rhs = exp                       #add`.
+     *
+     * @return the boolean `lhs` [and](https://docs.jsonata.org/boolean-operators#and-boolean-and) `rhs`
+     * cast calling [JSONataFunctionLibrary.boolean].
+     */
+    override fun visitAnd(
+        ctx: JSongParser.AndContext
+    ): JsonNode? {
         val lhs = lib.boolean(visit(ctx.lhs))
         val rhs = lib.boolean(visit(ctx.rhs))
         return BooleanNode.valueOf(lhs.booleanValue() && rhs.booleanValue())
     }
 
-    override fun visitApp(ctx: JSongParser.AppContext): JsonNode {
+    /**
+     * Return the [TextNode] from [ctx] matching
+     *
+     * ` | lhs = exp '+' rhs = exp                       #add`.
+     *
+     * @return the `rhs` [appended](https://docs.jsonata.org/other-operators#-concatenation) to `lhs`
+     * cast to string calling [JSONataFunctionLibrary.string].
+     */
+    override fun visitApp(
+        ctx: JSongParser.AppContext
+    ): TextNode {
         val sb = StringBuilder()
         visit(ctx.lhs)?.let { lhs ->
             sb.append(lib.string(lhs).textValue())
@@ -402,7 +470,14 @@ class Processor(
         return TextNode(sb.toString())
     }
 
-    override fun visitArr(ctx: JSongParser.ArrContext): JsonNode {
+    /**
+     * Return the [ArrayNode] from the [ctx] matching
+     *
+     * `arr: '[' exp (',' exp)* ']' | '[' ']';`.
+     */
+    override fun visitArr(
+        ctx: JSongParser.ArrContext
+    ): ArrayNode {
         val result = objectMapper.nodeFactory.arrayNode()
         ctx.exp().forEach { exp ->
             result.add(visit(exp))
@@ -410,7 +485,21 @@ class Processor(
         return result
     }
 
-    override fun visitBoo(ctx: JSongParser.BooContext): JsonNode? {
+    /**
+     * Return the [BooleanNode] from the [ctx] matching
+     *
+     * ` boo: TRUE | FALSE;`
+     * ` TRUE: 'true';`
+     * ` FALSE: 'false';`.
+     *
+     * @throws [IllegalArgumentException] if the [ctx] doesn't represent a boolean literal expression.
+     */
+    @Throws(
+        IllegalArgumentException::class
+    )
+    override fun visitBoo(
+        ctx: JSongParser.BooContext
+    ): BooleanNode {
         return when {
             ctx.FALSE() != null -> BooleanNode.FALSE
             ctx.TRUE() != null -> BooleanNode.TRUE
@@ -424,7 +513,7 @@ class Processor(
      *
      * `| '$' lbl '(' (exp (',' exp)*)? ')'             #call`
      *
-     * where `lbl` is the name of the function to call.
+     * where `lbl` is the name of the function to [call](https://docs.jsonata.org/programming#invoking-a-function).
      *
      * @return the [JsonNode] can be `null`.
      *
@@ -435,7 +524,8 @@ class Processor(
      * @see call
      */
     @Throws(
-        FunctionNotFoundException::class, FunctionTypeException::class
+        FunctionNotFoundException::class,
+        FunctionTypeException::class
     )
     override fun visitCall(
         ctx: JSongParser.CallContext
@@ -451,19 +541,47 @@ class Processor(
         }
     }
 
-    override fun visitChain(ctx: JSongParser.ChainContext): JsonNode? {
+    /**
+     * Return the [JsonNode] from the [ctx] matching
+     *
+     * ` | lhs = exp '~>' rhs = exp                      #chain`.
+     *
+     * @return the [JsonNode] resulting from the [chain](https://docs.jsonata.org/other-operators#-chain)
+     * operation between `lhs` and `rhs`.
+     * The result can be `null`.
+     */
+    override fun visitChain(
+        ctx: JSongParser.ChainContext
+    ): JsonNode? {
         context = visit(ctx.lhs)
         return visit(ctx.rhs)
     }
 
-
-    override fun visitContext(ctx: JSongParser.ContextContext): JsonNode? {
+    /**
+     * Return the [JsonNode] from the [ctx] matching
+     *
+     * ` | '$'   #context`.
+     *
+     * @return the [context] during the [evaluate] processing.
+     * It can be `null`.
+     *
+     * See [Sequences](https://docs.jsonata.org/processing#sequences) processing in JSONata documentation.
+     */
+    override fun visitContext(
+        ctx: JSongParser.ContextContext
+    ): JsonNode? {
         return context
     }
 
     /**
+     * Return the [ArrayNode] from [ctx] matching
+     *
+     * ` ctx: '@$' lbl;`
+     * ` lbl: LABEL;`
+     * ` LABEL: ([a-zA-Z][0-9a-zA-Z]*) | ('`' (.)+? '`');`.
+     *
      * @see map
-     * @see visitPos
+     * @see visitMapctx
      */
     @Suppress("DuplicatedCode")
     private fun visitCtx(
@@ -485,11 +603,34 @@ class Processor(
         return result
     }
 
-    override fun visitDefine(ctx: JSongParser.DefineContext): JsonNode {
+    /**
+     * Return the [JsonNode] from the [ctx] matching
+     *
+     * `| fun                                           #define`
+     * `fun:  ('fun'|'function') '(' ('$' lbl (',' '$' lbl)*)? ')' '{' exp '}';`.
+     *
+     * @return the [JsonNode] as [FunctionNode] [defined](https://docs.jsonata.org/programming#defining-a-function)
+     * by the `fun` expression.
+     */
+    override fun visitDefine(
+        ctx: JSongParser.DefineContext
+    ): JsonNode {
         return visit(ctx.`fun`())!!
     }
 
-    override fun visitDescendants(ctx: JSongParser.DescendantsContext): JsonNode? {
+    /**
+     * Return the [JsonNode] from the [ctx] matching
+     *
+     * ` | '**'  #descendants`.
+     *
+     * @return the [JsonNode] as [ArrayNode] when not `null`.
+     * The [ArrayNode] has as elements all
+     * [descendants](https://docs.jsonata.org/path-operators#-descendants)
+     * of [context].
+     */
+    override fun visitDescendants(
+        ctx: JSongParser.DescendantsContext
+    ): JsonNode? {
         val result = objectMapper.nodeFactory.arrayNode()
         if (context is ObjectNode) {
             result.addAll(descendants(context))
@@ -497,7 +638,17 @@ class Processor(
         return reduce(result)
     }
 
-    override fun visitDiv(ctx: JSongParser.DivContext): JsonNode {
+    /**
+     * Return the [DecimalNode] from `ctx` matching
+     *
+     * ` | lhs = exp '/' rhs = exp                       #div`.
+     *
+     * @return `lhs` [divided](https://docs.jsonata.org/numeric-operators#-division) by 'rhs`
+     * cast as numbers calling [JSONataFunctionLibrary.number].
+     */
+    override fun visitDiv(
+        ctx: JSongParser.DivContext
+    ): JsonNode {
         val lhs = lib.number(visit(ctx.lhs))
         val rhs = lib.number(visit(ctx.rhs))
         return DecimalNode(lhs.decimalValue().divide(rhs.decimalValue(), mathContext))

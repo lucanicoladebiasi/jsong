@@ -198,6 +198,7 @@ class Processor(
         args.forEachIndexed { index, node ->
             varMap[func.args[index]] = node
         }
+        varMap["$"]?.let { context = it }
         return Processor(context, varMap, mathContext, objectMapper, random, time, lib).evaluate(func.body)
     }
 
@@ -217,11 +218,13 @@ class Processor(
         FunctionNotFoundException::class
     )
     private fun call(
-        lib: JSONataFunctionLibrary, name: String, args: MutableList<JsonNode?>
+        lib: JSONataFunctionLibrary,
+        name: String,
+        args: MutableList<JsonNode?>
     ): JsonNode? {
         try {
             val method = lib::class.memberFunctions.first { name == it.name }
-            val requiredParameters = method.parameters.filter { it.isOptional == false }.size -1
+            val requiredParameters = method.parameters.filter { it.isOptional == false }.size - 1
             if (requiredParameters > 0 && args.size < requiredParameters) {
                 args.add(0, context)
             }
@@ -594,7 +597,13 @@ class Processor(
         val label = ctx.lbl().text
         val result = varMap[label]
         return when {
-            result == null -> null
+            result == null -> {
+                when (lib::class.memberFunctions.firstOrNull { label == it.name }) {
+                    null -> null
+                    else -> call(lib, label, mutableListOf(context))
+                }
+            }
+
             posSet.contains(label) -> IntNode(result.indexOf(context) + 1)
             ctxSet.contains(label) -> when (indexStack.isEmpty()) {
                 true -> result
@@ -1035,10 +1044,11 @@ class Processor(
     override fun visitSet(
         ctx: JSongParser.SetContext
     ): JsonNode? {
-        return when(ctx.exp().text.contains("~>")) {
+        return when (ctx.exp().text.contains("~>")) {
             true -> FunctionNode(listOf("$"), ctx.exp().text, objectMapper.nodeFactory).also {
                 varMap[ctx.lbl().text] = it
             }
+
             else -> visit(ctx.exp()).also {
                 varMap[ctx.lbl().text] = it
             }

@@ -24,8 +24,8 @@ class TestOtherOperators {
     @Test
     fun `Chain - single`() {
         val expression = "Account.Order.Product.(Price * Quantity) ~> \$sum()"
-        val expected = Processor(TestResources.invoice).evaluate("\$sum(Account.Order.Product.(Price * Quantity))")
         val actual = Processor(TestResources.invoice).evaluate(expression)
+        val expected = Processor(TestResources.invoice).evaluate("\$sum(Account.Order.Product.(Price * Quantity))")
         assertEquals(expected, actual)
     }
 
@@ -42,7 +42,7 @@ class TestOtherOperators {
               }
             }
         """.trimIndent())
-        val expression = "Customer.Email  ~> \$substringAfter(\"@\") ~> \$substringBefore(\".\") ~> \$uppercase()"
+        val expression = "Customer.Email  ~> \$substringAfter(\"@\")~> \$substringBefore(\".\") ~> \$uppercase()"
         val expected = Processor(json).evaluate("\$uppercase(\$substringBefore(\$substringAfter(Customer.Email, \"@\"), \".\"))")
         val actual = Processor(json).evaluate(expression)
         assertEquals(expected, actual)

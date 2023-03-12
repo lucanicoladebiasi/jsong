@@ -24,9 +24,11 @@
 package org.jsong
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.*
 import java.lang.Integer.min
 import java.math.BigDecimal
+import java.math.MathContext
 import java.math.RoundingMode
 import java.net.URLDecoder
 import java.net.URLEncoder
@@ -34,11 +36,19 @@ import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.*
+import kotlin.random.Random
 
-
+/**
+ * @property objectMapper is used to create [JsonNode] instances.
+ * @property random is used in [random] and [shuffle] methods.
+ * @property time sets the instant the [Processor] evaluates code: used in [millis] and [now] methods.
+ */
 class Library(
-    private val processor: Processor
-) : JSonataLFunctions {
+    val mathContext: MathContext,
+    val objectMapper: ObjectMapper,
+    val random: Random,
+    val time: Instant
+) : JSONataFunctionLibrary {
 
     companion object {
 
@@ -51,9 +61,8 @@ class Library(
         const val IS_STRING = "string"
         const val IS_UNDEFINED = "undefined"
 
-
         /**
-         * Used in [match] method..
+         * Used in [match] method.
          */
         const val TAG_GROUPS = "groups"
 
@@ -81,52 +90,105 @@ class Library(
         NUMBER(TextNode("number")),
         OBJECT(TextNode("object")),
         STRING(TextNode("string")),
+
         @Suppress("unused")
         UNDEFINED(TextNode("undefined"))
     }
 
-    override fun abs(number: DecimalNode): DecimalNode {
-        return DecimalNode(number.decimalValue().abs())
+    /**
+     * See [JSONataFunctionLibrary.abs].
+     *
+     * @param number cast calling [JSONataFunctionLibrary.number].
+     */
+    override fun abs(
+        number: DecimalNode
+    ): DecimalNode {
+        return DecimalNode(number(number).decimalValue().abs())
     }
 
     /**
-     * See [JSonataLFunctions.append].
+     * See [JSONataFunctionLibrary.append].
+     *
+     * @param array1 is cast to [ArrayNode] calling [expand].
+     * @param array2 is cast to [ArrayNode] calling [expand].
      */
-    override fun append(array1: JsonNode, array2: JsonNode): ArrayNode {
-        val arr1 = processor.expand(array1)
-        val arr2 = processor.expand(array2)
+    override fun append(
+        array1: JsonNode,
+        array2: JsonNode
+    ): ArrayNode {
+        val expanded1 = expand(array1)
+        val expanded2 = expand(array2)
         return when {
-            arr1 is RangesNode && arr2 is RangesNode -> {
-                RangesNode(processor.nf).addAll(arr1).addAll(arr2)
+            expanded1 is RangesNode && expanded2 is RangesNode -> {
+                RangesNode(objectMapper.nodeFactory).addAll(expanded1).addAll(expanded2)
             }
 
             else -> {
-                processor.nf.arrayNode().addAll(arr1).addAll(arr2)
+                objectMapper.nodeFactory.arrayNode().addAll(expanded1).addAll(expanded2)
             }
         }
     }
 
-    override fun assert(condition: JsonNode, message: JsonNode): BooleanNode {
+    /**
+     * See [JSONataFunctionLibrary.assert].
+     *
+     * @param condition is cast calling [JSONataFunctionLibrary.boolean].
+     * @param message is cast calling [JsonNode.textValue].
+     *
+     * @throws AssertionError if [condition] result to be `true`.
+     */
+    @Throws (
+        AssertionError::class
+    )
+    override fun assert(
+        condition: JsonNode,
+        message: JsonNode
+    ): BooleanNode {
         if (!boolean(condition).booleanValue()) {
             throw AssertionError(string(message).textValue())
         }
         return BooleanNode.TRUE
     }
 
-    override fun average(array: JsonNode): DecimalNode {
-        val arr = processor.expand(array)
+    /**
+     * See [JSONataFunctionLibrary.average].
+     *
+     * @see sum
+     */
+    override fun average(
+        array: JsonNode
+    ): DecimalNode {
+        val arr = expand(array)
         return DecimalNode(sum(arr).decimalValue().divide(arr.size().toBigDecimal()))
     }
 
-    override fun base64decode(str: JsonNode): TextNode {
+    /**
+     * See [JSONataFunctionLibrary.base64decode].
+     *
+     * @param str cast to string calling [JSONataFunctionLibrary.string].
+     */
+    override fun base64decode(
+        str: JsonNode
+    ): TextNode {
         return TextNode(Base64.getDecoder().decode(string(str).textValue()).toString(Charsets.UTF_8))
     }
 
-    override fun base64encode(str: JsonNode): TextNode {
+    /**
+     * See [JSONataFunctionLibrary.base64encode].
+     *
+     * @param str cast to string calling [JSONataFunctionLibrary.string].
+     */
+    override fun base64encode(
+        str: JsonNode): TextNode {
         return TextNode(Base64.getEncoder().encodeToString(string(str).textValue().toByteArray()))
     }
 
-    override fun boolean(arg: JsonNode?): BooleanNode {
+    /**
+     * See [JSONataFunctionLibrary.boolean].
+     */
+    override fun boolean(
+        arg: JsonNode?
+    ): BooleanNode {
         return BooleanNode.valueOf(when (arg) {
             is ArrayNode -> {
                 arg.forEach { node ->
@@ -138,7 +200,7 @@ class Library(
             }
 
             is BooleanNode -> arg.booleanValue()
-            is FunNode -> false
+            is FunctionNode -> false
             is NumericNode -> arg.decimalValue() != BigDecimal.ZERO
             is ObjectNode -> !arg.isEmpty
             is TextNode -> arg.textValue().isNotBlank()
@@ -161,14 +223,18 @@ class Library(
     }
 
     /**
-     * See [JSonataLFunctions.count].
+     * See [JSONataFunctionLibrary.count].
+     *
+     * @param array is cast to [ArrayNode] calling [expand].
      */
-    override fun count(array: JsonNode): DecimalNode {
-        val arr = processor.expand(array)
+    override fun count(
+        array: JsonNode
+    ): DecimalNode {
+        val expanded = expand(array)
         return DecimalNode(
-            when (arr) {
-                is RangesNode -> arr.indexes.size().toBigDecimal()
-                else -> arr.size().toBigDecimal()
+            when (expanded) {
+                is RangesNode -> expanded.indexes.size().toBigDecimal()
+                else -> expanded.size().toBigDecimal()
             }
         )
     }
@@ -182,25 +248,27 @@ class Library(
     }
 
     /**
-     * See [JSonataLFunctions.distinct].
+     * See [JSONataFunctionLibrary.distinct].
+     *
+     * @param array is cast to [ArrayNode] calling [expand].
      */
-    override fun distinct(array: JsonNode): ArrayNode {
-        return processor.nf.arrayNode().addAll(when(array) {
-            is RangesNode -> array.indexes.toSet()
-            else -> processor.expand(array).toSet()
-        })
+    override fun distinct(
+        array: JsonNode
+    ): ArrayNode {
+        return objectMapper.nodeFactory.arrayNode().addAll(
+            when (array) {
+                is RangesNode -> array.indexes.toSet()
+                else -> expand(array).toSet()
+            }
+        )
     }
 
-    override fun each(obj: ObjectNode, function: FunNode): ArrayNode {
+    override fun each(obj: ObjectNode, function: FunctionNode): ArrayNode {
         TODO("Not yet implemented")
     }
 
-    override fun error(message: JsonNode) {
-        throw Error(message.textValue())
-    }
-
-    override fun exists(arg: JsonNode?): BooleanNode {
-        return BooleanNode.valueOf(arg != null)
+    override fun error(message: JsonNode?) {
+        throw message?.let { Error(it.textValue()) } ?: Error()
     }
 
     override fun encodeUrl(str: JsonNode): TextNode {
@@ -211,11 +279,48 @@ class Library(
         return TextNode(URLEncoder.encode(str.textValue(), Charsets.UTF_8.toString()))
     }
 
-    override fun eval(expr: JsonNode, context: JsonNode?): JsonNode? {
-        return Processor(context).evaluate(string(expr).textValue())
+    /**
+     * See [JSONataFunctionLibrary.eval].
+     *
+     * This function creates a new processor to evaluate [expr],
+     * inheriting [mathContext], [objectMapper], [random], [time] and this [JSONataFunctionLibrary].
+     * The processor evaluating [expr] has its own variable registry.
+     *
+     * @param expr  to evaluate as a JSONata/JSong expression, cast to string calling [JSONataFunctionLibrary.string].
+     *
+     * @param context of the [expr] evaluation, it can be `null`.
+     */
+    override fun eval(
+        expr: JsonNode,
+        context: JsonNode?
+    ): JsonNode? {
+        return Processor(context, mutableMapOf(), mathContext, objectMapper, random, time, this)
+            .evaluate(string(expr).asText())
     }
 
-    override fun filter(array: ArrayNode, function: FunNode): ArrayNode {
+    override fun exists(arg: JsonNode?): BooleanNode {
+        return BooleanNode.valueOf(arg != null)
+    }
+
+    /**
+     * Return an [ArrayNode]
+     * * empty if [node] is null,
+     * * being a [RangesNode] instance if [node] is a [RangesNode] instance,
+     * * having the [node] element if [node] isn't an array,
+     * * the [node] itself if it is a not empty array.
+     */
+    private fun expand(
+        node: JsonNode?
+    ): ArrayNode {
+        return when (node) {
+            null -> objectMapper.nodeFactory.arrayNode()
+            is RangeNode -> RangesNode(objectMapper.nodeFactory).add(node)
+            is ArrayNode -> node
+            else -> objectMapper.nodeFactory.arrayNode().add(node)
+        }
+    }
+
+    override fun filter(array: ArrayNode, function: FunctionNode): ArrayNode {
         TODO("Not yet implemented")
     }
 
@@ -255,9 +360,9 @@ class Library(
 
 
     override fun join(array: JsonNode, separator: JsonNode?): TextNode {
-        val arr = when(array) {
+        val arr = when (array) {
             is RangesNode -> array.indexes
-            else -> processor.expand(array)
+            else -> expand(array)
         }.map { string(it).textValue() }.toTypedArray()
         val sep = separator?.let { string(it).textValue() } ?: ""
         return TextNode(arr.joinToString(sep))
@@ -265,7 +370,7 @@ class Library(
 
     override fun keys(array: ArrayNode): ArrayNode {
         val keys = mutableSetOf<String>()
-        when(array) {
+        when (array) {
             is RangesNode -> keys.addAll(keys(array.indexes).map { it.textValue() })
             else -> array.forEach { node ->
                 when (node) {
@@ -274,7 +379,7 @@ class Library(
                 }
             }
         }
-        return processor.nf.arrayNode().addAll(keys.map { TextNode(it) })
+        return objectMapper.nodeFactory.arrayNode().addAll(keys.map { TextNode(it) })
     }
 
     override fun keys(obj: ObjectNode): ArrayNode {
@@ -282,7 +387,7 @@ class Library(
         obj.fieldNames().forEach { fieldName ->
             keys.add(fieldName)
         }
-        return processor.nf.arrayNode().addAll(keys.map { TextNode(it) })
+        return objectMapper.nodeFactory.arrayNode().addAll(keys.map { TextNode(it) })
     }
 
     override fun length(str: JsonNode): DecimalNode {
@@ -294,13 +399,13 @@ class Library(
     }
 
     override fun lookup(array: ArrayNode, key: TextNode): JsonNode? {
-        val res = processor.nf.arrayNode()
+        val result = objectMapper.nodeFactory.arrayNode()
         array.forEach { node ->
             if (node is ObjectNode) {
-                lookup(node, key)?.let { res.add(it) }
+                lookup(node, key)?.let { result.add(it) }
             }
         }
-        return if (res.isEmpty) null else res
+        return if (result.isEmpty) null else result
     }
 
     override fun lookup(obj: ObjectNode, key: TextNode): JsonNode? {
@@ -310,12 +415,12 @@ class Library(
         }
     }
 
-    override fun map(array: ArrayNode, function: FunNode): ArrayNode {
+    override fun map(array: ArrayNode, function: FunctionNode): ArrayNode {
         TODO("Not yet implemented")
     }
 
     override fun match(str: JsonNode, pattern: JsonNode, limit: JsonNode?): ArrayNode {
-        val res = processor.nf.arrayNode()
+        val result = objectMapper.nodeFactory.arrayNode()
         val txt = string(str).textValue()
         val ptt = when (pattern) {
             is RegexNode -> pattern
@@ -324,45 +429,53 @@ class Library(
         val lim = limit?.let { number(it).asInt() } ?: Int.MAX_VALUE
         ptt.regex.findAll(txt).forEachIndexed { i, matchResult ->
             if (i < lim) {
-                res.add(
-                    processor.nf.objectNode()
+                result.add(
+                    objectMapper.nodeFactory.objectNode()
                         .put(TAG_MATCH, matchResult.value)
                         .put(TAG_INDEX, matchResult.range.first)
                         .set<ObjectNode>(
                             TAG_GROUPS,
-                            processor.nf.arrayNode().add(matchResult.groupValues.map { TextNode(it) }.last())
+                            objectMapper.nodeFactory.arrayNode().add(
+                                matchResult.groupValues.map { TextNode(it) }.last()
+                            )
                         )
                 )
             }
         }
-        return res
+        return result
     }
 
     override fun max(array: JsonNode): DecimalNode {
-        return DecimalNode(when(array) {
-            is RangesNode -> array.indexes.maxOf{ it.asInt()}.toBigDecimal()
-            else -> processor.expand(array).filterIsInstance<NumericNode>().maxOf { it.asDouble() }.toBigDecimal()
+        return DecimalNode(when (array) {
+            is RangesNode -> array.indexes.maxOf { it.asInt() }.toBigDecimal()
+            else -> expand(array)
+                .filterIsInstance<NumericNode>()
+                .maxOf { it.asDouble() }
+                .toBigDecimal()
         })
     }
 
     override fun merge(array: ArrayNode): ObjectNode {
-        val res = processor.nf.objectNode()
+        val result = objectMapper.nodeFactory.objectNode()
         array.filterIsInstance<ObjectNode>().forEach { obj ->
             obj.fieldNames().forEach { fieldName ->
-                res.set<JsonNode>(fieldName, obj[fieldName])
+                result.set<JsonNode>(fieldName, obj[fieldName])
             }
         }
-        return res
+        return result
     }
 
     override fun millis(): DecimalNode {
-        return DecimalNode(processor.time.toEpochMilli().toBigDecimal())
+        return DecimalNode(time.toEpochMilli().toBigDecimal())
     }
 
     override fun min(array: JsonNode): DecimalNode {
-        return DecimalNode(when(array) {
-            is RangesNode -> array.indexes.minOf{ it.asInt()}.toBigDecimal()
-            else -> processor.expand(array).filterIsInstance<NumericNode>().minOf { it.asDouble() }.toBigDecimal()
+        return DecimalNode(when (array) {
+            is RangesNode -> array.indexes.minOf { it.asInt() }.toBigDecimal()
+            else -> expand(array)
+                .filterIsInstance<NumericNode>()
+                .minOf { it.asDouble() }
+                .toBigDecimal()
         })
     }
 
@@ -381,7 +494,7 @@ class Library(
                     ?.let { ZoneId.of(it.asText()) }
                     ?: ZoneId.systemDefault()
             )
-        return TextNode(dtf.format(processor.time))
+        return TextNode(dtf.format(time))
     }
 
     override fun number(arg: JsonNode?): DecimalNode {
@@ -420,10 +533,10 @@ class Library(
     }
 
     override fun random(): DecimalNode {
-        return DecimalNode(processor.random.nextDouble().toBigDecimal())
+        return DecimalNode(random.nextDouble().toBigDecimal())
     }
 
-    override fun reduce(array: ArrayNode, function: FunNode, init: FunNode): JsonNode {
+    override fun reduce(array: ArrayNode, function: FunctionNode, init: FunctionNode): JsonNode {
         TODO("Not yet implemented")
     }
 
@@ -432,7 +545,8 @@ class Library(
         str: JsonNode,
         pattern: JsonNode,
         replacement: JsonNode,
-        limit: JsonNode?): TextNode {
+        limit: JsonNode?
+    ): TextNode {
         val txt = string(str).textValue()
         val new = string(replacement).textValue()
         return TextNode(
@@ -444,13 +558,19 @@ class Library(
     }
 
     /**
-     * See [JSonataLFunctions.reverse].
+     * See [JSONataFunctionLibrary.reverse].
+     *
+     * @param array is cast to [ArrayNode] calling [expand].
      */
-    override fun reverse(array: JsonNode): ArrayNode {
-        return processor.nf.arrayNode().addAll(when(array) {
-            is RangesNode -> array.indexes.reversed()
-            else -> processor.expand(array).reversed()
-        })
+    override fun reverse(
+        array: JsonNode
+    ): ArrayNode {
+        return objectMapper.nodeFactory.arrayNode().addAll(
+            when (array) {
+                is RangesNode -> array.indexes.reversed()
+                else -> expand(array).reversed()
+            }
+        )
     }
 
     override fun round(number: DecimalNode, precision: DecimalNode?): DecimalNode {
@@ -458,27 +578,103 @@ class Library(
         return DecimalNode(number.decimalValue().setScale(scale, RoundingMode.HALF_EVEN))
     }
 
+
+    override fun sift(obj: ObjectNode, function: FunctionNode): JsonNode {
+        TODO("Not yet implemented")
+    }
+
+    override fun single(array: ArrayNode, function: FunctionNode): JsonNode {
+        TODO("Not yet implemented")
+    }
+
     /**
-     * See [JSonataLFunctions.shuffle].
+     * See [JSONataFunctionLibrary.shuffle].
+     *
+     * The [random] property is used to shuffle.
+     *
+     * @param array is cast to [ArrayNode] calling [expand].
      */
-    override fun shuffle(array: JsonNode): ArrayNode {
-        return processor.nf.arrayNode().addAll(when (array) {
-            is RangesNode -> array.indexes.shuffled(processor.random)
-            else -> processor.expand(array).shuffled(processor.random)
-        })
+    override fun shuffle(
+        array: JsonNode
+    ): ArrayNode {
+        return objectMapper.nodeFactory.arrayNode().addAll(
+            when (array) {
+                is RangesNode -> array.indexes.shuffled(random)
+                else -> expand(array).shuffled(random)
+            }
+        )
     }
 
-    override fun sift(obj: ObjectNode, function: FunNode): JsonNode {
-        TODO("Not yet implemented")
-    }
+    /**
+     * See [JSONataFunctionLibrary.sort].
+     *
+     * @param array is cast to [ArrayNode] calling [expand]:
+     * not numeric elements are converted in strings calling the [string] method.
+     *
+     * @param function can be `null`, in this case the array is sorted in ascending order,
+     * else [function] must accept two arguments:
+     * the values of the two arguments are a couple of elements of the [array] parameter.
+     * The result of [function] is cast with [boolean], if `true` the values of the
+     * `two` arguments are swapped in the returned array.
+     *
+     * @return the [array] sorted.
+     *
+     * @throws FunctionTypeException if [function] is not a [FunctionNode]
+     * or doesn't accept two arguments in its signature.
+     */
+    @Throws(
+        FunctionTypeException::class
+    )
+    override fun sort(
+        array: JsonNode,
+        function: JsonNode?
+    ): ArrayNode {
+        val expanded = expand(array)
+        return when (function) {
+            null -> objectMapper.nodeFactory.arrayNode().addAll(expanded.sortedWith { o1, o2 ->
+                when {
+                    (o1?.isNumber ?: false) && (o2?.isNumber ?: false) -> {
+                        number(o1).decimalValue().compareTo(number(o2).decimalValue())
+                    }
 
-    override fun single(array: ArrayNode, function: FunNode): JsonNode {
-        TODO("Not yet implemented")
-    }
+                    else -> string(o1).asText().compareTo(string(o2).textValue())
+                }
+            })
 
-    override fun sort(array: JsonNode, function: FunNode?): ArrayNode {
-        // val array = processor.expand(node)
-        TODO("Not yet implemented")
+            is FunctionNode -> when (function.args.size == 2) {
+                true -> when (expanded.size()) {
+                    0 -> expanded
+                    1 -> expanded
+                    else -> {
+                        for (i in 1 until expanded.size()) {
+                            val varMap = mutableMapOf<String, JsonNode?>()
+                            varMap[function.args[0]] = expanded[i - 1]
+                            varMap[function.args[1]] = expanded[i]
+                            val toSwap = boolean(
+                                Processor(
+                                    null,
+                                    varMap,
+                                    mathContext,
+                                    objectMapper,
+                                    random,
+                                    time,
+                                    this
+                                ).evaluate(function.body)
+                            )
+                            if (toSwap.booleanValue()) {
+                                expanded[i - 1] = varMap[function.args[1]]
+                                expanded[i] = varMap[function.args[0]]
+                            }
+                        }
+                        expanded
+                    }
+                }
+
+                else -> throw FunctionTypeException("$function must have two arguments.")
+            }
+
+            else -> throw FunctionTypeException.forNode(function)
+        }
     }
 
     override fun split(str: JsonNode, separator: JsonNode, limit: JsonNode?): ArrayNode {
@@ -488,36 +684,41 @@ class Library(
             is RegexNode -> _str.split(separator.regex, _limit)
             else -> _str.split((string(separator).textValue()), ignoreCase = false, limit = _limit)
         }.map { TextNode(it) }
-        return processor.nf.arrayNode().addAll(_split)
+        return objectMapper.nodeFactory.arrayNode().addAll(_split)
     }
 
     override fun spread(array: ArrayNode): ArrayNode {
-        val res = processor.nf.arrayNode()
-        processor.expand(array).filterIsInstance<ObjectNode>().forEach { obj ->
-            res.addAll(spread(obj))
-        }
-        return res
+        val result = objectMapper.nodeFactory.arrayNode()
+        expand(array)
+            .filterIsInstance<ObjectNode>()
+            .forEach { obj ->
+                result.addAll(spread(obj))
+            }
+        return result
     }
 
     override fun spread(obj: ObjectNode): ArrayNode {
-        val res = processor.nf.arrayNode()
+        val result = objectMapper.nodeFactory.arrayNode()
         obj.fieldNames().forEach { fieldName ->
-            res.add(processor.nf.objectNode().set<JsonNode>(fieldName, obj[fieldName]))
+            result.add(objectMapper.nodeFactory.objectNode().set<JsonNode>(fieldName, obj[fieldName]))
         }
-        return res
+        return result
     }
 
     override fun sqrt(number: DecimalNode): DecimalNode {
         return DecimalNode(kotlin.math.sqrt(number.asDouble()).toBigDecimal())
     }
 
+    /**
+     * `null` values are represented
+     */
     override fun string(arg: JsonNode?, prettify: BooleanNode?): TextNode {
         return when (arg) {
             is TextNode -> arg
             else -> TextNode(
                 when (prettify?.asBoolean() ?: false) {
-                    true -> processor.om.writerWithDefaultPrettyPrinter().writeValueAsString(arg)
-                    else -> processor.om.writeValueAsString(arg)
+                    true -> objectMapper.writerWithDefaultPrettyPrinter().writeValueAsString(arg)
+                    else -> objectMapper.writeValueAsString(arg)
                 }
             )
         }
@@ -543,8 +744,11 @@ class Library(
     }
 
     override fun sum(array: JsonNode): DecimalNode {
-        val arr = processor.expand(array)
-        return DecimalNode(arr.filterIsInstance<NumericNode>().sumOf { it.decimalValue() })
+        return DecimalNode(
+            expand(array)
+                .filterIsInstance<NumericNode>()
+                .sumOf { it.decimalValue() }
+        )
     }
 
     override fun toMillis(timestamp: TextNode, picture: TextNode?): DecimalNode {
@@ -566,7 +770,7 @@ class Library(
                 is NullNode -> IS_NULL
                 is ArrayNode -> IS_ARRAY
                 is BooleanNode -> IS_BOOLEAN
-                is FunNode -> IS_FUNCTION
+                is FunctionNode -> IS_FUNCTION
                 is NumericNode -> IS_NUMBER
                 is ObjectNode -> IS_OBJECT
                 is TextNode -> IS_STRING
@@ -579,23 +783,28 @@ class Library(
         return TextNode(string(str).textValue().uppercase())
     }
 
+    /**
+     * See [JSONataFunctionLibrary.zip].
+     *
+     * @param arrays elements are cast with [expand].
+     */
     override fun zip(vararg arrays: JsonNode): ArrayNode {
-        val matrix = arrays.map { processor.expand(it) }
+        val matrix = arrays.map { expand(it) }
         var len = Int.MAX_VALUE
         matrix.forEach { array ->
             len = min(len, array.size())
         }
-        val res = processor.nf.arrayNode()
+        val result = objectMapper.nodeFactory.arrayNode()
         for (i in 0 until len) {
-            res.add(processor.nf.arrayNode())
+            result.add(objectMapper.nodeFactory.arrayNode())
             for (j in matrix.indices) {
                 if (i < matrix[j].size()) {
-                    (res[i] as ArrayNode).add(matrix[j][i])
+                    (result[i] as ArrayNode).add(matrix[j][i])
                 }
             }
         }
-        return res
+        return result
     }
 
-}
+} //~ Library
 

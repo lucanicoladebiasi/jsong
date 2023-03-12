@@ -45,7 +45,7 @@ class TestFunctionalProgramming {
     @Test
     fun `defining a function`() {
         val expression = "function(\$l, \$w, \$h){ \$k * \$w * \$h }"
-        val expected = FunNode(listOf("l", "w", "h"), "\$k*\$w*\$h")
+        val expected = FunctionNode(listOf("l", "w", "h"), "\$k*\$w*\$h")
         val actual = Processor().evaluate(expression)
         assertEquals(expected, actual)
     }

@@ -29,14 +29,26 @@ import com.fasterxml.jackson.databind.node.*
 /**
  * This interface defines the built-in functions library defined by the JSONata language.
  *
+ * The documentation is derived from the JSONata Function Library
+ * * [Array functions](https://docs.jsonata.org/array-functions)
+ * * [Boolean functions](https://docs.jsonata.org/boolean-functions)
+ * * [Date/Time functions](https://docs.jsonata.org/date-time-functions)
+ * * [Higher order functions](https://docs.jsonata.org/higher-order-functions)
+ * * [Numeric functions](https://docs.jsonata.org/numeric-functions)
+ * * [Numeric aggregation functions](https://docs.jsonata.org/aggregation-functions)
+ * * [Object functions](https://docs.jsonata.org/object-functions)
+ * * [String functions ](https://docs.jsonata.org/string-functions)
+ *
+ * Implementation of this interface can differ from the official JSON specifications described here:
+ * see the documentatuion of the implementations for specific differences.
+ *
  * @see Library
  */
-interface JSonataLFunctions {
+interface JSONataFunctionLibrary {
 
     // https://docs.jsonata.org/array-functions
 
     /**
-     *
      * Returns an array containing the values in [array1] followed by the values in [array2].
      * If either parameter is not an array, then it is treated as a singleton array containing that value.
      *
@@ -101,7 +113,7 @@ interface JSonataLFunctions {
      * @see [sort](https://docs.jsonata.org/array-functions#sort)
      *
      */
-    fun sort(array: JsonNode, function: FunNode? = null): ArrayNode
+    fun sort(array: JsonNode, function: JsonNode? = null): ArrayNode
 
     /**
      * Returns a convolved (zipped) array containing grouped [arrays] of values from the `array1 ... arrayN`
@@ -162,7 +174,7 @@ interface JSonataLFunctions {
      *
      * @param picture   If omitted, then the timestamp is formatted in the ISO 8601 format.
      *                  If the optional string is supplied, then the timestamp is formatted
-     *                  occording to the representation specified in that string.
+     *                  according to the representation specified in that string.
      *
      * @param timezone  If supplied, then the formatted timestamp will be in that timezone.
      *                  The timezone string should be in the format `±HHMM`,
@@ -219,7 +231,7 @@ interface JSonataLFunctions {
      *
      * @see [filter](https://docs.jsonata.org/higher-order-functions#filter)
      */
-    fun filter(array: ArrayNode, function: FunNode): ArrayNode
+    fun filter(array: ArrayNode, function: FunctionNode): ArrayNode
 
     /**
      * Returns an array containing the results of applying the [function] parameter to each value in the [array]
@@ -235,7 +247,7 @@ interface JSonataLFunctions {
      *
      * @see [map](https://docs.jsonata.org/higher-order-functions#map)
      */
-    fun map(array: ArrayNode, function: FunNode): ArrayNode
+    fun map(array: ArrayNode, function: FunctionNode): ArrayNode
 
     /**
      * Returns an aggregated value derived from applying the [function] parameter successively
@@ -249,7 +261,7 @@ interface JSonataLFunctions {
      *
      * @see [reduce](https://docs.jsonata.org/higher-order-functions#reduce)
      */
-    fun reduce(array: ArrayNode, function: FunNode, init: FunNode): JsonNode
+    fun reduce(array: ArrayNode, function: FunctionNode, init: FunctionNode): JsonNode
 
     /**
      * Returns an object that contains only the key/value pairs from the [obj] parameter
@@ -268,7 +280,7 @@ interface JSonataLFunctions {
      *
      * @see [sift](https://docs.jsonata.org/higher-order-functions#reduce)
      */
-    fun sift(obj: ObjectNode, function: FunNode): JsonNode
+    fun sift(obj: ObjectNode, function: FunctionNode): JsonNode
 
     /**
      * Returns the one and only one value in the [array] parameter that satisfy the function predicate
@@ -285,7 +297,7 @@ interface JSonataLFunctions {
      *
      * @see [single](https://docs.jsonata.org/higher-order-functions#single)
      */
-    fun single(array: ArrayNode, function: FunNode): JsonNode
+    fun single(array: ArrayNode, function: FunctionNode): JsonNode
 
 
     // https://docs.jsonata.org/aggregation-functions
@@ -485,59 +497,108 @@ interface JSonataLFunctions {
      */
     fun sqrt(number: DecimalNode): DecimalNode
 
+
     // https://docs.jsonata.org/object-functions
 
     /**
-     * https://docs.jsonata.org/object-functions#assert
+     * If [condition] is `true`, the function returns undefined.
+     * If the [condition] is `false`, an exception is thrown with the [message] as the message of the exception.
+     *
+     * @see [assert](https://docs.jsonata.org/object-functions#assert)
      */
     @Throws(AssertionError::class)
     fun assert(condition: JsonNode, message: JsonNode): BooleanNode
 
     /**
-     * https://docs.jsonata.org/object-functions#each
+     * Returns an array containing the values return by the function when applied to each key/value pair in the [obj].
+     *
+     * The [function] parameter will get invoked with two arguments:
+     *
+     * `function(value, name)`
+     *
+     * where the value `parameter` is the value of each name/value pair in the object and name is its name.
+     * The `name` parameter is optional.
+     *
+     * @see [each](https://docs.jsonata.org/object-functions#each)
      */
-    fun each(obj: ObjectNode, function: FunNode): ArrayNode
+    fun each(obj: ObjectNode, function: FunctionNode): ArrayNode
 
     /**
-     * https://docs.jsonata.org/object-functions#error
+     * Deliberately throws an error with an optional [message].
+     *
+     * @see [error]https://docs.jsonata.org/object-functions#error
      */
     @Throws(Error::class)
-    fun error(message: JsonNode)
+    fun error(message: JsonNode?)
 
     /**
-     * https://docs.jsonata.org/object-functions#keys
+     * Returns an array containing a de-duplicated list of all the keys in all of the objects of the [array].
+     *
+     * @see [keys](https://docs.jsonata.org/object-functions#keys)
      */
     fun keys(array: ArrayNode): ArrayNode
 
     /**
-     * https://docs.jsonata.org/object-functions#keys
+     * Returns an array containing the keys in the [obj].
+     *
+     * @see [keys](https://docs.jsonata.org/object-functions#keys)
      */
     fun keys(obj: ObjectNode): ArrayNode
 
     /**
-     * https://docs.jsonata.org/object-functions#lookup
+     * Search all the objects part of the [array] returning all the values associated with all occurrences of [key].
+     *
+     * @see [lookup](https://docs.jsonata.org/object-functions#lookup)
      */
     fun lookup(array: ArrayNode, key: TextNode): JsonNode?
 
     /**
-     * https://docs.jsonata.org/object-functions#lookup
+     * Returns the value associated with key in [obj].
+     *
+     * @see [lookup](https://docs.jsonata.org/object-functions#lookup)
      */
     fun lookup(obj: ObjectNode, key: TextNode): JsonNode?
 
+    /**
+     * Merges an [array] of objects into a single object containing
+     * all the key/value pairs from each of the objects in the input array.
+     * If any of the input objects contain the same key,
+     * then the returned object will contain the value of the last one in the array.
+     *
+     * It is an error if the input array contains an item that is not an object.
+     *
+     * @see [merge](https://docs.jsonata.org/object-functions#merge)
+     */
     fun merge(array: ArrayNode): ObjectNode
 
     /**
-     * https://docs.jsonata.org/object-functions#spread
+     * Return an array containing an object for every key/value pair in every object in the supplied [array].
+     *
+     * @see [spread](https://docs.jsonata.org/object-functions#spread)
      */
     fun spread(array: ArrayNode): ArrayNode
 
     /**
-     * https://docs.jsonata.org/object-functions#spread
+     * Splits an object containing key/value pairs into an array of objects,
+     * each of which has a single key/value pair from the input [obj].
+     *
+     * @see [spread](https://docs.jsonata.org/object-functions#spread)
      */
     fun spread(obj: ObjectNode): ArrayNode
 
     /**
-     * https://docs.jsonata.org/object-functions#type
+     * Evaluates the type of [value] and returns one of the following strings:
+     * * `null`
+     * * `number`
+     * * `string`
+     * * `boolean`
+     * * `array`
+     * * `object`
+     * * `function`
+     *
+     * Returns `undefined` when value is undefined/not recognized.
+     *
+     * @see [type](https://docs.jsonata.org/object-functions#type)
      */
     fun type(value: JsonNode?): TextNode
 
@@ -545,109 +606,309 @@ interface JSonataLFunctions {
     // https://docs.jsonata.org/string-functions
 
     /**
-     * https://docs.jsonata.org/string-functions#base64encode
+     * Converts base 64 encoded bytes to a string, using a UTF-8 Unicode codepage.
+     *
+     * @param str base 64 encoded bytes.
+     *
+     * @see [base64decode](https://docs.jsonata.org/string-functions#base64decode)
      */
     fun base64decode(str: JsonNode): TextNode
 
     /**
+     * Converts an ASCII string to a base 64 representation.
+     *
+     * Each character in the [str] is treated as a byte of binary data.
+     * This requires that all characters in the string are in the `0x00` to `0xFF` range,
+     * which includes all characters in URI encoded strings.
+     *
+     * Unicode characters outside of that range are not supported.
      * https://docs.jsonata.org/string-functions#base64encode
+     *
+     * @see [base64encode](https://docs.jsonata.org/string-functions#base64encode)
      */
     fun base64encode(str: JsonNode): TextNode
 
     /**
-     * https://docs.jsonata.org/string-functions#contains
+     * Returns `true` if [str] is matched by pattern,
+     * otherwise it returns `false`.
+     *
+     * If [str] is not specified (i.e. this function is invoked with one argument),
+     * then the context value is used as the value of [str].
+     *
+     * The [pattern] parameter can either be a string or a regular expression (regex).
+     * * If it is a string, the function returns `true`
+     *   if the characters within pattern are contained contiguously within str.
+     * * If it is a regex, the function will return true if the regex matches the contents of [str].
+     *
+     * @see [contains](https://docs.jsonata.org/string-functions#contains)
      */
     fun contains(str: JsonNode, pattern: JsonNode): BooleanNode
 
     /**
-     * https://docs.jsonata.org/string-functions#decodeurl
+     * Decodes a Uniform Resource Locator (URL) previously created by [encodeUrl].
+     *
+     * @param str content to decode.
+     *
+     * @see [decodeUrl](https://docs.jsonata.org/string-functions#decodeurl)
      */
     fun decodeUrl(str: JsonNode): TextNode
 
     /**
-     * https://docs.jsonata.org/string-functions#decodeurlcomponent
+     * Decodes a Uniform Resource Locator (URL) component previously created by [encodeUrlComponent].
+     *
+     * @param str content to decode.
+     *
+     * @see [decodeUrlComponent](https://docs.jsonata.org/string-functions#decodeurlcomponent)
      */
     fun decodeUrlComponent(str: JsonNode): TextNode
 
     /**
-     * https://docs.jsonata.org/string-functions#encodeurl
+     * Encodes a Uniform Resource Locator (URL) by replacing each instance of certain characters
+     * by one, two, three, or four escape sequences representing the UTF-8 encoding of the character.
+     *
+     * @param str content to encode.
+     *
+     * @see [encodeUrl](https://docs.jsonata.org/string-functions#encodeurl)
      */
     fun encodeUrl(str: JsonNode): TextNode
 
     /**
-     * https://docs.jsonata.org/string-functions#encodeurlcomponent
+     * Encodes a Uniform Resource Locator (URL) component by replacing each instance of certain characters
+     * by one, two, three, or four escape sequences representing the UTF-8 encoding of the character.
+     *
+     * @param str content to encode.
+     *
+     * @see [encodeUrlComponent](https://docs.jsonata.org/string-functions#encodeurlcomponent)
      */
     fun encodeUrlComponent(str: JsonNode): TextNode
 
     /**
-     * https://docs.jsonata.org/string-functions#eval
+     * Parses and evaluates the string [expr] which contains literal JSON or a JSONata expression
+     * using the current context as the context for evaluation.
+     *
+     * @see [eval](https://docs.jsonata.org/string-functions#eval)
      */
     fun eval(expr: JsonNode, context: JsonNode? = null): JsonNode?
 
     /**
-     * https://docs.jsonata.org/string-functions#join
+     * Joins an [array] of component strings into a single concatenated string
+     * with each component string separated by the optional [separator] parameter.
+     *
+     * It is an error if the input [array] contains an item which isn't a string.
+     *
+     * If [separator] is not specified, then it is assumed to be the empty string,
+     * i.e. no separator between the component strings.
+     * It is an error if separator is not a string.
+     *
+     * @see [join](https://docs.jsonata.org/string-functions#join)
      */
     fun join(array: JsonNode, separator: JsonNode? = null): TextNode
 
     /**
-     * https://docs.jsonata.org/string-functions#length
+     * Returns the number of characters in the string [str].
+     *
+     * If [str] is not specified (i.e. this function is invoked with no arguments),
+     * then the context value is used as the value of [str].
+     *
+     * An error is thrown if [str] is not a string.
+     *
+     * @see [length](https://docs.jsonata.org/string-functions#length)
      */
     fun length(str: JsonNode): DecimalNode
 
     /**
-     * https://docs.jsonata.org/string-functions#lowercase
+     * Returns a string with all the characters of str converted to lowercase from [str] content.
+     *
+     * If [str] is not specified (i.e. this function is invoked with no arguments),
+     * then the context value is used as the value of [str].
+     *
+     * An error is thrown if [str] is not a string.
+     *
+     * @see [lowercase](https://docs.jsonata.org/string-functions#lowercase)
      */
     fun lowercase(str: JsonNode): TextNode
 
     /**
-     * https://docs.jsonata.org/string-functions#join
+     * Applies the [str] string to the [pattern] regular expression and returns an array of objects,
+     * with each object containing information about each occurrence of a match withing [str].
+     *
+     * The object contains the following fields:
+     * * `match` - the substring that was matched by the regex.
+     * * `index` - the offset (starting at zero) within str of this match.
+     * * `groups` - if the regex contains capturing groups (parentheses),
+     *    this contains an array of strings representing each captured group.
+     *
+     * If [str] is not specified, then the context value is used as the value of [str].
+     *
+     * It is an error if [str] is not a string.
+     *
+     * @see [match](https://docs.jsonata.org/string-functions#join)
      */
     fun match(str: JsonNode, pattern: JsonNode, limit: JsonNode? = null): ArrayNode
 
     /**
-     * https://docs.jsonata.org/string-functions#pad
+     * Returns a copy of the string [str] with extra padding,
+     * if necessary,
+     * so that its total number of characters is at least the absolute value of the [width] parameter.
+     *
+     * If [width] is a positive number, then the string is padded to the right;
+     * if negative, it is padded to the left.
+     *
+     * The optional [char] argument specifies the padding character(s) to use.
+     * If not specified, it defaults to the space character.
+     *
+     * @see [pad](https://docs.jsonata.org/string-functions#pad)
      */
     fun pad(str: JsonNode, width: JsonNode, char: JsonNode? = null): TextNode
 
     /**
-     * https://docs.jsonata.org/string-functions#replace
+     * Finds occurrences of pattern within [str] and replaces them with [replacement].
+     *
+     * If [str] is not specified, then the context value is used as the value of [str].
+     *
+     * It is an error if [str] is not a string.
+     *
+     * The [pattern] parameter can either be a string or a regular expression (regex).
+     * * If it is a string, it specifies the substring(s) within str which should be replaced.
+     * * If it is a regex, its is used to find.
+     *
+     * The [replacement] parameter can either be a string or a function.
+     * * If it is a string, it specifies the sequence of characters
+     *   that replace the substring(s) that are matched by pattern.
+     * * If pattern is a regex,
+     *   then the replacement string can refer to the characters that were matched by the regex
+     *   as well as any of the captured groups using a `$` followed by a number `N`:
+     *      * If `N = 0`, then it is replaced by substring matched by the regex as a whole.
+     *      * If `N > 0`, then it is replaced by the substring captured by the Nth parenthesised group in the regex.
+     *      * If `N` is greater than the number of captured groups, then it is replaced by the empty string.
+     *      * A literal `$` character must be written as `$$` in the replacement string.
+     *
+     * If the [replacement] parameter is a function,
+     * then it is invoked for each match occurrence of the pattern regex.
+     * The [replacement] function must take a single parameter which will be the object structure of a regex match
+     * as described in the $[match] function; and must return a string.
+     *
+     * The optional [limit] parameter,
+     * is a number that specifies the maximum number of replacements to make before stopping.
+     * The remainder of the input beyond this limit will be copied to the output unchanged.
+     *
+     * @see [replace](https://docs.jsonata.org/string-functions#replace)
      */
     fun replace(str: JsonNode, pattern: JsonNode, replacement: JsonNode, limit: JsonNode? = null): TextNode
 
     /**
-     * https://docs.jsonata.org/string-functions#split
+     * Splits the [str] parameter into an array of substrings.
+     *
+     * If [str] is not specified, then the context value is used as the value of str.
+     *
+     * It is an error if [str] is not a string.
+     *
+     * The [separator] parameter can either be a string or a regular expression (regex).
+     * * If it is a string, it specifies the characters within str about which it should be split.
+     * * If it is the empty string, [str] will be split into an array of single characters.
+     * * If it is a regex, it splits the string around any sequence of characters that match the regex.
+     *
+     * The optional [limit] parameter is a number that specifies the maximum number of substrings
+     * to include in the resultant array.
+     * Any additional substrings are discarded. If limit is not specified,
+     * then [str] is fully split with no limit to the size of the resultant array.
+     *
+     * It is an error if [limit] is not a non-negative number.
+     *
+     * @see [split](https://docs.jsonata.org/string-functions#split)
      */
     fun split(str: JsonNode, separator: JsonNode, limit: JsonNode? = null): ArrayNode
 
     /**
-     * https://docs.jsonata.org/string-functions#string
+     * Casts the [arg] parameter to a string using the following casting rules
+     * * Strings are unchanged;
+     * * Functions are converted to an empty string;
+     * * Numeric infinity and NaN throw an error because they cannot be represented as a JSON number;
+     * * All other values are converted to a JSON string using the JSON.stringify function.
+     *
+     * If [arg] is not specified (i.e. this function is invoked with no arguments),
+     * then the context value is used as the value of [arg].
+     *
+     * If [prettify] is true, then "prettified" JSON is produced
+     * i.e one line per field and lines will be indented based on the field depth.
+     *
+     * @see [string](https://docs.jsonata.org/string-functions#string)
      */
     fun string(arg: JsonNode?, prettify: BooleanNode? = null): TextNode
 
     /**
-     * https://docs.jsonata.org/string-functions#substring
+     * Returns a string containing the characters in the first parameter [str]
+     * starting at position [start] (zero-offset).
+     *
+     * If [str] is not specified (i.e. this function is invoked with only the numeric argument(s)),
+     * then the context value is used as the value of [str].
+     *
+     * An error is thrown if [str] is not a string.
+     *
+     * If [length] is specified, then the substring will contain maximum length characters.
+     *
+     * If [start] is negative then it indicates the number of characters from the end of str.
+     * See [substr](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/substr)
+     * for full definition.
+     *
+     * @see [substring](https://docs.jsonata.org/string-functions#substring)
      */
     fun substring(str: JsonNode, start: DecimalNode, length: DecimalNode? = null): TextNode
 
     /**
-     * https://docs.jsonata.org/string-functions#substringafter
+     * Returns the substring after the first occurrence of the character sequence chars in [str].
+     *
+     * If [str] is not specified (i.e. this function is invoked with only one argument),
+     * then the context value is used as the value of [str].
+     *
+     * If [str] does not contain chars, then it returns [str].
+     *
+     * An error is thrown if [str] and [chars] are not strings.
+     *
+     * @see [substringAfter](https://docs.jsonata.org/string-functions#substringafter)
      */
     fun substringAfter(str: JsonNode, chars: TextNode): TextNode
 
     /**
-     * https://docs.jsonata.org/string-functions#substringbefore
+     * Returns the substring before the first occurrence of the character sequence [chars] in [str].
+     *
+     * If [str] is not specified (i.e. this function is invoked with only one argument),
+     * then the context value is used as the value of str.
+     *
+     * If [str] does not contain chars, then it returns [str].
+     *
+     * An error is thrown if [str] and chars are not strings.
+     *
+     * @see [substringBefore](https://docs.jsonata.org/string-functions#substringbefore)
      */
     fun substringBefore(str: JsonNode, chars: TextNode): TextNode
 
     /**
-     * https://docs.jsonata.org/string-functions#trim
+     * Normalizes and trims all whitespace characters in [str] by applying the following steps:
+     * * All tabs, carriage returns, and line feeds are replaced with spaces.
+     * * Contiguous sequences of spaces are reduced to a single space.
+     * * Trailing and leading spaces are removed.
+     *
+     * If [str] is not specified (i.e. this function is invoked with no arguments),
+     * then the context value is used as the value of [str].
+     *
+     * An error is thrown if [str] is not a string.
+     *
+     * @see [trim](https://docs.jsonata.org/string-functions#trim)
      */
     fun trim(str: JsonNode): TextNode
 
     /**
-     * https://docs.jsonata.org/string-functions#uppercase
+     * Returns a string with all the characters of [str] converted to uppercase.
+     *
+     * If [str] is not specified (i.e. this function is invoked with no arguments),
+     * then the context value is used as the value of [str].
+     *
+     * An error is thrown if [str] is not a string.
+     *
+     * @see [uppercase](https://docs.jsonata.org/string-functions#uppercase)
      */
     fun uppercase(str: JsonNode): TextNode
 
-}
+} //~ JSonataFunctions
 

@@ -371,9 +371,8 @@ class TestPathOperators {
     fun `Positional variable binding`() {
         val expression = "library.books#\$i[\"Kernighan\" in authors].{\"title\": title, \"index\": \$i }"
 
-
         @Language("JSON")
-        val expected = TestResources.mapper.readTree(
+        val expected = Processor().objectMapper.readTree(
             """
             [
               {

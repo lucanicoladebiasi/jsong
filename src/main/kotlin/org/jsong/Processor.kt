@@ -15,7 +15,7 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
@@ -76,13 +76,13 @@ import kotlin.reflect.full.memberFunctions
  * instance for this processor.
  */
 class Processor(
-    val root: JsonNode? = null,
-    val varMap: MutableMap<String, JsonNode?> = mutableMapOf(),
-    val mathContext: MathContext = MathContext.DECIMAL128,
+    private val root: JsonNode? = null,
+    private val varMap: MutableMap<String, JsonNode?> = mutableMapOf(),
+    private val mathContext: MathContext = MathContext.DECIMAL128,
     val objectMapper: ObjectMapper = ObjectMapper(),
-    val random: Random = Random.Default,
+    private val random: Random = Random.Default,
     val time: Instant = Instant.now(),
-    val lib: JSONataFunctionLibrary = Library(mathContext, objectMapper, random, time)
+    private val lib: JSONataFunctionLibrary = Library(mathContext, objectMapper, random, time)
 ) : JSongBaseVisitor<JsonNode?>() {
 
     companion object {
@@ -116,7 +116,7 @@ class Processor(
     private var context = root
 
     /**
-     * Store the index when [visitFilter] and [visitMap] ([visitMapctx], [visitMappos])  iterate and retrieve
+     * Store the index when [visitFilter] and [visitMap], [visitMapctx], [visitMappos]  iterate and retrieve
      * variables stored in [varMap].
      */
     private val indexStack = ArrayDeque<Int>()
@@ -224,7 +224,7 @@ class Processor(
     ): JsonNode? {
         try {
             val method = lib::class.memberFunctions.first { name == it.name }
-            val requiredParameters = method.parameters.filter { it.isOptional == false }.size - 1
+            val requiredParameters = method.parameters.filter { !it.isOptional }.size - 1
             if (requiredParameters > 0 && args.size < requiredParameters) {
                 args.add(0, context)
             }
@@ -287,6 +287,8 @@ class Processor(
      * * being a [RangesNode] instance if [node] is a [RangesNode] instance,
      * * having the [node] element if [node] isn't an array,
      * * the [node] itself if it is a not empty array.
+     *
+     * @see visitExpand
      */
     private fun expand(
         node: JsonNode?
@@ -639,11 +641,11 @@ class Processor(
     }
 
     /**
-     * Return the [DecimalNode] from `ctx` matching
+     * Return the [DecimalNode] from [ctx] matching
      *
      * ` | lhs = exp '/' rhs = exp                       #div`.
      *
-     * @return `lhs` [divided](https://docs.jsonata.org/numeric-operators#-division) by 'rhs`
+     * @return `lhs` [divided](https://docs.jsonata.org/numeric-operators#-division) by `rhs`.
      * cast as numbers calling [JSONataFunctionLibrary.number].
      */
     override fun visitDiv(
@@ -654,26 +656,70 @@ class Processor(
         return DecimalNode(lhs.decimalValue().divide(rhs.decimalValue(), mathContext))
     }
 
-    override fun visitEq(ctx: JSongParser.EqContext): JsonNode? {
+    /**
+     * Return the [BooleanNode] from [ctx] matching
+     *
+     * `| lhs = exp '='  rhs = exp`.
+     *
+     * @return `true` if `lhs` is [equal](https://docs.jsonata.org/expressions#comparison-expressions) to `rhs`,
+     * else `false`.
+     */
+    override fun visitEq(
+        ctx: JSongParser.EqContext
+    ): BooleanNode {
         val lhs = visit(ctx.lhs)
-        println(lhs?.textValue())
         val rhs = visit(ctx.rhs)
-        println(rhs?.textValue())
         return BooleanNode.valueOf(lhs == rhs)
     }
 
-
-    override fun visitExpand(ctx: JSongParser.ExpandContext): JsonNode {
+    /**
+     * Return the [ArrayNode] from [ctx] matching
+     *
+     * `| exp'[' ']'                                    #expand`
+     *
+     * @return the evaluation of `exp` and [expand] it as [ArrayNode],
+     * flag [isToReduce] to `false` to avoid to [reduce] the following steps of [evaluate] processing.
+     *
+     * See [Array constructor](https://docs.jsonata.org/construction#array-constructors) in JSONata documentation.
+     */
+    override fun visitExpand(
+        ctx: JSongParser.ExpandContext
+    ): ArrayNode {
         val result = expand(visit(ctx.exp()))
         isToReduce = false
         return result
     }
 
-    override fun visitField(ctx: JSongParser.FieldContext): JsonNode? {
+    /**
+     * Return the [JsonNode] from [ctx] matching
+     *
+     * ` | path     #select``.
+     *
+     * @return the [JsonNode] selected by the `path`, if any, else `null`.
+     *
+     * See [Navigation JSON objects](https://docs.jsonata.org/simple#navigating-json-objects) in JSONata documentation.
+     */
+    override fun visitField(
+        ctx: JSongParser.FieldContext
+    ): JsonNode? {
         return select(context, ctx.text)
     }
 
-    override fun visitFilter(ctx: JSongParser.FilterContext): JsonNode? {
+    /**
+     * Return the [JsonNode] from [ctx] matching
+     *
+     * `| lhs = exp'['  rhs = exp ']'                   #filter`.
+     *
+     * This method calls [shrink] to keep the size of referred contextual and positional variables in scope
+     * of the same size of the result.
+     *
+     * @return the [JsonNode] where `rhs` [filter](https://docs.jsonata.org/path-operators#---filter) the result of
+     * `lhs` evaluation.
+     * It can be `null`.
+     */
+    override fun visitFilter(
+        ctx: JSongParser.FilterContext
+    ): JsonNode? {
         val result = objectMapper.nodeFactory.arrayNode()
         val lhs = expand(visit(ctx.lhs))
         val predicate = BooleanArray(lhs.size())
@@ -724,6 +770,11 @@ class Processor(
      * Return the [FunctionNode] from [ctx] content matching
      *
      * `fun:  ('fun'|'function') '(' ('$' lbl (',' '$' lbl)*)? ')' '{' exp '}';`.
+     *
+     * @return the [FunctionNode] [defined](https://docs.jsonata.org/programming#defining-a-function)
+     * by the `fun` expression.
+     *
+     * @see visitDefine
      */
     override fun visitFun(
         ctx: JSongParser.FunContext
@@ -738,7 +789,9 @@ class Processor(
      *
      * `| '$' lbl                                       #recall`.
      *
-     * @return the [JsonNode] mapped in [varMap] with the `lbl` key, it can be `null`.
+     * @return the [JsonNode]
+     * [mapped](https://docs.jsonata.org/programming#variables)
+     * in [varMap] with the `lbl` key, it can be `null`.
      *
      * @see visitSet
      */
@@ -765,7 +818,20 @@ class Processor(
         }
     }
 
-    override fun visitGt(ctx: JSongParser.GtContext): JsonNode? {
+    /**
+     * Return the [BooleanNode] from [ctx] matching
+     *
+     * `| lhs = exp '>'  rhs = exp                      #gt`.
+     *
+     * @return `true` if `lhs` is [
+     * greater then](https://docs.jsonata.org/comparison-operators#-greater-than) `rhs`:
+     * * if both `lhs` and `rhs` are numbers the comparison is between number,
+     * * else both `lhs` and `rhs` are cast to string calling [JSONataFunctionLibrary.string] then the comparison
+     * is done between strings.
+     */
+    override fun visitGt(
+        ctx: JSongParser.GtContext
+    ): BooleanNode? {
         val lhs = visit(ctx.lhs)
         val rhs = visit(ctx.rhs)
         val result = BooleanNode.valueOf(
@@ -777,7 +843,20 @@ class Processor(
         return result
     }
 
-    override fun visitGte(ctx: JSongParser.GteContext): JsonNode? {
+    /**
+     * Return the [BooleanNode] from [ctx] matching
+     *
+     * ` | lhs = exp '>=' rhs = exp                      #gte`.
+     *
+     * @return `true` if `lhs` is
+     * [greater then or equal](https://docs.jsonata.org/comparison-operators#-greater-than-or-equals) `rhs`:
+     * * if both `lhs` and `rhs` are numbers the comparison is between number,
+     * * else both `lhs` and `rhs` are cast to string calling [JSONataFunctionLibrary.string] then the comparison
+     * is done between strings.
+     */
+    override fun visitGte(
+        ctx: JSongParser.GteContext
+    ): BooleanNode {
         val lhs = visit(ctx.lhs)
         val rhs = visit(ctx.rhs)
         val result = BooleanNode.valueOf(
@@ -877,10 +956,10 @@ class Processor(
         return result
     }
 
+    @Suppress("DuplicatedCode")
     override fun visitMap(ctx: JSongParser.MapContext): JsonNode? {
         val result = objectMapper.nodeFactory.arrayNode()
-        val lhs = expand(visit(ctx.lhs))
-        when (lhs) {
+        when (val lhs = expand(visit(ctx.lhs))) {
             is RangesNode -> lhs.indexes.forEach { context ->
                 this.context = context
                 when (val rhs = visit(ctx.rhs)) {
@@ -902,6 +981,7 @@ class Processor(
         return reduce(result)
     }
 
+    @Suppress("DuplicatedCode")
     override fun visitMapctx(ctx: JSongParser.MapctxContext): JsonNode? {
         val result = objectMapper.nodeFactory.arrayNode()
         val lhs = expand(visit(ctx.lhs))
@@ -927,10 +1007,10 @@ class Processor(
         return reduce(visitCtx(ctx.ctx(), lhs, result))
     }
 
+    @Suppress("DuplicatedCode")
     override fun visitMappos(ctx: JSongParser.MapposContext): JsonNode? {
         val result = objectMapper.nodeFactory.arrayNode()
-        val lhs = expand(visit(ctx.lhs))
-        when (lhs) {
+        when (val lhs = expand(visit(ctx.lhs))) {
             is RangesNode -> lhs.indexes.forEach { context ->
                 this.context = context
                 when (val rhs = visit(ctx.rhs)) {
@@ -958,7 +1038,8 @@ class Processor(
      *
      * `| lhs = exp '%' rhs = exp                       #mod`.
      *
-     * @return the remainder of the integer division `lhs` divided by `rhs`.
+     * @return the remainder of the integer division `lhs` divided by `rhs`
+     * cast as numbers calling [JSONataFunctionLibrary.number].
      */
     override fun visitMod(
         ctx: JSongParser.ModContext

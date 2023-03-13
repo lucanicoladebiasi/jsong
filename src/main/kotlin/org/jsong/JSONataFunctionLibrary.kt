@@ -40,7 +40,7 @@ import com.fasterxml.jackson.databind.node.*
  * * [String functions ](https://docs.jsonata.org/string-functions)
  *
  * Implementation of this interface can differ from the official JSON specifications described here:
- * see the documentatuion of the implementations for specific differences.
+ * see the documentation of the implementations for specific differences.
  *
  * @see Library
  */

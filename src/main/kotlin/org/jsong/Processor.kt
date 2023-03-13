@@ -400,7 +400,7 @@ class Processor(
     /**
      * Return the [DecimalNode] from the [ctx] content matching
      *
-     * ` | lhs = exp '+' rhs = exp                       #add`.
+     * `| lhs = exp '+' rhs = exp                       #add`.
      *
      * @return the [sum](https://docs.jsonata.org/numeric-operators#-addition)
      * of `lhs` plus `rhs` cast calling [JSONataFunctionLibrary.number].
@@ -416,7 +416,7 @@ class Processor(
     /**
      * Return the [JsonNode] from [ctx] content matching
      *
-     *  ` | '*'   #all`.
+     *  `| '*'   #all`.
      *
      *  @return an [ArrayNode] with all the elements properties of the [context] if the [context] is an [ObjectNode],
      *  else `null`.
@@ -438,7 +438,7 @@ class Processor(
     /**
      * Return the [BooleanNode] from [ctx] matching
      *
-     * ` | lhs = exp '+' rhs = exp                       #add`.
+     * `| lhs = exp '+' rhs = exp                       #add`.
      *
      * @return the boolean `lhs` [and](https://docs.jsonata.org/boolean-operators#and-boolean-and) `rhs`
      * cast calling [JSONataFunctionLibrary.boolean].
@@ -454,7 +454,7 @@ class Processor(
     /**
      * Return the [TextNode] from [ctx] matching
      *
-     * ` | lhs = exp '+' rhs = exp                       #add`.
+     * `| lhs = exp '+' rhs = exp                       #add`.
      *
      * @return the `rhs` [appended](https://docs.jsonata.org/other-operators#-concatenation) to `lhs`
      * cast to string calling [JSONataFunctionLibrary.string].
@@ -546,7 +546,7 @@ class Processor(
     /**
      * Return the [JsonNode] from the [ctx] matching
      *
-     * ` | lhs = exp '~>' rhs = exp                      #chain`.
+     * `| lhs = exp '~>' rhs = exp                      #chain`.
      *
      * @return the [JsonNode] resulting from the [chain](https://docs.jsonata.org/other-operators#-chain)
      * operation between `lhs` and `rhs`.
@@ -562,7 +562,7 @@ class Processor(
     /**
      * Return the [JsonNode] from the [ctx] matching
      *
-     * ` | '$'   #context`.
+     * `| '$'   #context`.
      *
      * @return the [context] during the [evaluate] processing.
      * It can be `null`.
@@ -578,9 +578,9 @@ class Processor(
     /**
      * Return the [ArrayNode] from [ctx] matching
      *
-     * ` ctx: '@$' lbl;`
-     * ` lbl: LABEL;`
-     * ` LABEL: ([a-zA-Z][0-9a-zA-Z]*) | ('`' (.)+? '`');`.
+     * `ctx: '@$' lbl;`
+     * `lbl: LABEL;`
+     * `LABEL: ([a-zA-Z][0-9a-zA-Z]*) | ('`' (.)+? '`');`.
      *
      * @see map
      * @see visitMapctx
@@ -623,7 +623,7 @@ class Processor(
     /**
      * Return the [JsonNode] from the [ctx] matching
      *
-     * ` | '**'  #descendants`.
+     * `| '**'  #descendants`.
      *
      * @return the [JsonNode] as [ArrayNode] when not `null`.
      * The [ArrayNode] has as elements all
@@ -643,7 +643,7 @@ class Processor(
     /**
      * Return the [DecimalNode] from [ctx] matching
      *
-     * ` | lhs = exp '/' rhs = exp                       #div`.
+     * `| lhs = exp '/' rhs = exp                       #div`.
      *
      * @return `lhs` [divided](https://docs.jsonata.org/numeric-operators#-division) by `rhs`.
      * cast as numbers calling [JSONataFunctionLibrary.number].
@@ -693,7 +693,7 @@ class Processor(
     /**
      * Return the [JsonNode] from [ctx] matching
      *
-     * ` | path     #select``.
+     * `| path     #select``.
      *
      * @return the [JsonNode] selected by the `path`, if any, else `null`.
      *
@@ -846,7 +846,7 @@ class Processor(
     /**
      * Return the [BooleanNode] from [ctx] matching
      *
-     * ` | lhs = exp '>=' rhs = exp                      #gte`.
+     * `| lhs = exp '>=' rhs = exp                      #gte`.
      *
      * @return `true` if `lhs` is
      * [greater then or equal](https://docs.jsonata.org/comparison-operators#-greater-than-or-equals) `rhs`:
@@ -868,6 +868,9 @@ class Processor(
         return result
     }
 
+    /**
+     * `| prd = exp '?' yes = exp ':' no = exp          #ife`.
+     */
     override fun visitIfe(ctx: JSongParser.IfeContext): JsonNode? {
         return when (lib.boolean(visit(ctx.prd)).booleanValue()) {
             true -> visit(ctx.yes)

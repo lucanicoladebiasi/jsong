@@ -437,7 +437,7 @@ class Processor(
     }
 
     /**
-     * Return the [BooleanNode] from [ctx] matching
+     * Return the [BooleanNode] from [ctx] content matching
      *
      * `| lhs = exp '+' rhs = exp                       #add`.
      *
@@ -453,7 +453,7 @@ class Processor(
     }
 
     /**
-     * Return the [TextNode] from [ctx] matching
+     * Return the [TextNode] from [ctx] content matching
      *
      * `| lhs = exp '+' rhs = exp                       #add`.
      *
@@ -474,7 +474,7 @@ class Processor(
     }
 
     /**
-     * Return the [ArrayNode] from the [ctx] matching
+     * Return the [ArrayNode] from the [ctx] content matching
      *
      * `arr: '[' exp (',' exp)* ']' | '[' ']';`.
      */
@@ -489,7 +489,7 @@ class Processor(
     }
 
     /**
-     * Return the [BooleanNode] from the [ctx] matching
+     * Return the [BooleanNode] from the [ctx] content matching
      *
      * ` boo: TRUE | FALSE;`
      * ` TRUE: 'true';`
@@ -545,7 +545,7 @@ class Processor(
     }
 
     /**
-     * Return the [JsonNode] from the [ctx] matching
+     * Return the [JsonNode] from the [ctx] content matching
      *
      * `| lhs = exp '~>' rhs = exp                      #chain`.
      *
@@ -561,7 +561,7 @@ class Processor(
     }
 
     /**
-     * Return the [JsonNode] from the [ctx] matching
+     * Return the [JsonNode] from the [ctx] content matching
      *
      * `| '$'   #context`.
      *
@@ -577,7 +577,7 @@ class Processor(
     }
 
     /**
-     * Return the [ArrayNode] from [ctx] matching
+     * Return the [ArrayNode] from [ctx] content matching
      *
      * `ctx: '@$' lbl;`
      * `lbl: LABEL;`
@@ -607,7 +607,7 @@ class Processor(
     }
 
     /**
-     * Return the [JsonNode] from the [ctx] matching
+     * Return the [JsonNode] from the [ctx] content matching
      *
      * `| fun                                           #define`
      * `fun:  ('fun'|'function') '(' ('$' lbl (',' '$' lbl)*)? ')' '{' exp '}';`.
@@ -622,7 +622,7 @@ class Processor(
     }
 
     /**
-     * Return the [JsonNode] from the [ctx] matching
+     * Return the [JsonNode] from the [ctx] content matching
      *
      * `| '**'  #descendants`.
      *
@@ -658,12 +658,13 @@ class Processor(
     }
 
     /**
-     * Return the [BooleanNode] from [ctx] matching
+     * Return the [BooleanNode] from [ctx] content matching
      *
-     * `| lhs = exp '='  rhs = exp`.
+     * `| lhs = exp '=' rhs = exp                       #eq`.
      *
-     * @return `true` if `lhs` is [equal](https://docs.jsonata.org/expressions#comparison-expressions) to `rhs`,
-     * else `false`.
+     * @return [BooleanNode.TRUE] if `lhs` is
+     * [equal](https://docs.jsonata.org/expressions#comparison-expressions)
+     * to `rhs`, else [BooleanNode.FALSE].
      */
     override fun visitEq(
         ctx: JSongParser.EqContext
@@ -674,7 +675,7 @@ class Processor(
     }
 
     /**
-     * Return the [ArrayNode] from [ctx] matching
+     * Return the [ArrayNode] from [ctx] content matching
      *
      * `| exp'[' ']'                                    #expand`
      *
@@ -692,7 +693,7 @@ class Processor(
     }
 
     /**
-     * Return the [JsonNode] from [ctx] matching
+     * Return the [JsonNode] from [ctx] content matching
      *
      * `| path     #select``.
      *
@@ -707,7 +708,7 @@ class Processor(
     }
 
     /**
-     * Return the [JsonNode] from [ctx] matching
+     * Return the [JsonNode] from [ctx] content matching
      *
      * `| lhs = exp'['  rhs = exp ']'                   #filter`.
      *
@@ -727,8 +728,7 @@ class Processor(
         lhs.forEachIndexed { index, context ->
             this.context = context
             indexStack.push(index)
-            val rhs = visit(ctx.rhs)
-            when (rhs) {
+            when (val rhs = visit(ctx.rhs)) {
                 is NumericNode -> {
                     val value = rhs.asInt()
                     val offset = if (value < 0) lhs.size() + value else value
@@ -818,11 +818,11 @@ class Processor(
     }
 
     /**
-     * Return the [BooleanNode] from [ctx] matching
+     * Return the [BooleanNode] from [ctx] content matching
      *
      * `| lhs = exp '>'  rhs = exp                      #gt`.
      *
-     * @return `true` if `lhs` is [
+     * @return [BooleanNode.TRUE] if `lhs` is [
      * greater then](https://docs.jsonata.org/comparison-operators#-greater-than) `rhs`:
      * * if both `lhs` and `rhs` are numbers the comparison is between number,
      * * else both `lhs` and `rhs` are cast to string calling [JSONataFunctionLibrary.string] then the comparison
@@ -843,11 +843,11 @@ class Processor(
     }
 
     /**
-     * Return the [BooleanNode] from [ctx] matching
+     * Return the [BooleanNode] from [ctx] content matching
      *
      * `| lhs = exp '>=' rhs = exp                      #gte`.
      *
-     * @return `true` if `lhs` is
+     * @return [BooleanNode.TRUE] if `lhs` is
      * [greater then or equal](https://docs.jsonata.org/comparison-operators#-greater-than-or-equals) `rhs`:
      * * if both `lhs` and `rhs` are numbers the comparison is between number,
      * * else both `lhs` and `rhs` are cast to string calling [JSONataFunctionLibrary.string] then the comparison
@@ -887,11 +887,11 @@ class Processor(
     }
 
     /**
-     * Return the [BooleanNode] from [ctx] matching
+     * Return the [BooleanNode] from [ctx] content matching
      *
      * `| lhs = exp 'in' rhs = exp                      #in`
      *
-     * @return `true` if the result of `lhs` evaluation (after [reduce] calling to cast as scalar if possible)
+     * @return [BooleanNode.TRUE] if the result of `lhs` evaluation (after [reduce] calling to cast as scalar if possible)
      * [includes](https://docs.jsonata.org/comparison-operators#in-inclusion)
      * the result of `rhs` evaluation (after [expand] to cast as collection).
      */
@@ -957,11 +957,11 @@ class Processor(
     }
 
     /**
-     * Return the [BooleanNode] from [ctx] matching
+     * Return the [BooleanNode] from [ctx] content matching
      *
      * `| lhs = exp '<'  rhs = exp                      #lt`.
      *
-     * @return `true` if `lhs` is
+     * @return [BooleanNode.TRUE]if `lhs` is
      * [less then](https://docs.jsonata.org/comparison-operators#-less-than) `rhs`:
      * * if both `lhs` and `rhs` are numbers the comparison is between number,
      * * else both `lhs` and `rhs` are cast to string calling [JSONataFunctionLibrary.string] then the comparison
@@ -982,11 +982,11 @@ class Processor(
     }
 
     /**
-     * Return the [BooleanNode] from [ctx] matching
+     * Return the [BooleanNode] from [ctx] content matching
      *
      * `| lhs = exp '<'  rhs = exp                      #lt`.
      *
-     * @return `true` if `lhs` is
+     * @return [BooleanNode.TRUE] if `lhs` is
      * [less then or equal](https://docs.jsonata.org/comparison-operators#-less-than-or-equals) `rhs`:
      * * if both `lhs` and `rhs` are numbers the comparison is between number,
      * * else both `lhs` and `rhs` are cast to string calling [JSONataFunctionLibrary.string] then the comparison
@@ -1007,7 +1007,7 @@ class Processor(
     }
 
     /**
-     * Return the [JsonNode] from [ctx] matching
+     * Return the [JsonNode] from [ctx] content matching
      *
      * `| lhs = exp '.' rhs = exp                       #map`.
      *
@@ -1043,7 +1043,21 @@ class Processor(
     }
 
     /**
+     * Return the [JsonNode] from [ctx] content matching
      *
+     * `| lhs = exp '.' rhs = exp ctx                   #mapCtx`
+     * ' ctx: '@$' lbl;`.
+     *
+     * The method maps `lhs` according `rhs` and it
+     * [binds](https://docs.jsonata.org/path-operators#-context-variable-binding) the resulting
+     * [context] to the variable named `lbl`.
+     *
+     * @return the [JsonNode] resulting from `lhs` evaluation is carried on, it can be `null`.
+     *
+     * @see ctxSet
+     * @see varMap
+     * @see visitMap
+     * @see visitMapCtx
      */
     @Suppress("DuplicatedCode")
     override fun visitMapCtx(
@@ -1073,6 +1087,21 @@ class Processor(
         return reduce(visitCtx(ctx.ctx(), lhs, result))
     }
 
+    /**
+     * Return the [JsonNode] from [ctx] content matching
+     *
+     * `| lhs = exp '.' rhs = exp pos                   #mapPos`
+     * `pos: '#$' lbl;`.
+     *
+     * The method maps `lhs` according `rhs` and it
+     * [binds](https://docs.jsonata.org/path-operators#-positional-variable-binding)
+     * the position of each element [context] in the variable named `lbl`.
+     *
+     * @see posSet
+     * @see varMap
+     * @see visitMap
+     * @see visitMapPos
+     */
     @Suppress("DuplicatedCode")
     override fun visitMapPos(ctx: JSongParser.MapPosContext): JsonNode? {
         val result = objectMapper.nodeFactory.arrayNode()
@@ -1104,7 +1133,8 @@ class Processor(
      *
      * `| lhs = exp '%' rhs = exp                       #mod`.
      *
-     * @return the remainder of the integer division `lhs` divided by `rhs`
+     * @return the [DecimalNode] [remainder](https://docs.jsonata.org/numeric-operators#-modulo)
+     * of the integer division `lhs` divided by `rhs`
      * cast as numbers calling [JSONataFunctionLibrary.number].
      */
     override fun visitMod(
@@ -1120,24 +1150,25 @@ class Processor(
      *
      * `| lhs = exp '*' rhs = exp                       #mul`.
      *
-     * LHS an RHS are converted to numbers calling [JSONataFunctionLibrary.number].
-     *
-     * @return LHS **multiplied** by RHS.
+     * @return the [DecimalNode] [product](https://docs.jsonata.org/numeric-operators#-multiplication)
+     * of `lhs` multiplied by `rhs`, those are cast as numbers calling [JSONataFunctionLibrary.number].
      */
-    override fun visitMul(ctx: JSongParser.MulContext): DecimalNode {
+    override fun visitMul(
+        ctx: JSongParser.MulContext
+    ): DecimalNode {
         val lhs = lib.number(visit(ctx.lhs))
         val rhs = lib.number(visit(ctx.rhs))
         return DecimalNode(lhs.decimalValue().multiply(rhs.decimalValue()))
     }
 
     /**
-     * Return the [BooleanNode] from the [ctx] content matching
+     * Return the [BooleanNode] from [ctx] matching
      *
-     * `| lhs = exp '!=' rhs = exp                      #ne`
+     * `| lhs = exp '!=' rhs = exp                      #ne`.
      *
-     * LHS an RHS are converted to booleans calling [JSONataFunctionLibrary.boolean].
-     *
-     * @return `true` if LHS and RHS are **not equal**.
+     * @return [BooleanNode.TRUE] if `lhs` is
+     * [not equal](https://docs.jsonata.org/comparison-operators#-not-equals)
+     * to `rhs`, else [BooleanNode.FALSE].
      */
     override fun visitNe(
         ctx: JSongParser.NeContext
@@ -1205,9 +1236,8 @@ class Processor(
      *
      * `| lhs = exp OR   rhs = exp                      #or`.
      *
-     * LHS an RHS are converted to booleans calling [JSONataFunctionLibrary.boolean].
-     *
-     * @return `true` if LHS or RHS is true.
+     * @return the boolean `lhs` [or](https://docs.jsonata.org/boolean-operators#or-boolean-or) `rhs`
+     * cast calling [JSONataFunctionLibrary.boolean].
      *
      */
     override fun visitOr(
@@ -1230,8 +1260,8 @@ class Processor(
      *
      * @return [context], it can be `null`.
      *
-     * @see map
-     * @see visitCtx
+     * @see visitMap
+     * @see visitMapPos
      */
     @Suppress("DuplicatedCode")
     private fun visitPos(
@@ -1257,6 +1287,13 @@ class Processor(
      *
      * The `min` and `max` limits are converted to numbers calling [JSONataFunctionLibrary.number].
      *
+     * See [Range](https://docs.jsonata.org/numeric-operators#-range) in JSONata documentation.
+     *
+     * **NOTE: JSONata represents ranges as a sequence of integers from `min` to `max`.
+     * JSong uses ranges in the same way JSONata does when the sequence of integers must be applied,
+     * but it represents ranges in mathematical terms, hence the `in` operator works correctly
+     * when a [DecimalNode] is tested if inside or outside the given range.**
+     *
      * @see visitRanges
      */
     override fun visitRange(
@@ -1271,6 +1308,8 @@ class Processor(
      * Return the [RangesNode] from the [ctx] content matching
      *
      * `| '[' range (',' range)* ']'                        #ranges`
+     *
+     * See [Range](https://docs.jsonata.org/numeric-operators#-range) in JSONata documentation.
      *
      * @see visitRange
      */
@@ -1288,8 +1327,8 @@ class Processor(
     /**
      * Return the [RegexNode] from the [ctx] content matching
      *
-     * `| REGEX                                         #regex`.
-     *
+     * `| REGEX                                         #regex`
+     * `REGEX: '/' (.)+? '/' 'i'? 'm'?;`.
      */
     override fun visitRegex(
         ctx: JSongParser.RegexContext
@@ -1313,7 +1352,7 @@ class Processor(
     /**
      * Return the last context from the [ctx] content matching
      *
-     * `| '(' exp (';' exp)* ')'`
+     * `| '(' exp (';' exp)* ')'`.
      *
      * @return [JsonNode] can be `null`.
      *

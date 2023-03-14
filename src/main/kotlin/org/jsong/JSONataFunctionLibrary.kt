@@ -15,7 +15,7 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT. IN NO EVENT SHALL THE
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
@@ -52,7 +52,7 @@ interface JSONataFunctionLibrary {
      * Returns an array containing the values in [array1] followed by the values in [array2].
      * If either parameter is not an array, then it is treated as a singleton array containing that value.
      *
-     * @see [append](https://docs.jsonata.org/array-functions#append)
+     * See [append](https://docs.jsonata.org/array-functions#append)
      */
     fun append(array1: JsonNode, array2: JsonNode): ArrayNode
 
@@ -63,7 +63,7 @@ interface JSONataFunctionLibrary {
      *
      * If array is not specified, then the context value is used as the value of array.
      *
-     * @see [count](https://docs.jsonata.org/array-functions#count)
+     * See [count](https://docs.jsonata.org/array-functions#count)
      */
     fun count(array: JsonNode): DecimalNode
 
@@ -74,14 +74,14 @@ interface JSONataFunctionLibrary {
      * Values are tested for deep equality as if by using the
      * [equality](https://docs.jsonata.org/comparison-operators#-equals) operator.
      *
-     * @see [distinct](]https://docs.jsonata.org/array-functions#distinct)
+     * See [distinct](]https://docs.jsonata.org/array-functions#distinct)
      */
     fun distinct(array: JsonNode): ArrayNode
 
     /**
      * Returns an [array] containing all the values from the array parameter, but in reverse order.
      *
-     * @see [reverse](https://docs.jsonata.org/array-functions#reverse)
+     * See [reverse](https://docs.jsonata.org/array-functions#reverse)
      */
     fun reverse(array: JsonNode): ArrayNode
 
@@ -89,7 +89,7 @@ interface JSONataFunctionLibrary {
      * Returns an array containing all the values from the [array] parameter,
      * but shuffled into random order.
      *
-     * @see [shuffle](https://docs.jsonata.org/array-functions#shuffle)
+     * See [shuffle](https://docs.jsonata.org/array-functions#shuffle)
      */
     fun shuffle(array: JsonNode): ArrayNode
 
@@ -110,7 +110,7 @@ interface JSONataFunctionLibrary {
      * @param array to sort.
      * @param function sorting. `null` by default, it sorts numbers and strings in ascending order.
      *
-     * @see [sort](https://docs.jsonata.org/array-functions#sort)
+     * See [sort](https://docs.jsonata.org/array-functions#sort)
      *
      */
     fun sort(array: JsonNode, function: JsonNode? = null): ArrayNode
@@ -122,7 +122,7 @@ interface JSONataFunctionLibrary {
      * This function accepts a variable number of arguments.
      * The length of the returned array is equal to the length of the shortest array in the arguments.
      *
-     * @see [zip](https://docs.jsonata.org/array-functions#zip)
+     * See [zip](https://docs.jsonata.org/array-functions#zip)
      */
     fun zip(vararg arrays: JsonNode): ArrayNode
 
@@ -145,7 +145,7 @@ interface JSONataFunctionLibrary {
      *      * object: non-empty	-> `true`
      *      * function	-> `false`
      *
-     * @see [boolean](https://docs.jsonata.org/boolean-functions#boolean)
+     * See [boolean](https://docs.jsonata.org/boolean-functions#boolean)
      */
     fun boolean(arg: JsonNode?): BooleanNode
 
@@ -154,7 +154,7 @@ interface JSONataFunctionLibrary {
      *
      * @param arg is first cast to a boolean.
      *
-     * @see [not](https://docs.jsonata.org/boolean-functions#not)
+     * See [not](https://docs.jsonata.org/boolean-functions#not)
      */
     fun not(arg: BooleanNode): BooleanNode
 
@@ -162,14 +162,14 @@ interface JSONataFunctionLibrary {
      * Returns `true` if the [arg] expression evaluates to a value,
      * or `false` if the expression does not match anything (e.g. a path to a non-existent field reference).
      *
-     * @see [exists](https://docs.jsonata.org/boolean-functions#exists)
+     * See [exists](https://docs.jsonata.org/boolean-functions#exists)
      */
     fun exists(arg: JsonNode?): BooleanNode
 
     // https://docs.jsonata.org/date-time-functions
 
     /**
-     * Convert the [number] representing milliseconds since the Unix Epoch (1 January, 1970 UTC)
+     * Convert the [number] representing milliseconds since the Unix Epoch (1 January 1970 UTC)
      * to a formatted string representation of the timestamp as specified by the picture string.
      *
      * @param picture   If omitted, then the timestamp is formatted in the ISO 8601 format.
@@ -182,12 +182,12 @@ interface JSONataFunctionLibrary {
      *                  is the offset in hours and minutes from UTC.
      *                  Positive offset for timezones east of UTC, negative offset for timezones west of UTC.
      *
-     * @see [fromMillis]](https://docs.jsonata.org/date-time-functions#frommillis)
+     * See [fromMillis]](https://docs.jsonata.org/date-time-functions#frommillis)
      */
     fun fromMillis(number: DecimalNode, picture: TextNode? = null, timezone: TextNode? = null): TextNode
 
     /**
-     * @see [millis](https://docs.jsonata.org/date-time-functions#millis)
+     * See [millis](https://docs.jsonata.org/date-time-functions#millis)
      */
     fun millis(): DecimalNode
 
@@ -197,12 +197,12 @@ interface JSONataFunctionLibrary {
      *
      * @param picture   If supplied, then the current timestamp is formatted as described by the [fromMillis] function.
      *
-     * @see [now](https://docs.jsonata.org/date-time-functions#now)
+     * See [now](https://docs.jsonata.org/date-time-functions#now)
      */
     fun now(picture: TextNode? = null, timezone: TextNode? = null): TextNode
 
     /**
-     * Convert a timestamp string to the number of milliseconds since the Unix Epoch (1 January, 1970 UTC) as a number.
+     * Convert a timestamp string to the number of milliseconds since the Unix Epoch (1 January 1970 UTC) as a number.
      *
      * @param timestamp If not specified, then the format of the timestamp is assumed to be ISO 8601.
      *                  An error is thrown if the string is not in the correct format.
@@ -210,7 +210,7 @@ interface JSONataFunctionLibrary {
      * @param picture   If specified, then the format is assumed to be described by this picture string using the
      *                  [same syntax as the XPath/XQuery function](https://www.w3.org/TR/xpath-functions-31/#date-picture-string) specification.
      *
-     * @see [toMillis](https://docs.jsonata.org/date-time-functions#tomillis)
+     * See [toMillis](https://docs.jsonata.org/date-time-functions#tomillis)
      */
     fun toMillis(timestamp: TextNode, picture: TextNode? = null): DecimalNode
 
@@ -229,7 +229,7 @@ interface JSONataFunctionLibrary {
      * The index (position) of that value in the input array is passed in as the second parameter, if specified.
      * The whole input array is passed in as the third parameter, if specified.
      *
-     * @see [filter](https://docs.jsonata.org/higher-order-functions#filter)
+     * See [filter](https://docs.jsonata.org/higher-order-functions#filter)
      */
     fun filter(array: ArrayNode, function: FunctionNode): ArrayNode
 
@@ -245,7 +245,7 @@ interface JSONataFunctionLibrary {
      * The index (position) of that value in the input array is passed in as the second parameter, if specified.
      * The whole input array is passed in as the third parameter, if specified.
      *
-     * @see [map](https://docs.jsonata.org/higher-order-functions#map)
+     * See [map](https://docs.jsonata.org/higher-order-functions#map)
      */
     fun map(array: ArrayNode, function: FunctionNode): ArrayNode
 
@@ -257,9 +257,9 @@ interface JSONataFunctionLibrary {
      * and behaves like an infix operator between each value within the array.
      * The signature of this supplied function must be of the form:
      *
-     * `myfunc($accumulator, $value[, $index[, $array]])`
+     * `func($accumulator, $value[, $index[, $array]])`
      *
-     * @see [reduce](https://docs.jsonata.org/higher-order-functions#reduce)
+     * See [reduce](https://docs.jsonata.org/higher-order-functions#reduce)
      */
     fun reduce(array: ArrayNode, function: FunctionNode, init: FunctionNode): JsonNode
 
@@ -278,7 +278,7 @@ interface JSONataFunctionLibrary {
      * The key (property name) of that value in the input object is passed in as the second parameter, if specified.
      * The whole input object is passed in as the third parameter, if specified.
      *
-     * @see [sift](https://docs.jsonata.org/higher-order-functions#reduce)
+     * See [sift](https://docs.jsonata.org/higher-order-functions#reduce)
      */
     fun sift(obj: ObjectNode, function: FunctionNode): JsonNode
 
@@ -295,7 +295,7 @@ interface JSONataFunctionLibrary {
      * The index (position) of that value in the input array is passed in as the second parameter, if specified.
      * The whole input array is passed in as the third parameter, if specified.
      *
-     * @see [single](https://docs.jsonata.org/higher-order-functions#single)
+     * See [single](https://docs.jsonata.org/higher-order-functions#single)
      */
     fun single(array: ArrayNode, function: FunctionNode): JsonNode
 
@@ -307,7 +307,7 @@ interface JSONataFunctionLibrary {
      *
      * It is an error if the input array contains an item which isn't a number.
      *
-     * @see [average](https://docs.jsonata.org/aggregation-functions#average)
+     * See [average](https://docs.jsonata.org/aggregation-functions#average)
      */
     fun average(array: JsonNode): DecimalNode
 
@@ -316,7 +316,7 @@ interface JSONataFunctionLibrary {
      *
      * It is an error if the input array contains an item which isn't a number.
      *
-     * @see [max](https://docs.jsonata.org/aggregation-functions#max)
+     * See [max](https://docs.jsonata.org/aggregation-functions#max)
      */
     fun max(array: JsonNode): DecimalNode
 
@@ -325,7 +325,7 @@ interface JSONataFunctionLibrary {
      *
      * It is an error if the input array contains an item which isn't a number.
      *
-     * @see [min](https://docs.jsonata.org/aggregation-functions#min)
+     * See [min](https://docs.jsonata.org/aggregation-functions#min)
      */
     fun min(array: JsonNode): DecimalNode
 
@@ -348,7 +348,7 @@ interface JSONataFunctionLibrary {
      * If [number] is not specified (i.e. this function is invoked with no arguments),
      * then the context value is used as the value of number.
      *
-     * @see [abs]](https://docs.jsonata.org/numeric-functions#abs)
+     * See [abs]](https://docs.jsonata.org/numeric-functions#abs)
      */
     fun abs(number: DecimalNode): DecimalNode
 
@@ -358,7 +358,7 @@ interface JSONataFunctionLibrary {
      * If [number] is not specified (i.e. this function is invoked with no arguments),
      * then the context value is used as the value of number.
      *
-     * @see [ceil](https://docs.jsonata.org/numeric-functions#ceil)
+     * See [ceil](https://docs.jsonata.org/numeric-functions#ceil)
      */
     fun ceil(number: DecimalNode): DecimalNode
 
@@ -368,7 +368,7 @@ interface JSONataFunctionLibrary {
      * If [number] is not specified (i.e. this function is invoked with no arguments),
      * then the context value is used as the value of number.
      *
-     * @see [floor](https://docs.jsonata.org/numeric-functions#floor)
+     * See [floor](https://docs.jsonata.org/numeric-functions#floor)
      */
     fun floor(number: DecimalNode): DecimalNode
 
@@ -379,7 +379,7 @@ interface JSONataFunctionLibrary {
      * If [radix] is not specified, then it defaults to base 10.
      * The [radix] parameter can be between 2 and 36, otherwise an error is thrown.
      *
-     * @see [formatBase](https://docs.jsonata.org/numeric-functions#formatbase)
+     * See [formatBase](https://docs.jsonata.org/numeric-functions#formatbase)
      */
     fun formatBase(number: DecimalNode, radix: DecimalNode? = null): TextNode
 
@@ -393,7 +393,7 @@ interface JSONataFunctionLibrary {
      * The [picture] string parameter defines how the number is formatted and
      * has the same syntax as `fn:format-integer`.
      *
-     * @see [formatInteger](https://docs.jsonata.org/numeric-functions#formatinteger)
+     * See [formatInteger](https://docs.jsonata.org/numeric-functions#formatinteger)
      */
     fun formatInteger(number: DecimalNode, picture: TextNode): TextNode
 
@@ -414,7 +414,7 @@ interface JSONataFunctionLibrary {
      * specified in the [decimal format](https://www.w3.org/TR/xpath-functions-31/#defining-decimal-format)
      * section of the XPath F&O 3.1 specification.
      *
-     * @see [formatNumber](https://docs.jsonata.org/numeric-functions#formatnumber)
+     * See [formatNumber](https://docs.jsonata.org/numeric-functions#formatnumber)
      */
     fun formatNumber(number: DecimalNode, picture: TextNode, options: TextNode? = null): TextNode
 
@@ -429,7 +429,7 @@ interface JSONataFunctionLibrary {
      * If [arg] is not specified (i.e. this function is invoked with no arguments),
      * then the context value is used as the value of [arg].
      *
-     * @see [number](https://docs.jsonata.org/numeric-functions#number)
+     * See [number](https://docs.jsonata.org/numeric-functions#number)
      */
     fun number(arg: JsonNode?): DecimalNode
 
@@ -441,7 +441,7 @@ interface JSONataFunctionLibrary {
      * Although the XPath specification does not have an equivalent function for parsing integers,
      * this capability has been added to JSONata.
      *
-     * @see [parseInteger](https://docs.jsonata.org/numeric-functions#random)
+     * See [parseInteger](https://docs.jsonata.org/numeric-functions#random)
      */
     fun parseInteger(string: TextNode, picture: TextNode): DecimalNode
 
@@ -454,14 +454,14 @@ interface JSONataFunctionLibrary {
      * An error is thrown if the values of base and exponent lead to a value
      * that cannot be represented as a JSON number (e.g. Infinity, complex numbers)
      *
-     * @see [power](https://docs.jsonata.org/numeric-functions#power)
+     * See [power](https://docs.jsonata.org/numeric-functions#power)
      */
     fun power(base: DecimalNode, exponent: DecimalNode): DecimalNode
 
     /**
      * Returns a pseudo random number greater than or equal to zero and less than one (0 ≤ n < 1).
      *
-     * @see [random](https://docs.jsonata.org/numeric-functions#random)
+     * See [random](https://docs.jsonata.org/numeric-functions#random)
      */
     fun random(): DecimalNode
 
@@ -481,7 +481,7 @@ interface JSONataFunctionLibrary {
      * at the specified precision.
      * This strategy is commonly used in financial calculations and is the default rounding mode in IEEE 754.
      *
-     * @see [random](https://docs.jsonata.org/numeric-functions#round)
+     * See [random](https://docs.jsonata.org/numeric-functions#round)
      */
     fun round(number: DecimalNode, precision: DecimalNode? = null): DecimalNode
 
@@ -493,7 +493,7 @@ interface JSONataFunctionLibrary {
      *
      * An error is thrown if the value of [number] is negative.
      *
-     * @see [sqrt](https://docs.jsonata.org/numeric-functions#sqrt)
+     * See [sqrt](https://docs.jsonata.org/numeric-functions#sqrt)
      */
     fun sqrt(number: DecimalNode): DecimalNode
 
@@ -504,7 +504,7 @@ interface JSONataFunctionLibrary {
      * If [condition] is `true`, the function returns undefined.
      * If the [condition] is `false`, an exception is thrown with the [message] as the message of the exception.
      *
-     * @see [assert](https://docs.jsonata.org/object-functions#assert)
+     * See [assert](https://docs.jsonata.org/object-functions#assert)
      */
     @Throws(AssertionError::class)
     fun assert(condition: JsonNode, message: JsonNode): BooleanNode
@@ -519,43 +519,43 @@ interface JSONataFunctionLibrary {
      * where the value `parameter` is the value of each name/value pair in the object and name is its name.
      * The `name` parameter is optional.
      *
-     * @see [each](https://docs.jsonata.org/object-functions#each)
+     * See [each](https://docs.jsonata.org/object-functions#each)
      */
     fun each(obj: ObjectNode, function: FunctionNode): ArrayNode
 
     /**
      * Deliberately throws an error with an optional [message].
      *
-     * @see [error]https://docs.jsonata.org/object-functions#error
+     * See [error]https://docs.jsonata.org/object-functions#error
      */
     @Throws(Error::class)
     fun error(message: JsonNode?)
 
     /**
-     * Returns an array containing a de-duplicated list of all the keys in all of the objects of the [array].
+     * Returns an array containing a de-duplicated list of all the keys in all the objects of the [array].
      *
-     * @see [keys](https://docs.jsonata.org/object-functions#keys)
+     * See [keys](https://docs.jsonata.org/object-functions#keys)
      */
     fun keys(array: ArrayNode): ArrayNode
 
     /**
      * Returns an array containing the keys in the [obj].
      *
-     * @see [keys](https://docs.jsonata.org/object-functions#keys)
+     * See [keys](https://docs.jsonata.org/object-functions#keys)
      */
     fun keys(obj: ObjectNode): ArrayNode
 
     /**
      * Search all the objects part of the [array] returning all the values associated with all occurrences of [key].
      *
-     * @see [lookup](https://docs.jsonata.org/object-functions#lookup)
+     * See [lookup](https://docs.jsonata.org/object-functions#lookup)
      */
     fun lookup(array: ArrayNode, key: TextNode): JsonNode?
 
     /**
      * Returns the value associated with key in [obj].
      *
-     * @see [lookup](https://docs.jsonata.org/object-functions#lookup)
+     * See [lookup](https://docs.jsonata.org/object-functions#lookup)
      */
     fun lookup(obj: ObjectNode, key: TextNode): JsonNode?
 
@@ -567,14 +567,14 @@ interface JSONataFunctionLibrary {
      *
      * It is an error if the input array contains an item that is not an object.
      *
-     * @see [merge](https://docs.jsonata.org/object-functions#merge)
+     * See [merge](https://docs.jsonata.org/object-functions#merge)
      */
     fun merge(array: ArrayNode): ObjectNode
 
     /**
      * Return an array containing an object for every key/value pair in every object in the supplied [array].
      *
-     * @see [spread](https://docs.jsonata.org/object-functions#spread)
+     * See [spread](https://docs.jsonata.org/object-functions#spread)
      */
     fun spread(array: ArrayNode): ArrayNode
 
@@ -582,7 +582,7 @@ interface JSONataFunctionLibrary {
      * Splits an object containing key/value pairs into an array of objects,
      * each of which has a single key/value pair from the input [obj].
      *
-     * @see [spread](https://docs.jsonata.org/object-functions#spread)
+     * See [spread](https://docs.jsonata.org/object-functions#spread)
      */
     fun spread(obj: ObjectNode): ArrayNode
 
@@ -598,7 +598,7 @@ interface JSONataFunctionLibrary {
      *
      * Returns `undefined` when value is undefined/not recognized.
      *
-     * @see [type](https://docs.jsonata.org/object-functions#type)
+     * See [type](https://docs.jsonata.org/object-functions#type)
      */
     fun type(value: JsonNode?): TextNode
 
@@ -610,7 +610,7 @@ interface JSONataFunctionLibrary {
      *
      * @param str base 64 encoded bytes.
      *
-     * @see [base64decode](https://docs.jsonata.org/string-functions#base64decode)
+     * See [base64decode](https://docs.jsonata.org/string-functions#base64decode)
      */
     fun base64decode(str: JsonNode): TextNode
 
@@ -621,10 +621,10 @@ interface JSONataFunctionLibrary {
      * This requires that all characters in the string are in the `0x00` to `0xFF` range,
      * which includes all characters in URI encoded strings.
      *
-     * Unicode characters outside of that range are not supported.
+     * Unicode's characters outside of that range are not supported.
      * https://docs.jsonata.org/string-functions#base64encode
      *
-     * @see [base64encode](https://docs.jsonata.org/string-functions#base64encode)
+     * See [base64encode](https://docs.jsonata.org/string-functions#base64encode)
      */
     fun base64encode(str: JsonNode): TextNode
 
@@ -640,7 +640,7 @@ interface JSONataFunctionLibrary {
      *   if the characters within pattern are contained contiguously within str.
      * * If it is a regex, the function will return true if the regex matches the contents of [str].
      *
-     * @see [contains](https://docs.jsonata.org/string-functions#contains)
+     * See [contains](https://docs.jsonata.org/string-functions#contains)
      */
     fun contains(str: JsonNode, pattern: JsonNode): BooleanNode
 
@@ -649,7 +649,7 @@ interface JSONataFunctionLibrary {
      *
      * @param str content to decode.
      *
-     * @see [decodeUrl](https://docs.jsonata.org/string-functions#decodeurl)
+     * See [decodeUrl](https://docs.jsonata.org/string-functions#decodeurl)
      */
     fun decodeUrl(str: JsonNode): TextNode
 
@@ -658,7 +658,7 @@ interface JSONataFunctionLibrary {
      *
      * @param str content to decode.
      *
-     * @see [decodeUrlComponent](https://docs.jsonata.org/string-functions#decodeurlcomponent)
+     * See [decodeUrlComponent](https://docs.jsonata.org/string-functions#decodeurlcomponent)
      */
     fun decodeUrlComponent(str: JsonNode): TextNode
 
@@ -668,7 +668,7 @@ interface JSONataFunctionLibrary {
      *
      * @param str content to encode.
      *
-     * @see [encodeUrl](https://docs.jsonata.org/string-functions#encodeurl)
+     * See [encodeUrl](https://docs.jsonata.org/string-functions#encodeurl)
      */
     fun encodeUrl(str: JsonNode): TextNode
 
@@ -678,7 +678,7 @@ interface JSONataFunctionLibrary {
      *
      * @param str content to encode.
      *
-     * @see [encodeUrlComponent](https://docs.jsonata.org/string-functions#encodeurlcomponent)
+     * See [encodeUrlComponent](https://docs.jsonata.org/string-functions#encodeurlcomponent)
      */
     fun encodeUrlComponent(str: JsonNode): TextNode
 
@@ -686,7 +686,7 @@ interface JSONataFunctionLibrary {
      * Parses and evaluates the string [expr] which contains literal JSON or a JSONata expression
      * using the current context as the context for evaluation.
      *
-     * @see [eval](https://docs.jsonata.org/string-functions#eval)
+     * See [eval](https://docs.jsonata.org/string-functions#eval)
      */
     fun eval(expr: JsonNode, context: JsonNode? = null): JsonNode?
 
@@ -700,7 +700,7 @@ interface JSONataFunctionLibrary {
      * i.e. no separator between the component strings.
      * It is an error if separator is not a string.
      *
-     * @see [join](https://docs.jsonata.org/string-functions#join)
+     * See [join](https://docs.jsonata.org/string-functions#join)
      */
     fun join(array: JsonNode, separator: JsonNode? = null): TextNode
 
@@ -712,7 +712,7 @@ interface JSONataFunctionLibrary {
      *
      * An error is thrown if [str] is not a string.
      *
-     * @see [length](https://docs.jsonata.org/string-functions#length)
+     * See [length](https://docs.jsonata.org/string-functions#length)
      */
     fun length(str: JsonNode): DecimalNode
 
@@ -724,7 +724,7 @@ interface JSONataFunctionLibrary {
      *
      * An error is thrown if [str] is not a string.
      *
-     * @see [lowercase](https://docs.jsonata.org/string-functions#lowercase)
+     * See [lowercase](https://docs.jsonata.org/string-functions#lowercase)
      */
     fun lowercase(str: JsonNode): TextNode
 
@@ -742,7 +742,7 @@ interface JSONataFunctionLibrary {
      *
      * It is an error if [str] is not a string.
      *
-     * @see [match](https://docs.jsonata.org/string-functions#join)
+     * See [match](https://docs.jsonata.org/string-functions#join)
      */
     fun match(str: JsonNode, pattern: JsonNode, limit: JsonNode? = null): ArrayNode
 
@@ -757,7 +757,7 @@ interface JSONataFunctionLibrary {
      * The optional [char] argument specifies the padding character(s) to use.
      * If not specified, it defaults to the space character.
      *
-     * @see [pad](https://docs.jsonata.org/string-functions#pad)
+     * See [pad](https://docs.jsonata.org/string-functions#pad)
      */
     fun pad(str: JsonNode, width: JsonNode, char: JsonNode? = null): TextNode
 
@@ -792,7 +792,7 @@ interface JSONataFunctionLibrary {
      * is a number that specifies the maximum number of replacements to make before stopping.
      * The remainder of the input beyond this limit will be copied to the output unchanged.
      *
-     * @see [replace](https://docs.jsonata.org/string-functions#replace)
+     * See [replace](https://docs.jsonata.org/string-functions#replace)
      */
     fun replace(str: JsonNode, pattern: JsonNode, replacement: JsonNode, limit: JsonNode? = null): TextNode
 
@@ -815,7 +815,7 @@ interface JSONataFunctionLibrary {
      *
      * It is an error if [limit] is not a non-negative number.
      *
-     * @see [split](https://docs.jsonata.org/string-functions#split)
+     * See [split](https://docs.jsonata.org/string-functions#split)
      */
     fun split(str: JsonNode, separator: JsonNode, limit: JsonNode? = null): ArrayNode
 
@@ -830,9 +830,9 @@ interface JSONataFunctionLibrary {
      * then the context value is used as the value of [arg].
      *
      * If [prettify] is true, then "prettified" JSON is produced
-     * i.e one line per field and lines will be indented based on the field depth.
+     * i.e. one line per field and lines will be indented based on the field depth.
      *
-     * @see [string](https://docs.jsonata.org/string-functions#string)
+     * See [string](https://docs.jsonata.org/string-functions#string)
      */
     fun string(arg: JsonNode?, prettify: BooleanNode? = null): TextNode
 
@@ -851,7 +851,7 @@ interface JSONataFunctionLibrary {
      * See [substr](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/substr)
      * for full definition.
      *
-     * @see [substring](https://docs.jsonata.org/string-functions#substring)
+     * See [substring](https://docs.jsonata.org/string-functions#substring)
      */
     fun substring(str: JsonNode, start: DecimalNode, length: DecimalNode? = null): TextNode
 
@@ -865,7 +865,7 @@ interface JSONataFunctionLibrary {
      *
      * An error is thrown if [str] and [chars] are not strings.
      *
-     * @see [substringAfter](https://docs.jsonata.org/string-functions#substringafter)
+     * See [substringAfter](https://docs.jsonata.org/string-functions#substringafter)
      */
     fun substringAfter(str: JsonNode, chars: TextNode): TextNode
 
@@ -879,7 +879,7 @@ interface JSONataFunctionLibrary {
      *
      * An error is thrown if [str] and chars are not strings.
      *
-     * @see [substringBefore](https://docs.jsonata.org/string-functions#substringbefore)
+     * See [substringBefore](https://docs.jsonata.org/string-functions#substringbefore)
      */
     fun substringBefore(str: JsonNode, chars: TextNode): TextNode
 
@@ -894,7 +894,7 @@ interface JSONataFunctionLibrary {
      *
      * An error is thrown if [str] is not a string.
      *
-     * @see [trim](https://docs.jsonata.org/string-functions#trim)
+     * See [trim](https://docs.jsonata.org/string-functions#trim)
      */
     fun trim(str: JsonNode): TextNode
 
@@ -906,7 +906,7 @@ interface JSONataFunctionLibrary {
      *
      * An error is thrown if [str] is not a string.
      *
-     * @see [uppercase](https://docs.jsonata.org/string-functions#uppercase)
+     * See [uppercase](https://docs.jsonata.org/string-functions#uppercase)
      */
     fun uppercase(str: JsonNode): TextNode
 

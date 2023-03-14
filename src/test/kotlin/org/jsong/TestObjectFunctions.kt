@@ -246,9 +246,9 @@ class TestObjectFunctions {
      */
     @Test
     fun `$type - array`() {
-        val expected = Library.Type.ARRAY.descriptor
+        val expected = Library.IS_ARRAY
         val actual = Processor(TestResources.mapper.readTree("[]")).evaluate("\$type($)")
-        assertEquals(expected, actual)
+        assertEquals(expected, actual?.textValue())
     }
 
     /**
@@ -256,9 +256,9 @@ class TestObjectFunctions {
      */
     @Test
     fun `$type - boolean`() {
-        val expected = Library.Type.BOOLEAN.descriptor
+        val expected = Library.IS_BOOLEAN
         val actual = Processor(TestResources.mapper.readTree("true")).evaluate("\$type($)")
-        assertEquals(expected, actual)
+        assertEquals(expected, actual?.textValue())
     }
 
     /**
@@ -266,9 +266,9 @@ class TestObjectFunctions {
      */
     @Test
     fun `$type - null`() {
-        val expected = Library.Type.NULL.descriptor
+        val expected = Library.IS_NULL
         val actual = Processor(TestResources.mapper.readTree("null")).evaluate("\$type($)")
-        assertEquals(expected, actual)
+        assertEquals(expected, actual?.textValue())
     }
 
     /**
@@ -276,9 +276,9 @@ class TestObjectFunctions {
      */
     @Test
     fun `$type - number`() {
-        val expected = Library.Type.NUMBER.descriptor
+        val expected = Library.IS_NUMBER
         val actual = Processor(TestResources.mapper.readTree("3.14")).evaluate("\$type($)")
-        assertEquals(expected, actual)
+        assertEquals(expected, actual?.textValue())
     }
 
     /**
@@ -286,9 +286,9 @@ class TestObjectFunctions {
      */
     @Test
     fun `$type - object`() {
-        val expected = Library.Type.OBJECT.descriptor
+        val expected = Library.IS_OBJECT
         val actual = Processor(TestResources.mapper.readTree("{}")).evaluate("\$type($)")
-        assertEquals(expected, actual)
+        assertEquals(expected, actual?.textValue())
     }
 
     /**
@@ -296,11 +296,11 @@ class TestObjectFunctions {
      */
     @Test
     fun `$type - string`() {
-        val expected = Library.Type.STRING.descriptor
+        val expected = Library.IS_STRING
         val actual = Processor(
             TestResources.mapper.readTree("\"God's in his heaven — All's right with the world.\"")
         ).evaluate("\$type($)")
-        assertEquals(expected, actual)
+        assertEquals(expected, actual?.textValue())
     }
 
 }

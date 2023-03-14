@@ -39,14 +39,14 @@ import kotlin.random.Random
 import kotlin.reflect.full.memberFunctions
 
 /**
- * This class [evaluate] an expression expressed in the
+ * This class [evaluate]s an expression expressed in the
  * [JSONata](https://docs.jsonata.org/overview.html) language and the JSong grammatical extensions
  * as defined in the `JSong.g4` [ANTLR](https://www.antlr.org/) grammar.
  *
- * `exp` refers to the expression evaluated, `exp` has `exp` sub-expressions according the grammar defined in the
+ * * `exp` refers to the expression evaluated, `exp` has `exp` sub-expressions according the grammar defined in the
  * `JSong.g4` file.
- * LHS and `lhs` refer to the Left Hand Side of a binary expression.
- * RHS and `rhs` refer to the Right Hand Side of a binary expression.
+ * * `lhs` refer to the Left Hand Side of a binary expression.
+ * * `rhs` refer to the Right Hand Side of a binary expression.
  *
  * The methods prefixed with `visit` override the ANTLR visiting pattern:
  * the documentation shows the matched pattern from [JSong.g4]() rules.
@@ -1414,11 +1414,7 @@ class Processor(
     /**
      * Return the [TextNode] from the [ctx] content matching
      *
-     * ```
-     * txt
-     *     : STRING
-     *     ;
-     * ```.
+     * `txt: STRING;`.
      */
     override fun visitTxt(
         ctx: JSongParser.TxtContext

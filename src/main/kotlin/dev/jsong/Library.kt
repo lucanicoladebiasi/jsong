@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.jsong
+package dev.jsong
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -327,7 +327,8 @@ class Library(
      */
     override fun each(
         obj: ObjectNode,
-        function: FunctionNode): ArrayNode {
+        function: FunctionNode
+    ): ArrayNode {
         TODO("Not yet implemented")
     }
 

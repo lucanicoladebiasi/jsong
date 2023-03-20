@@ -21,22 +21,23 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.jsong
+package dev.jsong
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.*
+import dev.jsong.antlr.JSongBaseVisitor
+import dev.jsong.antlr.JSongLexer
+import dev.jsong.antlr.JSongParser
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
-import org.jsong.antlr.JSongBaseVisitor
-import org.jsong.antlr.JSongLexer
-import org.jsong.antlr.JSongParser
 import java.lang.reflect.InvocationTargetException
 import java.math.MathContext
 import java.time.Instant
 import java.util.*
 import kotlin.random.Random
 import kotlin.reflect.full.memberFunctions
+
 
 /**
  * This class [evaluate]s an expression expressed in the
@@ -116,7 +117,7 @@ class Processor(
     private var context = root
 
     /**
-     * Store the index when [visitFilter] and [visitMap], [visitMapCtx], [visitMapPos]  iterate and retrieve
+     * Store the index when [visitFilter] and [visitMap], [visitMapCnt], [visitMapPos]  iterate and retrieve
      * variables stored in [varMap].
      */
     private val indexStack = ArrayDeque<Int>()
@@ -137,7 +138,7 @@ class Processor(
      *
      * @see visitCtx
      * @see visitLbl
-     * @see visitMapCtx
+     * @see visitMapCnt
      *
      */
     private val ctxSet = mutableSetOf<String>()
@@ -488,6 +489,12 @@ class Processor(
         return result
     }
 
+    override fun visitAsc(
+        ctx: JSongParser.AscContext
+    ): JsonNode? {
+        return visit(ctx.exp())?.let { lib.sort(it) }
+    }
+
     /**
      * Return the [BooleanNode] from the [ctx] content matching
      *
@@ -584,11 +591,11 @@ class Processor(
      * `LABEL: ([a-zA-Z][0-9a-zA-Z]*) | ('`' (.)+? '`');`.
      *
      * @see map
-     * @see visitMapCtx
+     * @see visitMapCnt
      */
     @Suppress("DuplicatedCode")
     private fun visitCtx(
-        ctx: JSongParser.CtxContext,
+        ctx: JSongParser.CntContext,
         lhs: ArrayNode,
         rhs: ArrayNode
     ): ArrayNode {
@@ -1057,11 +1064,11 @@ class Processor(
      * @see ctxSet
      * @see varMap
      * @see visitMap
-     * @see visitMapCtx
+     * @see visitMapCnt
      */
     @Suppress("DuplicatedCode")
-    override fun visitMapCtx(
-        ctx: JSongParser.MapCtxContext
+    override fun visitMapCnt(
+        ctx: JSongParser.MapCntContext
     ): JsonNode? {
         val result = objectMapper.nodeFactory.arrayNode()
         val lhs = expand(visit(ctx.lhs))
@@ -1084,7 +1091,7 @@ class Processor(
                 indexStack.pop()
             }
         }
-        return reduce(visitCtx(ctx.ctx(), lhs, result))
+        return reduce(visitCtx(ctx.cnt(), lhs, result))
     }
 
     /**
@@ -1246,6 +1253,16 @@ class Processor(
         val lhs = lib.boolean(visit(ctx.lhs))
         val rhs = lib.boolean(visit(ctx.rhs))
         return BooleanNode.valueOf(lhs.booleanValue() || rhs.booleanValue())
+    }
+
+    override fun visitOrderBy(
+        ctx: JSongParser.OrderByContext
+    ): JsonNode? {
+        var result: JsonNode? = null
+        ctx.exp().forEach { exp ->
+            result = visit(exp)?.let { lib.sort(it) }
+        }
+        return result
     }
 
     /**

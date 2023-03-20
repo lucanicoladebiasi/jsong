@@ -1,32 +1,30 @@
-package org.jsong
+package dev.jsong
 
 import com.fasterxml.jackson.databind.JsonNode
 
 /**
- * This class is thrown when the Full Qualified Name [fqn] of a function is not found.
+ * This class is thrown with [message] when the Full Qualified Name of a function is not found.
  *
  * @see Processor.visitCall
  */
 class FunctionNotFoundException(
     message: String
-): NoSuchMethodException(message) {
+): NoSuchMethodException(message)
 
-    companion object {
-
-        fun forName(name: String): FunctionNotFoundException {
-            return FunctionNotFoundException("function `$name` not found")
-        }
-
-    } //~ companion
-
-} //~ FunctionNotFoundException
-
+/**
+ * This class is thrown with [message] when [FunctionNode] is expected in vain.
+ *
+ * @param message shows the body of the node and its class.
+ */
 class FunctionTypeException(
     message: String
 ): ClassCastException(message) {
 
     companion object {
 
+        /**
+         * Create a new [FunctionTypeException] because [node] is not [FunctionNode].
+         */
         fun forNode(node: JsonNode): FunctionTypeException {
             return FunctionTypeException("node ${node.asText()}: ${node::class} is not a function")
         }

@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.jsong
+package dev.jsong
 
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Test

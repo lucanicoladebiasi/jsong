@@ -11,7 +11,7 @@ val jacksonVersion = "2.14.1"
 val kotlinVersion = "1.7.10"
 val junitVersion = "1.9.2"
 
-group = "org.jsong"
+group = "dev.jsong"
 version = "1.0-SNAPSHOT"
 
 repositories {
@@ -24,10 +24,11 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
     testImplementation("org.junit.jupiter:junit-jupiter:$junitVersion")
     testImplementation(kotlin("test"))
+    implementation(kotlin("stdlib-jdk8"))
 }
 
 tasks.generateGrammarSource {
-    outputDirectory = file("${outputDirectory.path}/org/jsong/antlr")
+    outputDirectory = file("${outputDirectory.path}/dev/jsong/antlr")
     maxHeapSize = "64m"
     arguments = arguments + listOf("-visitor", "-long-messages")
 }
@@ -43,4 +44,12 @@ tasks.test {
 tasks.withType<KotlinCompile> {
     dependsOn("generateGrammarSource")
     kotlinOptions.jvmTarget = "1.8"
+}
+val compileKotlin: KotlinCompile by tasks
+compileKotlin.kotlinOptions {
+    jvmTarget = "1.8"
+}
+val compileTestKotlin: KotlinCompile by tasks
+compileTestKotlin.kotlinOptions {
+    jvmTarget = "1.8"
 }

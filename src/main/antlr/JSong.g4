@@ -25,7 +25,7 @@ SOFTWARE.
 grammar JSong;
 
 @header {
-    package org.jsong.antlr;
+    package dev.jsong.antlr;
 }
 
 jsong
@@ -42,17 +42,17 @@ boo
     | FALSE
     ;
 
-ctx
+cnt
     : '@$' lbl
     ;
 
 exp
     //| '|' loc = exp ('|' upd = exp (',' del = exp)?)? '|'               #transform
-    //| '^(' sort (',' sort)* ')'                                         #orderby
-    : '(' exp (';' exp)*')'                         #scope
+    : '^(' exp (',' exp)* ')'                       #orderBy
+    | '(' exp (';' exp)*')'                         #scope
     | lhs = exp'['  rhs = exp ']'                   #filter
     | lhs = exp '.' rhs = exp pos                   #mapPos
-    | lhs = exp '.' rhs = exp ctx                   #mapCtx
+    | lhs = exp '.' rhs = exp cnt                   #mapCnt
     | lhs = exp '.' rhs = exp                       #map
     | lhs = exp '*' rhs = exp                       #mul
     | lhs = exp '/' rhs = exp                       #div

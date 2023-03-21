@@ -1,4 +1,4 @@
-package dev.jsong
+package io.github.lucanicoladebiasi.jsong
 
 import com.fasterxml.jackson.databind.JsonNode
 

@@ -11,7 +11,7 @@ val jacksonVersion = "2.14.1"
 val kotlinVersion = "1.7.10"
 val junitVersion = "1.9.2"
 
-group = "dev.jsong"
+group = "io.github.lucanicoladebiasi"
 version = "1.0-SNAPSHOT"
 
 repositories {
@@ -28,7 +28,7 @@ dependencies {
 }
 
 tasks.generateGrammarSource {
-    outputDirectory = file("${outputDirectory.path}/dev/jsong/antlr")
+    outputDirectory = file("${outputDirectory.path}/io/github/lucanicoladebiasi/jsong/antlr")
     maxHeapSize = "64m"
     arguments = arguments + listOf("-visitor", "-long-messages")
 }

@@ -1,4 +1,4 @@
-package dev.jsong
+package io.github.lucanicoladebiasi.jsong
 
 import com.fasterxml.jackson.databind.node.TextNode
 import org.intellij.lang.annotations.Language

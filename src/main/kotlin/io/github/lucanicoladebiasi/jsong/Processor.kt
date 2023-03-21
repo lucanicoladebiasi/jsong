@@ -21,14 +21,14 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package dev.jsong
+package io.github.lucanicoladebiasi.jsong
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.*
-import dev.jsong.antlr.JSongBaseVisitor
-import dev.jsong.antlr.JSongLexer
-import dev.jsong.antlr.JSongParser
+import io.github.lucanicoladebiasi.jsong.antlr.JSongBaseVisitor
+import io.github.lucanicoladebiasi.jsong.antlr.JSongLexer
+import io.github.lucanicoladebiasi.jsong.antlr.JSongParser
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import java.lang.reflect.InvocationTargetException

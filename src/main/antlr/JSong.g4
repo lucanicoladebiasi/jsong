@@ -25,7 +25,7 @@ SOFTWARE.
 grammar JSong;
 
 @header {
-    package dev.jsong.antlr;
+    package io.github.lucanicoladebiasi.jsong.antlr;
 }
 
 jsong

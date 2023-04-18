@@ -10,7 +10,7 @@ plugins {
 }
 
 val antlrVersion = "4.9.3"
-val jacksonVersion = "2.14.1"
+val jacksonVersion = "2.14.2"
 val kotlinVersion = "1.7.10"
 val junitVersion = "1.9.2"
 
@@ -35,11 +35,12 @@ java {
     withSourcesJar()
 }
 
+
 publishing {
     publications {
         create<MavenPublication>(project.name) {
             artifactId = rootProject.name
-            from(components["kotlin"])
+            from(components["java"])
             pom {
                 name.set(rootProject.name)
                 description.set("JSONata On New Ground!")
@@ -75,19 +76,20 @@ publishing {
     }
 }
 
-
 signing {
     sign(publishing.publications[project.name])
 }
+
+tasks.compileTestKotlin {
+    dependsOn(tasks.generateTestGrammarSource)
+}
+
+
 
 tasks.generateGrammarSource {
     outputDirectory = file("${outputDirectory.path}/io/github/lucanicoladebiasi/jsong/antlr")
     maxHeapSize = "64m"
     arguments = arguments + listOf("-visitor", "-long-messages")
-}
-
-tasks.compileTestKotlin {
-    dependsOn(tasks.generateTestGrammarSource)
 }
 
 tasks.test {

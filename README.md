@@ -39,7 +39,7 @@ language.
 
 ## How to use.
 
-### Declere the dependency
+### Declare the dependency.
 
 The project is published in
 [Maven Central](https://central.sonatype.com/artifact/io.github.lucanicoladebiasi/jsong/1.0).
@@ -68,6 +68,88 @@ implementation("io.github.lucanicoladebiasi:jsong:1.0")
     <version>1.0</version>
 </dependency>
 ```
+
+### Cpde with JSong
+
+#### Kotlin
+
+Kotlin is handy to declare JSON objects.
+Suppose  to define an `address` object as explained in the [Simple Queries](https://docs.jsonata.org/simple) page
+of the official JSONata documentation: in Kotlin this is defined as follows.
+
+```kotlin
+@Language("JSON")
+val root: JsonNode = mapper.readTree(
+        """
+        {
+          "FirstName": "Fred",
+          "Surname": "Smith",
+          "Age": 28,
+          "Address": {
+            "Street": "Hursley Park",
+            "City": "Winchester",
+            "Postcode": "SO21 2JN"
+          },
+          "Phone": [
+            {
+              "type": "home",
+              "number": "0203 544 1234"
+            },
+            {
+              "type": "office",
+              "number": "01962 001234"
+            },
+            {
+              "type": "office",
+              "number": "01962 001235"
+            },
+            {
+              "type": "mobile",
+              "number": "077 7700 1234"
+            }
+          ],
+          "Email": [
+            {
+              "type": "work",
+              "address": ["fred.smith@my-work.com", "fsmith@my-work.com"]
+            },
+            {
+              "type": "home",
+              "address": ["freddy@my-social.com", "frederic.smith@very-serious.com"]
+            }
+          ],
+          "Other": {
+            "Over 18 ?": true,
+            "Misc": null,
+            "Alternative.Address": {
+              "Street": "Brick Lane",
+              "City": "London",
+              "Postcode": "E1 6RF"
+            }
+          }
+        }
+        """.trimIndent()
+    )
+```
+
+To evaluate the JSONata expression `Address.City` to the JSON object `addreess`, the code is as simple as
+
+```kotlin
+val expression = "Address.City" 
+val result = Processor(root).evaluate(expression)
+```
+
+where
+
+* `root` is the `JsonNode` object to evaluate with the JSONata `expression`, `root` can be `null`;
+* `expression` is a string being a valid JSONata statement;
+* `result` returns the outcome of `expression` applied to `root`, 
+   it is a `JsonNode` object and it can be `null`.
+
+JUnit tests are organized per page of the JSONata official documentation,
+please, refer to them for a rich set of examples about how to use this software.
+
+The code is documented: start reading the documentation of the `io.github.lucanicoladebiasi.jsong.Processor` class.
 
 ## Current limitations.
 

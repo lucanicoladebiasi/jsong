@@ -48,7 +48,7 @@ cnt
 
 exp
     : top = exp '~>|' loc = exp ('|' upd = exp (',' del = exp)?)? '|'   #transform
-    | '^(' sort (',' sort)* ')'                     #orderBy
+    | exp '^(' sort (',' sort)* ')'                 #orderBy
     | '(' exp (';' exp)*')'                         #scope
     | lhs = exp'['  rhs = exp ']'                   #filter
     | lhs = exp '.' rhs = exp pos                   #mapPos

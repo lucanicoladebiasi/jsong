@@ -39,6 +39,36 @@ language.
 
 ## How to use.
 
+### Declere the dependency
+
+The project is published in
+[Maven Central](https://central.sonatype.com/artifact/io.github.lucanicoladebiasi/jsong/1.0).
+comopplete of source code and documentation jars.
+
+Declere dependency on it according the building toolchain of your choice. 
+
+#### Gradle
+
+```kotlin
+implementation 'io.github.lucanicoladebiasi:jsong:1.0'
+```
+
+#### Gradle in Kotlin
+
+```kotlin
+implementation("io.github.lucanicoladebiasi:jsong:1.0")
+```
+
+#### Maven
+
+```xml
+<dependency>
+    <groupId>io.github.lucanicoladebiasi</groupId>
+    <artifactId>jsong</artifactId>
+    <version>1.0</version>
+</dependency>
+```
+
 ## Current limitations.
 
 ## How to contribute

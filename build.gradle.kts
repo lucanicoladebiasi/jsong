@@ -38,7 +38,7 @@ val kotlinVersion = "1.7.10"
 val junitVersion = "1.9.2"
 
 group = "io.github.lucanicoladebiasi"
-version = "1.0"
+version = "1.1-SNAPSHOT"
 
 repositories {
     mavenCentral()

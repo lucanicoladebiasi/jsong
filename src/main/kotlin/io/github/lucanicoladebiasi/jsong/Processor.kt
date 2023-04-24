@@ -1259,9 +1259,12 @@ class Processor(
         ctx: JSongParser.OrderByContext
     ): JsonNode? {
         var result: JsonNode? = null
-        ctx.exp().forEach { exp ->
-            result = visit(exp)?.let { lib.sort(it) }
-        }
+//        ctx.sort().forEach {
+//            it.
+//        }
+//        ctx.exp.forEach { exp ->
+//            result = visit(exp)?.let { lib.sort(it) }
+//        }
         return result
     }
 

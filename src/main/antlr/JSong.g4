@@ -47,8 +47,8 @@ cnt
     ;
 
 exp
-    //| '|' loc = exp ('|' upd = exp (',' del = exp)?)? '|'               #transform
-    : '^(' exp (',' exp)* ')'                       #orderBy
+    : top = exp '~>|' loc = exp ('|' upd = exp (',' del = exp)?)? '|'   #transform
+    | '^(' sort (',' sort)* ')'                     #orderBy
     | '(' exp (';' exp)*')'                         #scope
     | lhs = exp'['  rhs = exp ']'                   #filter
     | lhs = exp '.' rhs = exp pos                   #mapPos
@@ -144,6 +144,9 @@ txt
     : STRING
     ;
 
+DEC: '>';
+INC: '<';
+
 AND: 'and';
 OR: 'or';
 
@@ -153,8 +156,6 @@ TRUE: 'true';
 FALSE: 'false';
 
 REGEX: '/' (.)+? '/' 'i'? 'm'?;
-
-
 
 LABEL: ([a-zA-Z][0-9a-zA-Z]*) | ('`' (.)+? '`');
 

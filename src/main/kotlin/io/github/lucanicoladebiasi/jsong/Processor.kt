@@ -1273,16 +1273,16 @@ class Processor(
     override fun visitOrderBy(
         ctx: JSongParser.OrderByContext
     ): ArrayNode {
-        var result = objectMapper.nodeFactory.arrayNode()
+        val result = objectMapper.nodeFactory.arrayNode()
         val sorted = expand(visit(ctx.exp())).sortedWith(object : Comparator<JsonNode> {
             override fun compare(o1: JsonNode, o2: JsonNode): Int {
                 var delta = 0
-                ctx.sort().forEachIndexed { index, sort ->
-                    val ln = Processor(o1, varMap, mathContext, objectMapper, random, time).evaluate(sort.exp().text)
-                    val rn = Processor(o2, varMap, mathContext, objectMapper, random, time).evaluate(sort.exp().text)
-                    delta = compare(ln, rn) * if (sort.DSC(index) != null) -1 else 1
-                    if (delta != 0)
-                        return@forEachIndexed
+                for (i in 0 until ctx.sort().size) {
+                    val exp = ctx.sort(i).exp().text
+                    val ln = Processor(o1, varMap, mathContext, objectMapper, random, time).evaluate(exp)
+                    val rn = Processor(o2, varMap, mathContext, objectMapper, random, time).evaluate(exp)
+                    delta = compare(ln, rn) * if (ctx.sort(i).DSC().isEmpty()) 1 else -1
+                    if (delta != 0) break
                 }
                 return delta
             }

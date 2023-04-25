@@ -69,7 +69,7 @@ implementation("io.github.lucanicoladebiasi:jsong:1.0")
 </dependency>
 ```
 
-### Cpde with JSong
+### Code with JSong
 
 #### Kotlin
 

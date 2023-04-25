@@ -35,6 +35,7 @@ import java.lang.reflect.InvocationTargetException
 import java.math.MathContext
 import java.time.Instant
 import java.util.*
+import kotlin.Comparator
 import kotlin.random.Random
 import kotlin.reflect.full.memberFunctions
 
@@ -1025,7 +1026,9 @@ class Processor(
      *  @return [JsonNode] can be `null`.
      */
     @Suppress("DuplicatedCode")
-    override fun visitMap(ctx: JSongParser.MapContext): JsonNode? {
+    override fun visitMap(
+        ctx: JSongParser.MapContext
+    ): JsonNode? {
         val result = objectMapper.nodeFactory.arrayNode()
         when (val lhs = expand(visit(ctx.lhs))) {
             is RangesNode -> lhs.indexes.forEach { context ->
@@ -1110,7 +1113,9 @@ class Processor(
      * @see visitMapPos
      */
     @Suppress("DuplicatedCode")
-    override fun visitMapPos(ctx: JSongParser.MapPosContext): JsonNode? {
+    override fun visitMapPos(
+        ctx: JSongParser.MapPosContext
+    ): JsonNode? {
         val result = objectMapper.nodeFactory.arrayNode()
         when (val lhs = expand(visit(ctx.lhs))) {
             is RangesNode -> lhs.indexes.forEach { context ->
@@ -1257,10 +1262,11 @@ class Processor(
 
     override fun visitOrderBy(
         ctx: JSongParser.OrderByContext
-    ): JsonNode? {
-        var result: JsonNode? = null
-//        expand(visit(ctx.exp())).sortedBy {
-//        }
+    ): ArrayNode {
+        var result =objectMapper.nodeFactory.arrayNode()
+        expand(visit(ctx.exp())).sortedBy { node ->
+            node.asText()
+        }
         return result
     }
 

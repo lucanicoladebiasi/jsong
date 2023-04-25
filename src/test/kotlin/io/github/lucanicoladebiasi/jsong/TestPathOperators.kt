@@ -79,10 +79,9 @@ class TestPathOperators {
      * https://docs.jsonata.org/path-operators#---order-by
      */
     @Test
-    @Disabled
     fun `order by default`() {
         @Language("JSON")
-        val expected = Processor().evaluate(
+        val expected = TestResources.mapper.readTree(
             """
                 [
                     {
@@ -150,10 +149,9 @@ class TestPathOperators {
      * https://docs.jsonata.org/path-operators#---order-by
      */
     @Test
-    @Disabled
     fun `order by decreasing`() {
         @Language("JSON")
-        val expected = Processor().evaluate(
+        val expected = TestResources.mapper.readTree(
             """
                 [
                 {
@@ -223,10 +221,9 @@ class TestPathOperators {
      * https://docs.jsonata.org/path-operators#---order-by
      */
     @Test
-    @Disabled
     fun `order by decreasing price, increasing quantity`() {
         @Language("JSON")
-        val expected = Processor().evaluate(
+        val expected = TestResources.mapper.readTree(
             """
                 [
                 {
@@ -296,10 +293,9 @@ class TestPathOperators {
      * https://docs.jsonata.org/path-operators#---order-by
      */
     @Test
-    @Disabled
     fun `order by increasing total`() {
         @Language("JSON")
-        val expected = Processor().evaluate(
+        val expected = TestResources.mapper.readTree(
             """
                 [
                     {

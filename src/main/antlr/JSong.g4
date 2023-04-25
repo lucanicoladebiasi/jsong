@@ -48,12 +48,12 @@ cnt
 
 exp
     : top = exp '~>|' loc = exp ('|' upd = exp (',' del = exp)?)? '|'   #transform
-    | exp '^(' sort (',' sort)* ')'                 #orderBy
     | '(' exp (';' exp)*')'                         #scope
     | lhs = exp'['  rhs = exp ']'                   #filter
     | lhs = exp '.' rhs = exp pos                   #mapPos
     | lhs = exp '.' rhs = exp cnt                   #mapCnt
     | lhs = exp '.' rhs = exp                       #map
+    | exp '^(' sort (',' sort)* ')'                 #orderBy
     | lhs = exp '*' rhs = exp                       #mul
     | lhs = exp '/' rhs = exp                       #div
     | lhs = exp '%' rhs = exp                       #mod
@@ -135,17 +135,15 @@ range
     ;
 
 sort
-    : '<' exp   #asc
-    | '>' exp   #des
-    | exp       #asc
+    : (ASC | DSC)* exp
     ;
 
 txt
     : STRING
     ;
 
-DEC: '>';
-INC: '<';
+ASC: '<';
+DSC: '>';
 
 AND: 'and';
 OR: 'or';

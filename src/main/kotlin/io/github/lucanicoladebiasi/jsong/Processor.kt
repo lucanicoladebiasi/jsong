@@ -35,7 +35,6 @@ import java.lang.reflect.InvocationTargetException
 import java.math.MathContext
 import java.time.Instant
 import java.util.*
-import kotlin.Comparator
 import kotlin.random.Random
 import kotlin.reflect.full.memberFunctions
 
@@ -249,6 +248,23 @@ class Processor(
             throw e.targetException
         } catch (e: NullPointerException) {
             throw FunctionNotFoundException(e.message!!)
+        }
+    }
+
+    private fun compare(
+        ln: JsonNode?,
+        rn: JsonNode?
+    ): Int {
+        return if (ln == null && rn == null) {
+            0
+        } else if (ln == null) {
+            -1
+        } else if (rn == null) {
+            1
+        } else if (ln.isNumber && rn.isNumber) {
+            ln.decimalValue().compareTo(rn.decimalValue())
+        } else {
+            ln.asText().compareTo(rn.asText())
         }
     }
 
@@ -488,12 +504,6 @@ class Processor(
             result.add(visit(exp))
         }
         return result
-    }
-
-    override fun visitAsc(
-        ctx: JSongParser.AscContext
-    ): JsonNode? {
-        return visit(ctx.exp())?.let { lib.sort(it) }
     }
 
     /**
@@ -1263,10 +1273,21 @@ class Processor(
     override fun visitOrderBy(
         ctx: JSongParser.OrderByContext
     ): ArrayNode {
-        var result =objectMapper.nodeFactory.arrayNode()
-        expand(visit(ctx.exp())).sortedBy { node ->
-            node.asText()
-        }
+        var result = objectMapper.nodeFactory.arrayNode()
+        val sorted = expand(visit(ctx.exp())).sortedWith(object : Comparator<JsonNode> {
+            override fun compare(o1: JsonNode, o2: JsonNode): Int {
+                var delta = 0
+                ctx.sort().forEachIndexed { index, sort ->
+                    val ln = Processor(o1, varMap, mathContext, objectMapper, random, time).evaluate(sort.exp().text)
+                    val rn = Processor(o2, varMap, mathContext, objectMapper, random, time).evaluate(sort.exp().text)
+                    delta = compare(ln, rn) * if (sort.DSC(index) != null) -1 else 1
+                    if (delta != 0)
+                        return@forEachIndexed
+                }
+                return delta
+            }
+        })
+        result.addAll(sorted)
         return result
     }
 

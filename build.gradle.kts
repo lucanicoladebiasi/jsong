@@ -27,7 +27,7 @@ plugins {
     antlr
     idea
     `java-library`
-    kotlin("jvm") version "1.7.10"
+    kotlin("jvm") version "1.8.20"
     `maven-publish`
     signing
 }

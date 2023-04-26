@@ -33,12 +33,12 @@ plugins {
 }
 
 val antlrVersion = "4.9.3"
-val jacksonVersion = "2.14.2"
+val jacksonVersion = "2.15.0"
 val kotlinVersion = "1.7.10"
 val junitVersion = "1.9.2"
 
 group = "io.github.lucanicoladebiasi"
-version = "1.1"
+version = "1.2"
 
 repositories {
     mavenCentral()

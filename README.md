@@ -50,13 +50,13 @@ Declere dependency on it according the building toolchain of your choice.
 #### Gradle
 
 ```kotlin
-implementation 'io.github.lucanicoladebiasi:jsong:1.1'
+implementation 'io.github.lucanicoladebiasi:jsong:1.2'
 ```
 
 #### Gradle in Kotlin
 
 ```kotlin
-implementation("io.github.lucanicoladebiasi:jsong:1.1")
+implementation("io.github.lucanicoladebiasi:jsong:1.2")
 ```
 
 #### Maven
@@ -65,7 +65,7 @@ implementation("io.github.lucanicoladebiasi:jsong:1.1")
 <dependency>
     <groupId>io.github.lucanicoladebiasi</groupId>
     <artifactId>jsong</artifactId>
-    <version>1.1</version>
+    <version>1.2</version>
 </dependency>
 ```
 

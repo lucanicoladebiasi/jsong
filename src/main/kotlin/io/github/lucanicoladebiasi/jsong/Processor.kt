@@ -1,7 +1,7 @@
 /**
  * MIT License
  *
- * Copyright (c) [2023] [Luca Nicola Debiasi]
+ * Copyright (c) 2023 Luca Nicola Debiasi
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,22 +21,23 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.jsong
+package io.github.lucanicoladebiasi.jsong
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.*
+import io.github.lucanicoladebiasi.jsong.antlr.JSongBaseVisitor
+import io.github.lucanicoladebiasi.jsong.antlr.JSongLexer
+import io.github.lucanicoladebiasi.jsong.antlr.JSongParser
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
-import org.jsong.antlr.JSongBaseVisitor
-import org.jsong.antlr.JSongLexer
-import org.jsong.antlr.JSongParser
 import java.lang.reflect.InvocationTargetException
 import java.math.MathContext
 import java.time.Instant
 import java.util.*
 import kotlin.random.Random
 import kotlin.reflect.full.memberFunctions
+
 
 /**
  * This class [evaluate]s an expression expressed in the
@@ -116,7 +117,7 @@ class Processor(
     private var context = root
 
     /**
-     * Store the index when [visitFilter] and [visitMap], [visitMapCtx], [visitMapPos]  iterate and retrieve
+     * Store the index when [visitFilter] and [visitMap], [visitMapCnt], [visitMapPos]  iterate and retrieve
      * variables stored in [varMap].
      */
     private val indexStack = ArrayDeque<Int>()
@@ -137,7 +138,7 @@ class Processor(
      *
      * @see visitCtx
      * @see visitLbl
-     * @see visitMapCtx
+     * @see visitMapCnt
      *
      */
     private val ctxSet = mutableSetOf<String>()
@@ -247,6 +248,23 @@ class Processor(
             throw e.targetException
         } catch (e: NullPointerException) {
             throw FunctionNotFoundException(e.message!!)
+        }
+    }
+
+    private fun compare(
+        ln: JsonNode?,
+        rn: JsonNode?
+    ): Int {
+        return if (ln == null && rn == null) {
+            0
+        } else if (ln == null) {
+            -1
+        } else if (rn == null) {
+            1
+        } else if (ln.isNumber && rn.isNumber) {
+            ln.decimalValue().compareTo(rn.decimalValue())
+        } else {
+            ln.asText().compareTo(rn.asText())
         }
     }
 
@@ -584,11 +602,11 @@ class Processor(
      * `LABEL: ([a-zA-Z][0-9a-zA-Z]*) | ('`' (.)+? '`');`.
      *
      * @see map
-     * @see visitMapCtx
+     * @see visitMapCnt
      */
     @Suppress("DuplicatedCode")
     private fun visitCtx(
-        ctx: JSongParser.CtxContext,
+        ctx: JSongParser.CntContext,
         lhs: ArrayNode,
         rhs: ArrayNode
     ): ArrayNode {
@@ -1018,7 +1036,9 @@ class Processor(
      *  @return [JsonNode] can be `null`.
      */
     @Suppress("DuplicatedCode")
-    override fun visitMap(ctx: JSongParser.MapContext): JsonNode? {
+    override fun visitMap(
+        ctx: JSongParser.MapContext
+    ): JsonNode? {
         val result = objectMapper.nodeFactory.arrayNode()
         when (val lhs = expand(visit(ctx.lhs))) {
             is RangesNode -> lhs.indexes.forEach { context ->
@@ -1057,11 +1077,11 @@ class Processor(
      * @see ctxSet
      * @see varMap
      * @see visitMap
-     * @see visitMapCtx
+     * @see visitMapCnt
      */
     @Suppress("DuplicatedCode")
-    override fun visitMapCtx(
-        ctx: JSongParser.MapCtxContext
+    override fun visitMapCnt(
+        ctx: JSongParser.MapCntContext
     ): JsonNode? {
         val result = objectMapper.nodeFactory.arrayNode()
         val lhs = expand(visit(ctx.lhs))
@@ -1084,7 +1104,7 @@ class Processor(
                 indexStack.pop()
             }
         }
-        return reduce(visitCtx(ctx.ctx(), lhs, result))
+        return reduce(visitCtx(ctx.cnt(), lhs, result))
     }
 
     /**
@@ -1103,7 +1123,9 @@ class Processor(
      * @see visitMapPos
      */
     @Suppress("DuplicatedCode")
-    override fun visitMapPos(ctx: JSongParser.MapPosContext): JsonNode? {
+    override fun visitMapPos(
+        ctx: JSongParser.MapPosContext
+    ): JsonNode? {
         val result = objectMapper.nodeFactory.arrayNode()
         when (val lhs = expand(visit(ctx.lhs))) {
             is RangesNode -> lhs.indexes.forEach { context ->
@@ -1246,6 +1268,27 @@ class Processor(
         val lhs = lib.boolean(visit(ctx.lhs))
         val rhs = lib.boolean(visit(ctx.rhs))
         return BooleanNode.valueOf(lhs.booleanValue() || rhs.booleanValue())
+    }
+
+    override fun visitOrderBy(
+        ctx: JSongParser.OrderByContext
+    ): ArrayNode {
+        val result = objectMapper.nodeFactory.arrayNode()
+        val sorted = expand(visit(ctx.exp())).sortedWith(object : Comparator<JsonNode> {
+            override fun compare(o1: JsonNode, o2: JsonNode): Int {
+                var delta = 0
+                for (i in 0 until ctx.sort().size) {
+                    val exp = ctx.sort(i).exp().text
+                    val ln = Processor(o1, varMap, mathContext, objectMapper, random, time).evaluate(exp)
+                    val rn = Processor(o2, varMap, mathContext, objectMapper, random, time).evaluate(exp)
+                    delta = compare(ln, rn) * if (ctx.sort(i).DSC().isEmpty()) 1 else -1
+                    if (delta != 0) break
+                }
+                return delta
+            }
+        })
+        result.addAll(sorted)
+        return result
     }
 
     /**

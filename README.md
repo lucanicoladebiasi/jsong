@@ -50,13 +50,13 @@ Declere dependency on it according the building toolchain of your choice.
 #### Gradle
 
 ```kotlin
-implementation 'io.github.lucanicoladebiasi:jsong:1.0'
+implementation 'io.github.lucanicoladebiasi:jsong:1.1'
 ```
 
 #### Gradle in Kotlin
 
 ```kotlin
-implementation("io.github.lucanicoladebiasi:jsong:1.0")
+implementation("io.github.lucanicoladebiasi:jsong:1.1")
 ```
 
 #### Maven
@@ -144,16 +144,37 @@ where
 * `root` is the `JsonNode` object to evaluate with the JSONata `expression`, `root` can be `null`;
 * `expression` is a string being a valid JSONata statement;
 * `result` returns the outcome of `expression` applied to `root`, 
-   it is a `JsonNode` object and it can be `null`.
+   it is a `JsonNode` object and it can be `null`. 
+   For the above example, `result` is a `TextNode` wrapping "Winchester" string.
 
 JUnit tests are organized per page of the JSONata official documentation,
 please, refer to them for a rich set of examples about how to use this software.
 
 The code is documented: start reading the documentation of the `io.github.lucanicoladebiasi.jsong.Processor` class.
 
+## Changes from previous version
+
+The [order-by](https://docs.jsonata.org/path-operators#---order-by) path operator is full implemented.
+
 ## Current limitations.
 
+* Operators
+  * The [transform](https://docs.jsonata.org/other-operators#-------transform) operator (planned for 1.2 release).
+* Functions
+  * [$formatInteger()](https://docs.jsonata.org/numeric-functions#formatinteger) doesn't implement the JS `picture` argument.
+  * [$formatNumber()](https://docs.jsonata.org/numeric-functions#formatnumber) doesn't implement the `options` argument.
+  * [$fromMillis()](https://docs.jsonata.org/date-time-functions#frommillis) doesn't implement the JS `picture` argument.
+  * [$parseInteger()](https://docs.jsonata.org/numeric-functions#formatnumber) doesn't implement the `options` argument.
+  * [$replace()](https://docs.jsonata.org/string-functions#replace) doesn't implement the `limit` argument, the `replacement` doesn't parse the regex group reference.
+  * [$toMillis()](https://docs.jsonata.org/date-time-functions#tomillis) doesn't implement the JS `picture` argument.
+
 ## How to contribute
+
+This tiny project is my attempt to return a little of what I received from the open-source community, hence feel free to
+fork, criticize (nothing can offend me, I will always learn from your observations), improve, propose.
+
+To decide what next to release, please, write an e-mail to `luca.nicola.debiasi@gmail.com` with subject line
+starting with **"JSong"**: we will decide how to merge your contribution.
 
 ##  MIT License
 

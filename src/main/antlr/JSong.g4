@@ -1,7 +1,7 @@
 /*
 MIT License
 
-Copyright (c) [2023] [Luca Nicola Debiasi]
+Copyright (c) 2023 Luca Nicola Debiasi
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,7 @@ SOFTWARE.
 grammar JSong;
 
 @header {
-    package org.jsong.antlr;
+    package io.github.lucanicoladebiasi.jsong.antlr;
 }
 
 jsong
@@ -42,18 +42,18 @@ boo
     | FALSE
     ;
 
-ctx
+cnt
     : '@$' lbl
     ;
 
 exp
-    //| '|' loc = exp ('|' upd = exp (',' del = exp)?)? '|'               #transform
-    //| '^(' sort (',' sort)* ')'                                         #orderby
-    : '(' exp (';' exp)*')'                         #scope
+    : top = exp '~>|' loc = exp ('|' upd = exp (',' del = exp)?)? '|'   #transform
+    | '(' exp (';' exp)*')'                         #scope
     | lhs = exp'['  rhs = exp ']'                   #filter
     | lhs = exp '.' rhs = exp pos                   #mapPos
-    | lhs = exp '.' rhs = exp ctx                   #mapCtx
+    | lhs = exp '.' rhs = exp cnt                   #mapCnt
     | lhs = exp '.' rhs = exp                       #map
+    | exp '^(' sort (',' sort)* ')'                 #orderBy
     | lhs = exp '*' rhs = exp                       #mul
     | lhs = exp '/' rhs = exp                       #div
     | lhs = exp '%' rhs = exp                       #mod
@@ -135,14 +135,15 @@ range
     ;
 
 sort
-    : '<' exp   #asc
-    | '>' exp   #des
-    | exp       #asc
+    : (ASC | DSC)* exp
     ;
 
 txt
     : STRING
     ;
+
+ASC: '<';
+DSC: '>';
 
 AND: 'and';
 OR: 'or';
@@ -153,8 +154,6 @@ TRUE: 'true';
 FALSE: 'false';
 
 REGEX: '/' (.)+? '/' 'i'? 'm'?;
-
-
 
 LABEL: ([a-zA-Z][0-9a-zA-Z]*) | ('`' (.)+? '`');
 

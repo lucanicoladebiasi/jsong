@@ -1,7 +1,7 @@
 /**
  * MIT License
  *
- * Copyright (c) [2023] [Luca Nicola Debiasi]
+ * Copyright (c) 2023 Luca Nicola Debiasi
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,19 +21,19 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.jsong
+package io.github.lucanicoladebiasi.jsong
 
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
 /**
- * https://docs.JSong.org/predicate
+ * https://docs.jsonata.org/predicate
  */
 class TestPredicateQueries {
 
     /**
-     * https://docs.JSong.org/predicate#predicates
+     * https://docs.jsonata.org/predicate#predicates
      */
     @Test
     fun `Select the Phone items that have a type field that equals mobile`() {
@@ -49,7 +49,7 @@ class TestPredicateQueries {
     }
 
     /**
-     * https://docs.JSong.org/predicate#predicates
+     * https://docs.jsonata.org/predicate#predicates
      */
     @Test
     fun `Select the mobile phone number`() {
@@ -65,7 +65,7 @@ class TestPredicateQueries {
     }
 
     /**
-     * https://docs.JSong.org/predicate#predicates
+     * https://docs.jsonata.org/predicate#predicates
      */
     @Test
     fun `Select the office phone numbers - there are two of them!`() {
@@ -81,7 +81,7 @@ class TestPredicateQueries {
     }
 
     /**
-     * https://docs.JSong.org/predicate#singleton-array-and-value-equivalence
+     * https://docs.jsonata.org/predicate#singleton-array-and-value-equivalence
      */
     @Test
     fun `Singleton array and value equivalence - array of object`() {
@@ -97,7 +97,7 @@ class TestPredicateQueries {
     }
 
     /**
-     * https://docs.JSong.org/predicate#singleton-array-and-value-equivalence
+     * https://docs.jsonata.org/predicate#singleton-array-and-value-equivalence
      */
     @Test
     fun `Singleton array and value equivalence - array of element`() {
@@ -113,7 +113,7 @@ class TestPredicateQueries {
     }
 
     /**
-     * https://docs.JSong.org/predicate#singleton-array-and-value-equivalence
+     * https://docs.jsonata.org/predicate#singleton-array-and-value-equivalence
      */
     @Test
     fun `Singleton array and value equivalence - array then predicate`() {
@@ -129,7 +129,7 @@ class TestPredicateQueries {
     }
 
     /**
-     * https://docs.JSong.org/predicate#singleton-array-and-value-equivalence
+     * https://docs.jsonata.org/predicate#singleton-array-and-value-equivalence
      */
     @Test
     fun `Singleton array and value equivalence - predicate then array`() {
@@ -145,7 +145,7 @@ class TestPredicateQueries {
     }
 
     /**
-     * https://docs.JSong.org/predicate#wildcards
+     * https://docs.jsonata.org/predicate#wildcards
      */
     @Test
     fun `Use of asterix instead of field name to select all fields in an object - postfix`() {
@@ -161,7 +161,7 @@ class TestPredicateQueries {
     }
 
     /**
-     * https://docs.JSong.org/predicate#wildcards
+     * https://docs.jsonata.org/predicate#wildcards
      */
     @Test
     fun `Use of asterix instead of field name to select all fields in an object - prefix`() {
@@ -177,7 +177,7 @@ class TestPredicateQueries {
     }
 
     /**
-     * https://docs.JSong.org/predicate#navigate-arbitrary-depths
+     * https://docs.jsonata.org/predicate#navigate-arbitrary-depths
      */
     @Test
     fun `Navigate arbitrary depths`() {

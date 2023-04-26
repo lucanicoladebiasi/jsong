@@ -1,7 +1,7 @@
 /**
  * MIT License
  *
- * Copyright (c) [2023] [Luca Nicola Debiasi]
+ * Copyright (c) 2023 Luca Nicola Debiasi
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,34 +21,39 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.jsong
+package io.github.lucanicoladebiasi.jsong
 
-import com.fasterxml.jackson.databind.node.TextNode
-import org.junit.jupiter.api.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertNull
+import com.fasterxml.jackson.databind.JsonNode
 
 /**
- * https://docs.jsonata.org/boolean-operators
+ * This class is thrown with [message] when the Full Qualified Name of a function is not found.
+ *
+ * @see Processor.visitCall
  */
-class TestBooleanOperators {
+class FunctionNotFoundException(
+    message: String
+): NoSuchMethodException(message)
 
-    /**
-     * https://docs.jsonata.org/boolean-operators#and-boolean-and
-     */
-    @Test
-    fun and() {
-        val expected = TextNode("Compilers: Principles, Techniques, and Tools")
-        val actual = Processor(TestResources.library).evaluate("library.books[\"Aho\" in authors and price < 50].title")
-        assertEquals(expected, actual)
-    }
+/**
+ * This class is thrown with [message] when [FunctionNode] is expected in vain.
+ *
+ * @param message shows the body of the node and its class.
+ */
+class FunctionTypeException(
+    message: String
+): ClassCastException(message) {
 
-    /**
-     * https://docs.jsonata.org/boolean-operators#or-boolean-or
-     */
-    @Test
-    fun or() {
-        val actual = Processor(TestResources.library).evaluate("library.books[price < 10 or section=\"diy\"].title")
-        assertNull(actual)
-    }
-}
+    companion object {
+
+        /**
+         * Create a new [FunctionTypeException] because [node] is not [FunctionNode].
+         */
+        fun forNode(node: JsonNode): FunctionTypeException {
+            return FunctionTypeException("node ${node.asText()}: ${node::class} is not a function")
+        }
+
+    } //~ companion
+
+} //~ FunctionTypeException
+
+

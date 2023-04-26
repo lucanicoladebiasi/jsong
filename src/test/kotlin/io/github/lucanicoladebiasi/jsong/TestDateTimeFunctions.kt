@@ -1,7 +1,7 @@
 /**
  * MIT License
  *
- * Copyright (c) [2023] [Luca Nicola Debiasi]
+ * Copyright (c) 2023 Luca Nicola Debiasi
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.jsong
+package io.github.lucanicoladebiasi.jsong
 
 import com.fasterxml.jackson.databind.node.DecimalNode
 import com.fasterxml.jackson.databind.node.TextNode
@@ -33,12 +33,12 @@ import java.time.format.DateTimeFormatter
 import kotlin.test.assertEquals
 
 /**
- * https://docs.JSong.org/date-time-functions
+ * https://docs.jsonata.org/date-time-functions
  */
 class TestDateTimeFunctions {
 
     /**
-     * https://docs.JSong.org/date-time-functions#now
+     * https://docs.jsonata.org/date-time-functions#now
      */
     @Test
     fun `$now()`() {
@@ -50,7 +50,7 @@ class TestDateTimeFunctions {
     }
 
     /**
-     * https://docs.JSong.org/date-time-functions#millis
+     * https://docs.jsonata.org/date-time-functions#millis
      */
     @Test
     fun `$millis()`() {
@@ -62,7 +62,7 @@ class TestDateTimeFunctions {
 
 
     /**
-     * https://docs.JSong.org/date-time-functions#frommillis
+     * https://docs.jsonata.org/date-time-functions#frommillis
      */
     @Test
     fun `$fromMillis()`() {
@@ -73,7 +73,7 @@ class TestDateTimeFunctions {
     }
 
     /**
-     * https://docs.JSong.org/date-time-functions#frommillis
+     * https://docs.jsonata.org/date-time-functions#frommillis
      */
     @Test
     @Disabled("todo: JS picture format")
@@ -85,7 +85,7 @@ class TestDateTimeFunctions {
     }
 
     /**
-     * https://docs.JSong.org/date-time-functions#frommillis
+     * https://docs.jsonata.org/date-time-functions#frommillis
      */
     @Test
     @Disabled("todo: JS picture format")
@@ -97,7 +97,7 @@ class TestDateTimeFunctions {
     }
 
     /**
-     * https://docs.JSong.org/date-time-functions#tomillis
+     * https://docs.jsonata.org/date-time-functions#tomillis
      */
     @Test
     fun `$toMillis()`() {

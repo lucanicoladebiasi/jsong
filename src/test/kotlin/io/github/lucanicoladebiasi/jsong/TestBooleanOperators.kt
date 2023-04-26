@@ -1,7 +1,7 @@
 /**
  * MIT License
  *
- * Copyright (c) [2023] [Luca Nicola Debiasi]
+ * Copyright (c) 2023 Luca Nicola Debiasi
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,54 +21,34 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package org.jsong
+package io.github.lucanicoladebiasi.jsong
 
+import com.fasterxml.jackson.databind.node.TextNode
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 /**
- * https://docs.jsonata.org/aggregation-functions
+ * https://docs.jsonata.org/boolean-operators
  */
-class TestNumericAggregationFunctions {
+class TestBooleanOperators {
 
     /**
-     * https://docs.jsonata.org/aggregation-functions#sum
+     * https://docs.jsonata.org/boolean-operators#and-boolean-and
      */
     @Test
-    fun `$sum()`() {
-        val expected = Processor().evaluate("20")
-        val actual = Processor().evaluate("\$sum([5,1,3,7,4])")
+    fun and() {
+        val expected = TextNode("Compilers: Principles, Techniques, and Tools")
+        val actual = Processor(TestResources.library).evaluate("library.books[\"Aho\" in authors and price < 50].title")
         assertEquals(expected, actual)
     }
 
     /**
-     * https://docs.jsonata.org/aggregation-functions#max
+     * https://docs.jsonata.org/boolean-operators#or-boolean-or
      */
     @Test
-    fun `$max()`() {
-        val expected = Processor().evaluate("7")
-        val actual = Processor().evaluate("\$max([5,1,3,7,4])")
-        assertEquals(expected, actual)
+    fun or() {
+        val actual = Processor(TestResources.library).evaluate("library.books[price < 10 or section=\"diy\"].title")
+        assertNull(actual)
     }
-
-    /**
-     * https://docs.jsonata.org/aggregation-functions#min
-     */
-    @Test
-    fun `$min()`() {
-        val expected = Processor().evaluate("1")
-        val actual = Processor().evaluate("\$min([5,1,3,7,4])")
-        assertEquals(expected, actual)
-    }
-
-    /**
-     * https://docs.jsonata.org/aggregation-functions#average
-     */
-    @Test
-    fun `$average()`() {
-        val expected = Processor().evaluate("4")
-        val actual = Processor().evaluate("\$average([5,1,3,7,4])")
-        assertEquals(expected, actual)
-    }
-
 }

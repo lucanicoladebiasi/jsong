@@ -65,7 +65,7 @@ implementation("io.github.lucanicoladebiasi:jsong:1.1")
 <dependency>
     <groupId>io.github.lucanicoladebiasi</groupId>
     <artifactId>jsong</artifactId>
-    <version>1.0</version>
+    <version>1.1</version>
 </dependency>
 ```
 

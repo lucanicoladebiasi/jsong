@@ -1,0 +1,170 @@
+{
+  "schema": {
+    "version": "1.0",
+    "type": "service"
+  },
+  "identifier": {
+    "group": "resource-registry",
+    "name": "endpoint",
+    "version": "1.0"
+  },
+  "application": {
+    "api": {
+      "http": {
+        "spec": "the open api docs"
+      }
+    },
+    "type": "oci",
+    "image": {
+      "registry": "ghcr.io/dynamocloud",
+      "name": "resource-registry-endpoint",
+      "tag": "snapshot"
+    },
+    "resources": {
+      "cpu": {
+        "request": "1",
+        "limit": "1"
+      },
+      "memory": {
+        "request": "512Mi",
+        "limit": "1024Mi"
+      }
+    },
+    "config-map": {
+      "correlation-id": "resource-registry-endpoint",
+      "import-service-configuration": true
+    },
+    "environment": {
+      "import-service-configuration": false,
+      "properties": {
+        "LOGGING_LEVEL_DEFAULT": {
+          "type": "string",
+          "value": {
+            "type": "constant",
+            "value": "DEBUG"
+          }
+        },
+        "LOGGING_LEVELS": {
+          "type": "string",
+          "value": {
+            "type": "constant",
+            "value": "io.micronaut.kubernetes=INFO,io.micronaut.http.client=DEBUG"
+          }
+        }
+      }
+    }
+  },
+  "configuration": {
+    "properties": {
+      "pulsar.brokerUrl": {
+        "type": "string",
+        "description": "Pulsar broker url",
+        "value": {
+          "type": "dependency-output",
+          "ref": "pulsar",
+          "name": "url"
+        }
+      },
+      "pulsar.outboundTopic": {
+        "type": "string",
+        "description": "Pulsar outbound topic name",
+        "value": {
+          "type": "dependency-output",
+          "ref": "pulsar-output-topic",
+          "name": "name"
+        }
+      },
+      "logging.level": {
+        "type": "string",
+        "description": "Logging level",
+        "value": {
+          "type": "constant",
+          "value": "INFO"
+        }
+      },
+      "sql.url": {
+        "description": "Database url",
+        "type": "string",
+        "value": {
+          "name": "r2dbc-connection-url",
+          "ref": "resource-db",
+          "type": "dependency-output"
+        }
+      },
+      "sql.username": {
+        "description": "Database url",
+        "type": "string",
+        "value": {
+          "name": "username",
+          "ref": "resource-db",
+          "type": "dependency-output"
+        }
+      },
+      "sql.password": {
+        "description": "Database url",
+        "type": "string",
+        "value": {
+          "name": "password",
+          "ref": "resource-db",
+          "type": "dependency-output"
+        }
+      },
+      "liquibase.url": {
+        "description": "Database url",
+        "type": "string",
+        "value": {
+          "name": "jdbc-connection-url",
+          "ref": "resource-db",
+          "type": "dependency-output"
+        }
+      },
+      "liquibase.username": {
+        "description": "Database url",
+        "type": "string",
+        "value": {
+          "name": "username",
+          "ref": "resource-db",
+          "type": "dependency-output"
+        }
+      },
+      "liquibase.password": {
+        "description": "Database url",
+        "type": "string",
+        "value": {
+          "name": "password",
+          "ref": "resource-db",
+          "type": "dependency-output"
+        }
+      }
+    }
+  },
+  "dependencies": {
+    "pulsar": {
+      "type": "pulsar-cluster",
+      "classifier": "new-cluster"
+    },
+    "pulsar-output-topic": {
+      "type": "pulsar-topic",
+      "target": {
+        "local-id": "pulsar",
+        "type": "dependency-reference"
+      }
+    },
+    "resource-db": {
+      "type": "postgres-database",
+      "database-name": "resources",
+      "username": "resources-user"
+    },
+    "pulsar-topic-access": {
+      "type": "pulsar-topic-access",
+      "target": {
+        "type": "dependency-reference",
+        "local-id": "pulsar-topic"
+      },
+      "actions": [
+        "PUBLISH"
+      ]
+    }
+  }
+}
+

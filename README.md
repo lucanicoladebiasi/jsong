@@ -50,13 +50,13 @@ Declere dependency on it according the building toolchain of your choice.
 #### Gradle
 
 ```kotlin
-implementation 'io.github.lucanicoladebiasi:jsong:1.1'
+implementation 'io.github.lucanicoladebiasi:jsong1:1.1'
 ```
 
 #### Gradle in Kotlin
 
 ```kotlin
-implementation("io.github.lucanicoladebiasi:jsong:1.1")
+implementation("io.github.lucanicoladebiasi:jsong1:1.1")
 ```
 
 #### Maven
@@ -150,7 +150,7 @@ where
 JUnit tests are organized per page of the JSONata official documentation,
 please, refer to them for a rich set of examples about how to use this software.
 
-The code is documented: start reading the documentation of the `io.github.lucanicoladebiasi.jsong.Processor` class.
+The code is documented: start reading the documentation of the `io.github.lucanicoladebiasi.jsong1.Processor` class.
 
 ## Changes from previous version
 

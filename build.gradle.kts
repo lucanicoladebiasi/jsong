@@ -33,12 +33,13 @@ plugins {
 }
 
 val antlrVersion = "4.9.3"
+val commonsVersion = "1.10.0"
 val jacksonVersion = "2.14.2"
 val kotlinVersion = "1.7.10"
 val junitVersion = "1.9.2"
 
 group = "io.github.lucanicoladebiasi"
-version = "1.1"
+version = "2.0-SNAPSHOT"
 
 repositories {
     mavenCentral()
@@ -47,6 +48,7 @@ repositories {
 dependencies {
     antlr("org.antlr:antlr4:$antlrVersion")
     implementation("com.fasterxml.jackson.core:jackson-databind:$jacksonVersion")
+    implementation("org.apache.commons:commons-text:$commonsVersion")
     implementation("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
     testImplementation("org.junit.jupiter:junit-jupiter:$junitVersion")
     testImplementation(kotlin("test"))
@@ -82,8 +84,8 @@ publishing {
                     }
                 }
                 scm {
-                    connection.set("scm:git:git://github.com/lucanicoladebiasi/jsong")
-                    developerConnection.set("scm:git:ssh://github.com/lucanicoladebiasi/jsong")
+                    connection.set("scm:git:git://github.com/lucanicoladebiasi/jsong1")
+                    developerConnection.set("scm:git:ssh://github.com/lucanicoladebiasi/jsong1")
                     url.set("https://github.com/lucanicoladebiasi/jsong")
                 }
             }
@@ -113,7 +115,7 @@ tasks.compileTestKotlin {
 
 
 tasks.generateGrammarSource {
-    outputDirectory = file("${outputDirectory.path}/io/github/lucanicoladebiasi/jsong/antlr")
+    outputDirectory = file("${outputDirectory.path}/io/github/lucanicoladebiasi/jsong1/antlr")
     maxHeapSize = "64m"
     arguments = arguments + listOf("-visitor", "-long-messages")
 }

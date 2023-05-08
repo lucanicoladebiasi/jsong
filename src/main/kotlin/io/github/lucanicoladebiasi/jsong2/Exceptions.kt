@@ -7,6 +7,11 @@ open class JSongException(
     message: String
 ): RuntimeException(message)
 
+class JSongOutOfBoundsException(
+    ctx: RuleContext,
+    message: String
+): JSongException(ctx, message)
+
 class JSongParseException(
     ctx: RuleContext,
     message: String

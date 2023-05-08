@@ -13,7 +13,7 @@ import org.apache.commons.text.StringEscapeUtils
 
 class Processor(
     private val root: JsonNode?,
-    private val mapr: ObjectMapper
+    mapr: ObjectMapper
 ) : JSong2BaseVisitor<SequenceNode>() {
 
     companion object {
@@ -41,6 +41,8 @@ class Processor(
 
     private val stack = ArrayDeque<SequenceNode>()
 
+    private val trace = ArrayDeque<SequenceNode>()
+
     init {
         push(SequenceNode(nf).append(root))
     }
@@ -56,25 +58,11 @@ class Processor(
         return seq
     }
 
-//    private fun select(
-//        node: ArrayNode,
-//        index: Int
-//    ): ArrayNode {
-//        val result = mapr.createArrayNode()
-//        node.forEach { element ->
-//            val expanded = expand(element)
-//            val offset = if (index < 0) expanded.size() + index else index
-//            if (offset >= 0 && offset < expanded.size()) {
-//                result.addAll(expand(expanded[offset]))
-//            }
-//        }
-//        return result
-//    }
-
     private fun select(
         seq: SequenceNode,
         offset: Int
     ): SequenceNode {
+        stack.firstOrNull()?.let { trace.addFirst(it) }
         val res = SequenceNode(nf)
         seq.forEach { context ->
             val size = context.size()
@@ -90,14 +78,16 @@ class Processor(
         seq: SequenceNode,
         key: String
     ): SequenceNode {
+        stack.firstOrNull()?.let { trace.addFirst(it) }
         val res = SequenceNode(nf)
         seq.forEach { context ->
-            context.filterIsInstance<ObjectNode>().filter {
-                node -> node.has(key)
-            }.forEach {
-                node -> res.append(node[key])
+            context.filterIsInstance<ObjectNode>().filter { node ->
+                node.has(key)
+            }.forEach { node ->
+                res.append(node[key])
             }
         }
+        trace.add(res)
         return res
     }
 
@@ -127,7 +117,7 @@ class Processor(
     override fun visitId(
         ctx: JSong2Parser.IdContext
     ): SequenceNode {
-        return push(select(pop(), sanitise( ctx.ID().text)))
+        return push(select(pop(), sanitise(ctx.ID().text)))
     }
 
     @Throws(JSongParseException::class)
@@ -144,15 +134,25 @@ class Processor(
     }
 
     override fun visitNumber(
-        ctx: JSong2Parser.NumberContext)
-    : SequenceNode {
+        ctx: JSong2Parser.NumberContext
+    ): SequenceNode {
         return push(SequenceNode(nf).append(DecimalNode(ctx.NUMBER().text.toBigDecimal())))
     }
 
     override fun visitPath(
         ctx: JSong2Parser.PathContext
     ): SequenceNode {
-        return push(select(pop(), sanitise( ctx.ID().text)))
+        return push(select(pop(), sanitise(ctx.ID().text)))
     }
+
+    override fun visitParent(
+        ctx: JSong2Parser.ParentContext
+    ): SequenceNode {
+        val index = trace.size - 1 - ctx.PRC().size
+        if (index < 0) throw JSongOutOfBoundsException(ctx, "${ctx.text} out of bound")
+        val res = pop().value
+        return push(SequenceNode(nf).append(res))
+    }
+
 
 } //~ Processor

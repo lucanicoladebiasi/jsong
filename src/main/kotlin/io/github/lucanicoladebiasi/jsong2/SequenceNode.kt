@@ -3,13 +3,12 @@ package io.github.lucanicoladebiasi.jsong2
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
-import com.fasterxml.jackson.databind.node.TextNode
 
 class SequenceNode(
     private val nf: JsonNodeFactory
 ) : ArrayNode(nf) {
 
-    val value: JsonNode? get() = reduce(this)
+    val value: JsonNode? get() = reduce(flatten(this))
 
     fun append(node: JsonNode?): SequenceNode {
         when(node) {
@@ -20,22 +19,29 @@ class SequenceNode(
         return this
     }
 
-    fun reduce(node: JsonNode): JsonNode? {
+    private fun flatten(array: ArrayNode): ArrayNode? {
+        val flat = nf.arrayNode()
+        array.forEach {
+            when(it) {
+                is ArrayNode -> flat.addAll(flatten(it))
+                else -> flat.add(it)
+            }
+        }
+        return flat
+    }
+
+    private fun reduce(node: JsonNode?): JsonNode? {
         return when(node) {
             is ArrayNode -> when(node.size()) {
                 0 -> null
-                1 -> reduce(node[0])
-                else -> {
-                    val res = nf.arrayNode()
-                    forEach {
-                        res.add(reduce(it))
-                    }
-                    res
-                }
+                1 -> node[0]
+                else -> node
             }
             else -> node
         }
     }
+
+
 
 } //~ SequenceNode
 

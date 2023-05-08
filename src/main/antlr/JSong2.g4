@@ -33,15 +33,18 @@ exp_to_eof
     ;
 
 exp
-    :   ID                      # id
-    |   DOT ID                  # path
-    |   ARR_OPEN exp ARR_CLOSE  # array
-    |   MINUS exp               # negative
-    |   NUMBER                  # number
+    :   ID                              # id
+    |   ROOT                            # path_root
+    |   (PRC | (DOT PRC)+)              # parent
+    |   DOT ID                          # path
+    |   ARR_L exp ARR_R                 # array
+    |   MINUS exp                       # negative
+    |   PAR_L (exp (SC (exp)?)*)? PAR_R # block
+    |   NUMBER                          # number
     ;
 
-ARR_OPEN: '[';
-ARR_CLOSE: ']';
+ARR_L: '[';
+ARR_R: ']';
 
 DOT:    '.';
 
@@ -57,6 +60,15 @@ NUMBER
     |   INT EXP             // 1e10 3e4
     |   INT                 // 3, 45
     ;
+
+PAR_L: '(';
+PAR_R: ')';
+
+PRC: '%';
+
+ROOT: '$$';
+
+SC: ';';
 
 fragment BACK_QUOTE: '`';
 

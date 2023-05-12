@@ -62,7 +62,6 @@ class Processor(
         seq: SequenceNode,
         offset: Int
     ): SequenceNode {
-        stack.firstOrNull()?.let { trace.addFirst(it) }
         val res = SequenceNode(nf)
         seq.forEach { context ->
             val size = context.size()
@@ -78,7 +77,6 @@ class Processor(
         seq: SequenceNode,
         key: String
     ): SequenceNode {
-        stack.firstOrNull()?.let { trace.addFirst(it) }
         val res = SequenceNode(nf)
         seq.forEach { context ->
             context.filterIsInstance<ObjectNode>().filter { node ->
@@ -87,7 +85,6 @@ class Processor(
                 res.append(node[key])
             }
         }
-        trace.add(res)
         return res
     }
 
@@ -117,6 +114,9 @@ class Processor(
     override fun visitId(
         ctx: JSong2Parser.IdContext
     ): SequenceNode {
+        stack.firstOrNull()?.let {
+            trace.add(it)
+        }
         return push(select(pop(), sanitise(ctx.ID().text)))
     }
 
@@ -142,17 +142,25 @@ class Processor(
     override fun visitPath(
         ctx: JSong2Parser.PathContext
     ): SequenceNode {
+        stack.firstOrNull()?.let {
+            trace.add(it)
+        }
         return push(select(pop(), sanitise(ctx.ID().text)))
     }
 
     override fun visitParent(
         ctx: JSong2Parser.ParentContext
     ): SequenceNode {
-        val index = trace.size - 1 - ctx.PRC().size
+        val index = trace.size - ctx.PRC().size
         if (index < 0) throw JSongOutOfBoundsException(ctx, "${ctx.text} out of bound")
-        val res = pop().value
-        return push(SequenceNode(nf).append(res))
+        val pop = pop().flatten
+        val rec = trace[index].flatten
+        val res = SequenceNode(nf)
+        repeat(pop.size()) {
+            val e = rec[it / rec.size()]
+            res.append(e)
+        }
+        return push(res)
     }
-
 
 } //~ Processor

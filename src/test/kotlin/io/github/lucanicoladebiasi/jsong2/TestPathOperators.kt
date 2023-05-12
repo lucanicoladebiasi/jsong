@@ -2,9 +2,11 @@ package io.github.lucanicoladebiasi.jsong2
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import kotlin.test.assertEquals
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class TestPathOperators {
@@ -23,12 +25,29 @@ class TestPathOperators {
      */
     @Test
     fun `Parent - 1`() {
+        @Language("JSON")
+        val expected = mapr.readTree(
+            """
+            ["order103","order103","order104","order104"]  
+            """.trimIndent()
+        )
         val actual = JSong.expression("Account.Order.Product.%.OrderID").evaluate(node)
-        println(actual)
+        assertEquals(expected, actual)
     }
 
-    fun y() {
-        JSong.expression("Account.Order.Product.%.%.`Account Name`")
+    /**
+     * https://docs.jsonata.org/path-operators#-parent
+     */
+    @Test
+    fun `Parent - 2`() {
+        @Language("JSON")
+        val expected = mapr.readTree(
+            """
+            ["Firefly", "Firefly", "Firefly", "Firefly"]
+            """.trimIndent()
+        )
+        val actual = JSong.expression("Account.Order.Product.%.%.`Account Name`").evaluate(node)
+        assertEquals(expected, actual)
     }
 
 }

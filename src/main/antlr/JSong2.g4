@@ -34,6 +34,8 @@ exp_to_eof
 
 exp
     :   ID                              # id
+    |   WILD                            # field_values
+    |   DESC                            # descendants
     |   ROOT                            # path_root
     |   (PRC | (DOT PRC)+)              # parent
     |   DOT ID                          # path
@@ -46,7 +48,9 @@ exp
 ARR_L: '[';
 ARR_R: ']';
 
-DOT:    '.';
+DESC: '**';
+
+DOT: '.';
 
 ID
 	:   [\p{L}] [\p{L}0-9_]*
@@ -69,6 +73,8 @@ PRC: '%';
 ROOT: '$$';
 
 SC: ';';
+
+WILD: '*';
 
 fragment BACK_QUOTE: '`';
 

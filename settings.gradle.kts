@@ -1,2 +1,2 @@
-rootProject.name = "jsong1"
+rootProject.name = "jsong"
 

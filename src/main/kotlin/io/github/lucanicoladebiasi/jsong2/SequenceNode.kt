@@ -15,7 +15,6 @@ class SequenceNode(
     fun append(node: JsonNode?): SequenceNode {
         when(node) {
             null -> this
-            is SequenceNode -> add(node)
             is ArrayNode -> add(node)
             else -> {
                 add(SequenceNode(nf).add(node))

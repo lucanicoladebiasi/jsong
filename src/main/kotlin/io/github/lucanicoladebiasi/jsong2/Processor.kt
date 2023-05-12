@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.DecimalNode
-import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.fasterxml.jackson.databind.node.NumericNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import io.github.lucanicoladebiasi.jsong1.antlr.JSong2BaseVisitor
@@ -45,6 +44,29 @@ class Processor(
 
     init {
         push(SequenceNode(nf).append(root))
+    }
+
+    private fun descendants(
+        node: JsonNode
+    ): SequenceNode {
+        val res = SequenceNode(nf)
+        when (node) {
+            is SequenceNode -> node.flatten.forEach {
+                res.addAll(descendants(it).flatten)
+            }
+            is ArrayNode -> node.forEach {
+                res.addAll(descendants(it).flatten)
+            }
+            is ObjectNode -> node.fields().forEach {
+                res.addAll(descendants(it.value).flatten)
+                res.add(it.value)
+            }
+            else -> {
+                res.add(node)
+            }
+
+        }
+        return res
     }
 
     private fun pop(): SequenceNode {
@@ -94,12 +116,25 @@ class Processor(
         visit(ctx.exp())
         val rhs = pop()
         val lhs = pop()
-        val res = when(lhs.isEmpty) {
+        val res = when (lhs.isEmpty) {
             true -> rhs
-            else -> when(val offset = rhs.value) {
+            else -> when (val offset = rhs.value) {
                 is NumericNode -> select(lhs, offset.asInt())
                 else -> TODO()
             }
+        }
+        return push(res)
+    }
+
+    override fun visitDescendants(
+        ctx: JSong2Parser.DescendantsContext
+    ): SequenceNode {
+        stack.firstOrNull()?.let {
+            trace.add(it)
+        }
+        val res = SequenceNode(nf)
+        pop().flatten.forEach { node ->
+            res.append(descendants(node))
         }
         return push(res)
     }
@@ -109,6 +144,25 @@ class Processor(
     ): SequenceNode {
         super.visitExp_to_eof(ctx)
         return pop()
+    }
+
+    override fun visitField_values(
+        ctx: JSong2Parser.Field_valuesContext
+    ): SequenceNode {
+        stack.firstOrNull()?.let {
+            trace.add(it)
+        }
+        val res = SequenceNode(nf)
+        pop().flatten.forEach { node ->
+            when (node) {
+                is ObjectNode -> node.fields().forEach { field ->
+                    res.append(field.value)
+                }
+
+                else -> res.append(node)
+            }
+        }
+        return push(res)
     }
 
     override fun visitId(
@@ -126,7 +180,7 @@ class Processor(
     ): SequenceNode {
         visit(ctx.exp())
         val value = pop().value
-        val res = when(value) {
+        val res = when (value) {
             is NumericNode -> SequenceNode(nf).append(DecimalNode(value.decimalValue().negate()))
             else -> throw JSongParseException(ctx, "${ctx.text} not a number")
         }

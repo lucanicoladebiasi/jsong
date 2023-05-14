@@ -37,7 +37,8 @@ exp
     |   WILD                            # field_values
     |   DESC                            # descendants
     |   ROOT                            # path_root
-    |   (PRC | (DOT PRC)+)              # parent
+    |   GOTO                            # goto
+    |   (PARENT | (DOT PARENT)+)        # parent
     |   DOT ID                          # path
     |   ARR_L exp ARR_R                 # array
     |   MINUS exp                       # negative
@@ -51,6 +52,8 @@ ARR_R: ']';
 DESC: '**';
 
 DOT: '.';
+
+GOTO: '<~';
 
 ID
 	:   [\p{L}] [\p{L}0-9_]*
@@ -68,11 +71,13 @@ NUMBER
 PAR_L: '(';
 PAR_R: ')';
 
-PRC: '%';
+PARENT: '%';
 
 ROOT: '$$';
 
 SC: ';';
+
+VAR_ID: '$' ID ;
 
 WILD: '*';
 

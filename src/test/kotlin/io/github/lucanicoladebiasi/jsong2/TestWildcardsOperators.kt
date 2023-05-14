@@ -2,6 +2,8 @@ package io.github.lucanicoladebiasi.jsong2
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.node.ArrayNode
+import com.fasterxml.jackson.databind.node.ObjectNode
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
@@ -26,6 +28,7 @@ class TestWildcardsOperators {
     @Test
     fun `Wildcard - select the values of all the fields`() {
         val expression = "Address.*"
+
         @Language("JSON")
         val expected = mapr.readTree(
             """
@@ -42,6 +45,7 @@ class TestWildcardsOperators {
     @Test
     fun `Wildcard - select the values of any child object`() {
         val expression = "*.Postcode"
+
         @Language("JSON")
         val expected = mapr.readTree(
             """
@@ -55,6 +59,7 @@ class TestWildcardsOperators {
     @Test
     fun `Wildcard - select the values of an array`() {
         val expression = "Phone.*"
+
         @Language("JSON")
         val expected = mapr.readTree(
             """
@@ -80,6 +85,7 @@ class TestWildcardsOperators {
     @Test
     fun `Descendants - prefix`() {
         val expression = "**.Postcode"
+
         @Language("JSON")
         val expected = mapr.readTree(
             """
@@ -93,6 +99,7 @@ class TestWildcardsOperators {
     @Test
     fun `Descendants - postfix`() {
         val expression = "Phone.**"
+
         @Language("JSON")
         val expected = mapr.readTree(
             """
@@ -125,8 +132,67 @@ class TestWildcardsOperators {
             """.trimIndent()
         )
         val actual = JSong.expression(expression).evaluate(node)
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun `Descendants - alone`() {
+        val expression = "**"
+        @Language("JSON")
+        val node = mapr.readTree(
+            """
+                {
+                  "schema": {
+                    "version": "1.0",
+                    "type": "service"
+                  }
+                }
+            """.trimIndent()
+        )
+        @Language("JSON")
+        val expected = mapr.readTree(
+            """
+            [
+              {
+                "schema": {
+                  "version": "1.0",
+                  "type": "service"
+                }
+              },
+              {
+                "version": "1.0",
+                "type": "service"
+              },
+              "1.0",
+              "service"
+            ]
+        """.trimIndent()
+        )
+        val actual = desc(node)
         println(actual)
         assertEquals(expected, actual)
+    }
+
+    fun desc(node: JsonNode): ArrayNode {
+        val res = SequenceNode(mapr.nodeFactory)
+        when(node) {
+            is ArrayNode -> {
+                res.add(node)
+                node.forEach {
+                    res.addAll(desc(it))
+                }
+            }
+            is ObjectNode -> {
+                res.add(node)
+                node.fields().forEach {
+                    res.addAll(desc(it.value))
+                }
+            }
+            else -> {
+                res.add(node)
+            }
+        }
+        return res
     }
 
 }

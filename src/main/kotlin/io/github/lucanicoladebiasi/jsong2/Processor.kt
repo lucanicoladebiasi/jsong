@@ -51,16 +51,19 @@ class Processor(
     ): SequenceNode {
         val res = SequenceNode(nf)
         when(node) {
-            is ArrayNode -> node.forEach {
-                res.addAll(descendants(it))
+            is ArrayNode -> {
+                node.forEach {
+                    res.addAll(descendants(it))
+                }
             }
             is ObjectNode -> {
                 res.add(node)
                 node.fields().forEach {
-                    if (it.value != null) {
-                        res.add(it.value)
-                    }
+                    res.addAll(descendants(it.value))
                 }
+            }
+            else -> {
+                res.add(node)
             }
         }
         return res
@@ -129,7 +132,7 @@ class Processor(
         stack.firstOrNull()?.let {
             trace.add(it)
         }
-        val res = descendants(pop())
+        val res = descendants(pop().value!!)
         return push(res)
     }
 
@@ -157,6 +160,12 @@ class Processor(
             }
         }
         return push(res)
+    }
+
+    override fun visitGoto(
+        ctx: JSong2Parser.GotoContext
+    ): SequenceNode {
+        return super.visitGoto(ctx)
     }
 
     override fun visitId(
@@ -199,7 +208,7 @@ class Processor(
     override fun visitParent(
         ctx: JSong2Parser.ParentContext
     ): SequenceNode {
-        val index = trace.size - ctx.PRC().size
+        val index = trace.size - ctx.PARENT().size
         if (index < 0) throw JSongOutOfBoundsException(ctx, "${ctx.text} out of bound")
         val pop = pop().flatten
         val rec = trace[index].flatten

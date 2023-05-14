@@ -11,7 +11,7 @@ import io.github.lucanicoladebiasi.jsong1.antlr.JSong2Parser
 import org.apache.commons.text.StringEscapeUtils
 
 class Processor(
-    private val root: JsonNode?,
+    root: JsonNode?,
     mapr: ObjectMapper
 ) : JSong2BaseVisitor<SequenceNode>() {
 
@@ -50,21 +50,18 @@ class Processor(
         node: JsonNode
     ): SequenceNode {
         val res = SequenceNode(nf)
-        when (node) {
-            is SequenceNode -> node.flatten.forEach {
-                res.addAll(descendants(it).flatten)
-            }
+        when(node) {
             is ArrayNode -> node.forEach {
-                res.addAll(descendants(it).flatten)
+                res.addAll(descendants(it))
             }
-            is ObjectNode -> node.fields().forEach {
-                res.addAll(descendants(it.value).flatten)
-                res.add(it.value)
-            }
-            else -> {
+            is ObjectNode -> {
                 res.add(node)
+                node.fields().forEach {
+                    if (it.value != null) {
+                        res.add(it.value)
+                    }
+                }
             }
-
         }
         return res
     }
@@ -132,10 +129,7 @@ class Processor(
         stack.firstOrNull()?.let {
             trace.add(it)
         }
-        val res = SequenceNode(nf)
-        pop().flatten.forEach { node ->
-            res.append(descendants(node))
-        }
+        val res = descendants(pop())
         return push(res)
     }
 

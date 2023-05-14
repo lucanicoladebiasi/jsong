@@ -125,6 +125,7 @@ class TestWildcardsOperators {
             """.trimIndent()
         )
         val actual = JSong.expression(expression).evaluate(node)
+        println(actual)
         assertEquals(expected, actual)
     }
 

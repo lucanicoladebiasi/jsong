@@ -138,38 +138,143 @@ class TestWildcardsOperators {
     @Test
     fun `Descendants - alone`() {
         val expression = "**"
-        @Language("JSON")
-        val node = mapr.readTree(
-            """
-                {
-                  "schema": {
-                    "version": "1.0",
-                    "type": "service"
-                  }
-                }
-            """.trimIndent()
-        )
+
         @Language("JSON")
         val expected = mapr.readTree(
             """
-            [
-              {
-                "schema": {
-                  "version": "1.0",
-                  "type": "service"
-                }
-              },
-              {
-                "version": "1.0",
-                "type": "service"
-              },
-              "1.0",
-              "service"
-            ]
-        """.trimIndent()
+                [
+                  {
+                    "FirstName": "Fred",
+                    "Surname": "Smith",
+                    "Age": 28,
+                    "Address": {
+                      "Street": "Hursley Park",
+                      "City": "Winchester",
+                      "Postcode": "SO21 2JN"
+                    },
+                    "Phone": [
+                      {
+                        "type": "home",
+                        "number": "0203 544 1234"
+                      },
+                      {
+                        "type": "office",
+                        "number": "01962 001234"
+                      },
+                      {
+                        "type": "office",
+                        "number": "01962 001235"
+                      },
+                      {
+                        "type": "mobile",
+                        "number": "077 7700 1234"
+                      }
+                    ],
+                    "Email": [
+                      {
+                        "type": "office",
+                        "address": [
+                          "fred.smith@my-work.com",
+                          "fsmith@my-work.com"
+                        ]
+                      },
+                      {
+                        "type": "home",
+                        "address": [
+                          "freddy@my-social.com",
+                          "frederic.smith@very-serious.com"
+                        ]
+                      }
+                    ],
+                    "Other": {
+                      "Over 18 ?": true,
+                      "Misc": null,
+                      "Alternative.Address": {
+                        "Street": "Brick Lane",
+                        "City": "London",
+                        "Postcode": "E1 6RF"
+                      }
+                    }
+                  },
+                  "Fred",
+                  "Smith",
+                  28,
+                  {
+                    "Street": "Hursley Park",
+                    "City": "Winchester",
+                    "Postcode": "SO21 2JN"
+                  },
+                  "Hursley Park",
+                  "Winchester",
+                  "SO21 2JN",
+                  {
+                    "type": "home",
+                    "number": "0203 544 1234"
+                  },
+                  "home",
+                  "0203 544 1234",
+                  {
+                    "type": "office",
+                    "number": "01962 001234"
+                  },
+                  "office",
+                  "01962 001234",
+                  {
+                    "type": "office",
+                    "number": "01962 001235"
+                  },
+                  "office",
+                  "01962 001235",
+                  {
+                    "type": "mobile",
+                    "number": "077 7700 1234"
+                  },
+                  "mobile",
+                  "077 7700 1234",
+                  {
+                    "type": "office",
+                    "address": [
+                      "fred.smith@my-work.com",
+                      "fsmith@my-work.com"
+                    ]
+                  },
+                  "office",
+                  "fred.smith@my-work.com",
+                  "fsmith@my-work.com",
+                  {
+                    "type": "home",
+                    "address": [
+                      "freddy@my-social.com",
+                      "frederic.smith@very-serious.com"
+                    ]
+                  },
+                  "home",
+                  "freddy@my-social.com",
+                  "frederic.smith@very-serious.com",
+                  {
+                    "Over 18 ?": true,
+                    "Misc": null,
+                    "Alternative.Address": {
+                      "Street": "Brick Lane",
+                      "City": "London",
+                      "Postcode": "E1 6RF"
+                    }
+                  },
+                  true,
+                  null,
+                  {
+                    "Street": "Brick Lane",
+                    "City": "London",
+                    "Postcode": "E1 6RF"
+                  },
+                  "Brick Lane",
+                  "London",
+                  "E1 6RF"
+                ]
+            """.trimIndent()
         )
-        val actual = desc(node)
-        println(actual)
+
+        val actual = JSong.expression(expression).evaluate(node)
         assertEquals(expected, actual)
     }
 

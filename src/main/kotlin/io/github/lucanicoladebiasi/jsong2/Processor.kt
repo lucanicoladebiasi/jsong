@@ -3,9 +3,12 @@ package io.github.lucanicoladebiasi.jsong2
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
+import com.fasterxml.jackson.databind.node.BooleanNode
 import com.fasterxml.jackson.databind.node.DecimalNode
+import com.fasterxml.jackson.databind.node.NullNode
 import com.fasterxml.jackson.databind.node.NumericNode
 import com.fasterxml.jackson.databind.node.ObjectNode
+import com.fasterxml.jackson.databind.node.TextNode
 import io.github.lucanicoladebiasi.jsong1.antlr.JSong2BaseVisitor
 import io.github.lucanicoladebiasi.jsong1.antlr.JSong2Parser
 import org.apache.commons.text.StringEscapeUtils
@@ -133,6 +136,16 @@ class Processor(
         return push(res)
     }
 
+    override fun visitBoolean(
+        ctx: JSong2Parser.BooleanContext
+    ): SequenceNode {
+        val literal = when(ctx.literal.type) {
+            JSong2Parser.TRUE -> BooleanNode.TRUE
+            else -> BooleanNode.FALSE
+        }
+        return push(SequenceNode(nf).append(literal))
+    }
+
     override fun visitDescendants(
         ctx: JSong2Parser.DescendantsContext
     ): SequenceNode {
@@ -174,9 +187,6 @@ class Processor(
             val eval = JSong.expression(expr).evaluate(trace.first())
             res.append(eval)
         }
-
-        //println(mapr.writerWithDefaultPrettyPrinter().writeValueAsString(res.value))
-
         return push(res)
     }
 
@@ -199,10 +209,30 @@ class Processor(
         return push(res)
     }
 
+    override fun visitNull(
+        ctx: JSong2Parser.NullContext
+    ): SequenceNode {
+        return push(SequenceNode(nf).append(NullNode.instance))
+    }
+
     override fun visitNumber(
         ctx: JSong2Parser.NumberContext
     ): SequenceNode {
         return push(SequenceNode(nf).append(DecimalNode(ctx.NUMBER().text.toBigDecimal())))
+    }
+
+    override fun visitObject(
+        ctx: JSong2Parser.ObjectContext
+    ): SequenceNode {
+        val obj = ObjectNode(nf)
+        ctx.field().forEachIndexed { index, field ->
+            visit(field.key)
+            val key = pop().value?.asText() ?: index.toString()
+            visit(field.value)
+            val value = pop().value ?: NullNode.instance
+            obj.set<JsonNode>(key, value)
+        }
+        return push(SequenceNode(nf).append(obj))
     }
 
     override fun visitPath(
@@ -215,7 +245,7 @@ class Processor(
     override fun visitParent(
         ctx: JSong2Parser.ParentContext
     ): SequenceNode {
-        val index = trace.size - ctx.PARENT().size
+        val index = trace.size - ctx.MODULE().size
         if (index < 0) throw JSongOutOfBoundsException(ctx, "${ctx.text} out of bound")
         val pop = pop().flatten
         val rec = trace[index].flatten
@@ -226,6 +256,12 @@ class Processor(
             res.append(e)
         }
         return push(res)
+    }
+
+    override fun visitString(
+        ctx: JSong2Parser.StringContext
+    ): SequenceNode {
+        return push(SequenceNode(nf).append(TextNode(sanitise(ctx.text))))
     }
 
 } //~ Processor

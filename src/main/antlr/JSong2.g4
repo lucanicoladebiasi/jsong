@@ -28,60 +28,98 @@ grammar JSong2;
     package io.github.lucanicoladebiasi.jsong1.antlr;
 }
 
-exp_to_eof
-    :   exp* EOF
+// PARSER RULES
+
+exp_to_eof  :   exp* EOF
+            ;
+
+exp :   ID                                  # id
+    |   '*'                                 # field_values
+    |   DESCEND                             # descendants
+    |   ROOT                                # path_root
+    |   GOTO exp                            # goto
+    |   (MODULE | ('.' MODULE)+)            # parent
+    |   '.' ID                              # path
+    |   ARR_OPEN exp ARR_CLOSE              # array
+    |   '{' (field (',' field)*)? '}'       # object
+    |   literal = (TRUE | FALSE)            # boolean
+    |   SUB exp                             # negative
+    |   '(' (exp (';' (exp)?)*)? ')'        # block
+    |   NUMBER                              # number
+    |   STRING                              # string
+    |   NULL                                # null
     ;
 
-exp
-    :   ID                              # id
-    |   WILD                            # field_values
-    |   DESC                            # descendants
-    |   ROOT                            # path_root
-    |   GOTO exp                        # goto
-    |   (PARENT | (DOT PARENT)+)        # parent
-    |   DOT ID                          # path
-    |   ARR_L exp ARR_R                 # array
-    |   MINUS exp                       # negative
-    |   PAR_L (exp (SC (exp)?)*)? PAR_R # block
-    |   NUMBER                          # number
-    ;
+field   : key = exp ':' value = exp;
 
-ARR_L: '[';
-ARR_R: ']';
+// LEXER RULES
 
-DESC: '**';
+TRUE    : 'true';
+FALSE   : 'false';
 
-DOT: '.';
+STRING  : '\'' (ESC | ~['\\])* '\''
+	    | '"'  (ESC | ~["\\])* '"'
+	    ;
 
-GOTO: '->';
+NULL : 'null';
 
-ID
-	:   [\p{L}] [\p{L}0-9_]*
-	|   BACK_QUOTE ~[`]* BACK_QUOTE
-	;
+ARR_OPEN    : '[';
+ARR_CLOSE   : ']';
 
-MINUS: '-';
 
-NUMBER
-    :   INT '.' [0-9]+ EXP? // 1.35, 1.35E-9, 0.3
-    |   INT EXP             // 1e10 3e4
-    |   INT                 // 3, 45
-    ;
+MAP         : '.';
+CONTEXT     : '$';
+ROOT        : '$$' ;
+DESCEND     : '**';
 
-PAR_L: '(';
-PAR_R: ')';
+NUMBER  : INT '.' [0-9]+ EXP? // 1.35, 1.35E-9, 0.3
+        | INT EXP             // 1e10 3e4
+        | INT                 // 3, 45
+        ;
 
-PARENT: '%';
+FUNCTIONID : ('function' | 'λ') ;
 
-ROOT: '$$';
+WS      : [ \t\r\n]+ -> skip;              // ignore whitespace
+COMMENT : '/*' .*? '*/' -> skip;      // allow comments
 
-SC: ';';
+// Assign token names used in above grammar
+GOTO    : '->';
+CHAIN   : '~>' ;
+ASSIGN  : ':=' ;
+MUL     : '*' ;
+DIV     : '/' ;
+ADD     : '+' ;
+SUB     : '-' ;
+MODULE  : '%' ;
+EQ      : '=' ;
+NOT_EQ  : '!=' ;
+LT      : '<' ;
+LE      : '<=' ;
+GT      : '>' ;
+GE      : '>=' ;
+CONCAT  : '&';
+CIRCUM  : '^';
+PIPE    : '|';
+UNDER   : '_';
+AND     : 'and';
+OR      : 'or';
 
-VAR_ID: '$' ID ;
 
-WILD: '*';
+VAR_ID  : '$' ID ;
 
-fragment BACK_QUOTE: '`';
+ID      : [\p{L}_] [\p{L}0-9_]*
+	    | BACK_QUOTE ~[`]* BACK_QUOTE;
 
-fragment INT : '0' | [1-9] [0-9]* ; // no leading zeros
-fragment EXP : [Ee] [+\-]? INT ;    // \- since - means "range" inside [...]
+
+// LEXER FRAGMENTS
+
+fragment ESC     :   '\\' (["'\\/bfnrt] | UNICODE) ;
+fragment UNICODE : ([\u0080-\uFFFF] | 'u' HEX HEX HEX HEX) ;
+fragment HEX     : [0-9a-fA-F] ;
+
+fragment INT     : '0' | [1-9] [0-9]* ; // no leading zeros
+fragment EXP     : [Ee] [+\-]? INT ;    // \- since - means "range" inside [...]
+
+fragment SINGLE_QUOTE   : '\'';
+fragment DOUBLE_QUOTE   : '"';
+fragment BACK_QUOTE     : '`';

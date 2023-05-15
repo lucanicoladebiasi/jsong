@@ -2,8 +2,6 @@ package io.github.lucanicoladebiasi.jsong2
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.node.ArrayNode
-import com.fasterxml.jackson.databind.node.ObjectNode
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
@@ -276,28 +274,6 @@ class TestWildcardsOperators {
 
         val actual = JSong.expression(expression).evaluate(node)
         assertEquals(expected, actual)
-    }
-
-    fun desc(node: JsonNode): ArrayNode {
-        val res = SequenceNode(mapr.nodeFactory)
-        when(node) {
-            is ArrayNode -> {
-                res.add(node)
-                node.forEach {
-                    res.addAll(desc(it))
-                }
-            }
-            is ObjectNode -> {
-                res.add(node)
-                node.fields().forEach {
-                    res.addAll(desc(it.value))
-                }
-            }
-            else -> {
-                res.add(node)
-            }
-        }
-        return res
     }
 
 }

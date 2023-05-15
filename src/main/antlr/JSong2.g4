@@ -37,7 +37,7 @@ exp
     |   WILD                            # field_values
     |   DESC                            # descendants
     |   ROOT                            # path_root
-    |   GOTO                            # goto
+    |   GOTO exp                        # goto
     |   (PARENT | (DOT PARENT)+)        # parent
     |   DOT ID                          # path
     |   ARR_L exp ARR_R                 # array
@@ -53,7 +53,7 @@ DESC: '**';
 
 DOT: '.';
 
-GOTO: '<~';
+GOTO: '->';
 
 ID
 	:   [\p{L}] [\p{L}0-9_]*

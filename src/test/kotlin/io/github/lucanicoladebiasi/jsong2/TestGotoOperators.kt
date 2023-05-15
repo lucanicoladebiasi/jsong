@@ -45,7 +45,7 @@ class TestGotoOperators {
 
     @Test
     fun `Goto all 'ref'`() {
-        val expression = "**.ref<~"
+        val expression = "**.ref->**."
 
         @Language("JSON")
         val expected = mapr.readTree(

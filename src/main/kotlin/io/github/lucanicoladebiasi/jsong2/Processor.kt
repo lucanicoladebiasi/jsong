@@ -12,7 +12,7 @@ import org.apache.commons.text.StringEscapeUtils
 
 class Processor(
     root: JsonNode?,
-    val mapr: ObjectMapper
+    mapr: ObjectMapper
 ) : JSong2BaseVisitor<SequenceNode>() {
 
     companion object {
@@ -111,6 +111,12 @@ class Processor(
         return res
     }
 
+    private fun trace() {
+        stack.firstOrNull()?.let {
+            trace.add(it)
+        }
+    }
+
     override fun visitArray(
         ctx: JSong2Parser.ArrayContext
     ): SequenceNode {
@@ -130,9 +136,7 @@ class Processor(
     override fun visitDescendants(
         ctx: JSong2Parser.DescendantsContext
     ): SequenceNode {
-        stack.firstOrNull()?.let {
-            trace.add(it)
-        }
+        trace()
         return push(descendants(pop()))
     }
 
@@ -146,9 +150,7 @@ class Processor(
     override fun visitField_values(
         ctx: JSong2Parser.Field_valuesContext
     ): SequenceNode {
-        stack.firstOrNull()?.let {
-            trace.add(it)
-        }
+        trace()
         val res = SequenceNode(nf)
         pop().flatten.forEach { node ->
             when (node) {
@@ -165,9 +167,10 @@ class Processor(
     override fun visitGoto(
         ctx: JSong2Parser.GotoContext
     ): SequenceNode {
+        trace()
         val res = SequenceNode(nf)
         pop().flatten.forEach {
-            val expr = "**.`${it.asText()}`"
+            val expr = "${ctx.exp().text}`${it.asText()}`"
             val eval = JSong.expression(expr).evaluate(trace.first())
             res.append(eval)
         }
@@ -180,9 +183,7 @@ class Processor(
     override fun visitId(
         ctx: JSong2Parser.IdContext
     ): SequenceNode {
-        stack.firstOrNull()?.let {
-            trace.add(it)
-        }
+        trace()
         return push(select(pop(), sanitise(ctx.ID().text)))
     }
 
@@ -207,9 +208,7 @@ class Processor(
     override fun visitPath(
         ctx: JSong2Parser.PathContext
     ): SequenceNode {
-        stack.firstOrNull()?.let {
-            trace.add(it)
-        }
+        trace()
         return push(select(pop(), sanitise(ctx.ID().text)))
     }
 

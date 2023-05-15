@@ -43,4 +43,53 @@ class TestGotoOperators {
         assertEquals(expected, actual)
     }
 
+    @Test
+    fun `Goto all 'ref'`() {
+        val expression = "**.ref<~"
+
+        @Language("JSON")
+        val expected = mapr.readTree(
+            """
+            [ 
+                {
+                  "type" : "pulsar-cluster",
+                  "classifier" : "new-cluster"
+                }, {
+                  "type" : "pulsar-topic",
+                  "target" : {
+                    "local-id" : "pulsar",
+                    "type" : "dependency-reference"
+                  }
+                }, {
+                  "type" : "postgres-database",
+                  "database-name" : "resources",
+                  "username" : "resources-user"
+                }, {
+                  "type" : "postgres-database",
+                  "database-name" : "resources",
+                  "username" : "resources-user"
+                }, {
+                  "type" : "postgres-database",
+                  "database-name" : "resources",
+                  "username" : "resources-user"
+                }, {
+                  "type" : "postgres-database",
+                  "database-name" : "resources",
+                  "username" : "resources-user"
+                }, {
+                  "type" : "postgres-database",
+                  "database-name" : "resources",
+                  "username" : "resources-user"
+                }, {
+                  "type" : "postgres-database",
+                  "database-name" : "resources",
+                  "username" : "resources-user"
+                } 
+            ]
+            """.trimIndent()
+        )
+        val actual = JSong.expression(expression).evaluate(node)
+        assertEquals(expected, actual)
+    }
+
 }

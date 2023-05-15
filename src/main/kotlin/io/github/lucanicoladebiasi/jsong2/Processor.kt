@@ -12,7 +12,7 @@ import org.apache.commons.text.StringEscapeUtils
 
 class Processor(
     root: JsonNode?,
-    mapr: ObjectMapper
+    val mapr: ObjectMapper
 ) : JSong2BaseVisitor<SequenceNode>() {
 
     companion object {
@@ -47,10 +47,11 @@ class Processor(
     }
 
     private fun descendants(
-        node: JsonNode
+        node: JsonNode?
     ): SequenceNode {
         val res = SequenceNode(nf)
         when(node) {
+            null -> return res
             is ArrayNode -> {
                 node.forEach {
                     res.addAll(descendants(it))
@@ -132,8 +133,7 @@ class Processor(
         stack.firstOrNull()?.let {
             trace.add(it)
         }
-        val res = descendants(pop().value!!)
-        return push(res)
+        return push(descendants(pop()))
     }
 
     override fun visitExp_to_eof(
@@ -165,7 +165,16 @@ class Processor(
     override fun visitGoto(
         ctx: JSong2Parser.GotoContext
     ): SequenceNode {
-        return super.visitGoto(ctx)
+        val res = SequenceNode(nf)
+        pop().flatten.forEach {
+            val expr = "**.`${it.asText()}`"
+            val eval = JSong.expression(expr).evaluate(trace.first())
+            res.append(eval)
+        }
+
+        //println(mapr.writerWithDefaultPrettyPrinter().writeValueAsString(res.value))
+
+        return push(res)
     }
 
     override fun visitId(
@@ -182,8 +191,7 @@ class Processor(
         ctx: JSong2Parser.NegativeContext
     ): SequenceNode {
         visit(ctx.exp())
-        val value = pop().value
-        val res = when (value) {
+        val res = when (val value = pop().value) {
             is NumericNode -> SequenceNode(nf).append(DecimalNode(value.decimalValue().negate()))
             else -> throw JSongParseException(ctx, "${ctx.text} not a number")
         }

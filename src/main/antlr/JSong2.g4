@@ -33,24 +33,27 @@ grammar JSong2;
 exp_to_eof  :   exp* EOF
             ;
 
-exp :   ID                                  # id
-    |   '*'                                 # field_values
-    |   DESCEND                             # descendants
-    |   ROOT                                # path_root
-    |   GOTO exp                            # goto
-    |   (MODULE | ('.' MODULE)+)            # parent
-    |   '.' ID                              # path
-    |   ARR_OPEN exp ARR_CLOSE              # array
+exp :   ID                                  # select
+    |   '*'                                 # fields
+    |   '**'                                # descendants
+    |   '$$'                                # root
+    |   '%'                                 # parent
+    |   '->' exp                            # goto
+    |   '.' exp                             # map
+    |  '[' exp ']'                          # index
     |   '{' (field (',' field)*)? '}'       # object
-    |   literal = (TRUE | FALSE)            # boolean
+    |   (TRUE | FALSE)                      # boolean
     |   SUB exp                             # negative
     |   '(' (exp (';' (exp)?)*)? ')'        # block
-    |   NUMBER                              # number
+    |   number                              # decimal
     |   STRING                              # string
     |   NULL                                # null
     ;
 
-field   : key = exp ':' value = exp;
+field   : key = exp ':' value = exp+;
+
+number  : NUMBER;
+
 
 // LEXER RULES
 
@@ -62,15 +65,6 @@ STRING  : '\'' (ESC | ~['\\])* '\''
 	    ;
 
 NULL : 'null';
-
-ARR_OPEN    : '[';
-ARR_CLOSE   : ']';
-
-
-MAP         : '.';
-CONTEXT     : '$';
-ROOT        : '$$' ;
-DESCEND     : '**';
 
 NUMBER  : INT '.' [0-9]+ EXP? // 1.35, 1.35E-9, 0.3
         | INT EXP             // 1e10 3e4

@@ -10,15 +10,20 @@ class SequenceNode(
 
     val flatten: ArrayNode get() = flatten(this)
 
-    val value: JsonNode? get() = reduce(flatten)
+    val value: JsonNode? get() {
+        val node = flatten
+        return when (node.size()) {
+            0 -> null
+            1 -> node[0]
+            else -> node
+        }
+    }
 
     fun append(node: JsonNode?): SequenceNode {
-        when(node) {
-            null -> this
+        when (node) {
+            is SequenceNode -> addAll(node)
             is ArrayNode -> add(node)
-            else -> {
-                add(SequenceNode(nf).add(node))
-            }
+            else -> add(SequenceNode(nf).add(node))
         }
         return this
     }
@@ -26,26 +31,13 @@ class SequenceNode(
     private fun flatten(array: ArrayNode): ArrayNode {
         val flat = nf.arrayNode()
         array.forEach {
-            when(it) {
+            when (it) {
                 is ArrayNode -> flat.addAll(flatten(it))
                 else -> flat.add(it)
             }
         }
         return flat
     }
-
-    private fun reduce(node: JsonNode?): JsonNode? {
-        return when(node) {
-            is ArrayNode -> when(node.size()) {
-                0 -> null
-                1 -> node[0]
-                else -> node
-            }
-            else -> node
-        }
-    }
-
-
 
 } //~ SequenceNode
 

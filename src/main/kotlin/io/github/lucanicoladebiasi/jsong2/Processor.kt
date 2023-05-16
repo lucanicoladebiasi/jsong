@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.BooleanNode
 import com.fasterxml.jackson.databind.node.DecimalNode
 import com.fasterxml.jackson.databind.node.NullNode
-import com.fasterxml.jackson.databind.node.NumericNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.node.TextNode
 import io.github.lucanicoladebiasi.jsong1.antlr.JSong2BaseVisitor
@@ -14,7 +13,7 @@ import io.github.lucanicoladebiasi.jsong1.antlr.JSong2Parser
 import org.apache.commons.text.StringEscapeUtils
 
 class Processor(
-    root: JsonNode?,
+    private val root: JsonNode?,
     mapr: ObjectMapper
 ) : JSong2BaseVisitor<SequenceNode>() {
 
@@ -26,7 +25,7 @@ class Processor(
             return StringEscapeUtils.unescapeJson(
                 when {
                     txt.startsWith("`") && txt.endsWith("`")
-                            || txt.startsWith("'") && txt.endsWith("''")
+                            || txt.startsWith("'") && txt.endsWith("'")
                             || txt.startsWith("\"") && txt.endsWith("\"") -> {
                         txt.substring(1, txt.length - 1)
                     }
@@ -43,8 +42,6 @@ class Processor(
 
     private val stack = ArrayDeque<SequenceNode>()
 
-    private val trace = ArrayDeque<SequenceNode>()
-
     init {
         push(SequenceNode(nf).append(root))
     }
@@ -52,25 +49,25 @@ class Processor(
     private fun descendants(
         node: JsonNode?
     ): SequenceNode {
-        val res = SequenceNode(nf)
+        val result = SequenceNode(nf)
         when(node) {
-            null -> return res
+            null -> return result
             is ArrayNode -> {
                 node.forEach {
-                    res.addAll(descendants(it))
+                    result.addAll(descendants(it))
                 }
             }
             is ObjectNode -> {
-                res.add(node)
+                result.add(node)
                 node.fields().forEach {
-                    res.addAll(descendants(it.value))
+                    result.addAll(descendants(it.value))
                 }
             }
             else -> {
-                res.add(node)
+                result.add(node)
             }
         }
-        return res
+        return result
     }
 
     private fun pop(): SequenceNode {
@@ -86,70 +83,32 @@ class Processor(
 
     private fun select(
         seq: SequenceNode,
-        offset: Int
-    ): SequenceNode {
-        val res = SequenceNode(nf)
-        seq.forEach { context ->
-            val size = context.size()
-            val index = if (offset < 0) size + offset else offset
-            if (index in 0 until size) {
-                res.append(context[index])
-            }
-        }
-        return res
-    }
-
-    private fun select(
-        seq: SequenceNode,
         key: String
     ): SequenceNode {
-        val res = SequenceNode(nf)
+        val result = SequenceNode(nf)
         seq.forEach { context ->
             context.filterIsInstance<ObjectNode>().filter { node ->
                 node.has(key)
             }.forEach { node ->
-                res.append(node[key])
+                result.append(node[key])
             }
         }
-        return res
-    }
-
-    private fun trace() {
-        stack.firstOrNull()?.let {
-            trace.add(it)
-        }
-    }
-
-    override fun visitArray(
-        ctx: JSong2Parser.ArrayContext
-    ): SequenceNode {
-        visit(ctx.exp())
-        val rhs = pop()
-        val lhs = pop()
-        val res = when (lhs.isEmpty) {
-            true -> rhs
-            else -> when (val offset = rhs.value) {
-                is NumericNode -> select(lhs, offset.asInt())
-                else -> TODO()
-            }
-        }
-        return push(res)
+        return result
     }
 
     override fun visitBoolean(
         ctx: JSong2Parser.BooleanContext
     ): SequenceNode {
-        val literal = when(ctx.literal.type) {
-            JSong2Parser.TRUE -> BooleanNode.TRUE
+        val boolean = when(ctx.TRUE() != null) {
+            true -> BooleanNode.TRUE
             else -> BooleanNode.FALSE
         }
-        return push(SequenceNode(nf).append(literal))
+        return push(SequenceNode(nf).append(boolean))
     }
 
     override fun visitDescendants(
         ctx: JSong2Parser.DescendantsContext
     ): SequenceNode {
-        trace()
         return push(descendants(pop()))
     }
 
@@ -160,53 +119,67 @@ class Processor(
         return pop()
     }
 
-    override fun visitField_values(
-        ctx: JSong2Parser.Field_valuesContext
+    override fun visitFields(
+        ctx: JSong2Parser.FieldsContext
     ): SequenceNode {
-        trace()
-        val res = SequenceNode(nf)
+        val result = SequenceNode(nf)
         pop().flatten.forEach { node ->
             when (node) {
                 is ObjectNode -> node.fields().forEach { field ->
-                    res.append(field.value)
+                    result.append(field.value)
                 }
 
-                else -> res.append(node)
+                else -> result.append(node)
             }
         }
-        return push(res)
+        return push(result)
     }
 
     override fun visitGoto(
         ctx: JSong2Parser.GotoContext
     ): SequenceNode {
-        trace()
         val res = SequenceNode(nf)
         pop().flatten.forEach {
             val expr = "${ctx.exp().text}`${it.asText()}`"
-            val eval = JSong.expression(expr).evaluate(trace.first())
+            val eval = JSong.expression(expr).evaluate(root)
             res.append(eval)
         }
         return push(res)
     }
 
-    override fun visitId(
-        ctx: JSong2Parser.IdContext
+    @Throws(
+        NotNumericException::class,
+    )
+    override fun visitIndex(
+        ctx: JSong2Parser.IndexContext
     ): SequenceNode {
-        trace()
-        return push(select(pop(), sanitise(ctx.ID().text)))
+        visit(ctx.exp())
+        val offset = pop().value?.asInt() ?: throw NotNumericException(ctx, "${ctx.exp().text} not a number")
+        val result = SequenceNode(nf)
+        pop().forEach { context ->
+            when(context) {
+                is ArrayNode -> {
+                    val size = context.size()
+                    val index = if (offset < 0) size + offset else offset
+                    if (index in 0 until size) {
+                        result.append(context[index])
+                    }
+                }
+            }
+        }
+        return push(result)
     }
 
-    @Throws(JSongParseException::class)
+    @Throws(
+        NotNumericException::class
+    )
     override fun visitNegative(
         ctx: JSong2Parser.NegativeContext
     ): SequenceNode {
         visit(ctx.exp())
-        val res = when (val value = pop().value) {
-            is NumericNode -> SequenceNode(nf).append(DecimalNode(value.decimalValue().negate()))
-            else -> throw JSongParseException(ctx, "${ctx.text} not a number")
-        }
-        return push(res)
+        val context = pop()
+        val n = context.value?.decimalValue()?.negate() ?: throw NotNumericException(ctx, "${ctx.text} not a number")
+        return push(SequenceNode(nf).append(DecimalNode(n)))
     }
 
     override fun visitNull(
@@ -235,28 +208,28 @@ class Processor(
         return push(SequenceNode(nf).append(obj))
     }
 
-    override fun visitPath(
-        ctx: JSong2Parser.PathContext
+    override fun visitSelect(
+        ctx: JSong2Parser.SelectContext
     ): SequenceNode {
-        trace()
         return push(select(pop(), sanitise(ctx.ID().text)))
     }
 
-    override fun visitParent(
-        ctx: JSong2Parser.ParentContext
-    ): SequenceNode {
-        val index = trace.size - ctx.MODULE().size
-        if (index < 0) throw JSongOutOfBoundsException(ctx, "${ctx.text} out of bound")
-        val pop = pop().flatten
-        val rec = trace[index].flatten
-        val res = SequenceNode(nf)
-        val ratio = rec.size().toDouble() / pop.size().toDouble()
-        repeat(pop.size()) {
-            val e = rec[(ratio * it).toInt()]
-            res.append(e)
-        }
-        return push(res)
-    }
+
+//    override fun visitParent(
+//        ctx: JSong2Parser.ParentContext
+//    ): SequenceNode {
+//        val index = trace.size - ctx.MODULE().size
+//        if (index < 0) throw JSongOutOfBoundsException(ctx, "${ctx.text} out of bound")
+//        val pop = pop().flatten
+//        val rec = trace[index].flatten
+//        val res = SequenceNode(nf)
+//        val ratio = rec.size().toDouble() / pop.size().toDouble()
+//        repeat(pop.size()) {
+//            val e = rec[(ratio * it).toInt()]
+//            res.append(e)
+//        }
+//        return push(res)
+//    }
 
     override fun visitString(
         ctx: JSong2Parser.StringContext

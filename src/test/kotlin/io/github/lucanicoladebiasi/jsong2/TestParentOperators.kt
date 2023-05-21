@@ -55,18 +55,18 @@ class TestParentOperators {
         assertEquals(expected, actual)
     }
 
+
     /**
      * https://docs.jsonata.org/path-operators#-parent
      */
     @Test
-    @Disabled
     fun `Parent - composite`() {
         val expression =
             """
             Account.Order.Product.{
-               'Product': `Product Name`,
-               'Order': %.OrderID,
-               'Account': %.%.`Account Name`
+                'Product': `Product Name`,
+                'Order': %.OrderID,
+                'Account': %.%.`Account Name`
             }
             """.trimIndent()
 

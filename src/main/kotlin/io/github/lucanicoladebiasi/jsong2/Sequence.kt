@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 
-class SequenceNode(
+class Sequence(
     private val nf: JsonNodeFactory
 ) : ArrayNode(nf) {
 
@@ -19,11 +19,11 @@ class SequenceNode(
         }
     }
 
-    fun append(node: JsonNode?): SequenceNode {
+    fun append(node: JsonNode?): Sequence {
         when (node) {
-            is SequenceNode -> addAll(node)
+            is Sequence -> addAll(node)
             is ArrayNode -> add(node)
-            else -> add(SequenceNode(nf).add(node))
+            else -> add(Sequence(nf).add(node))
         }
         return this
     }

@@ -34,13 +34,13 @@ exp_to_eof  :   exp* EOF
             ;
 
 exp :   ID                                  # select
+    |   MODULE                              # parent
     |   '*'                                 # fields
     |   '**'                                # descendants
     |   '$$'                                # root
-    |   '%'                                 # parent
     |   '->' exp                            # goto
     |   '.' exp                             # map
-    |  '[' exp ']'                          # index
+    |  '[' exp ']'                          # filter
     |   '{' (field (',' field)*)? '}'       # object
     |   (TRUE | FALSE)                      # boolean
     |   SUB exp                             # negative
@@ -50,7 +50,7 @@ exp :   ID                                  # select
     |   NULL                                # null
     ;
 
-field   : key = exp ':' value = exp+;
+field   : key = exp ':' value += exp+;
 
 number  : NUMBER;
 

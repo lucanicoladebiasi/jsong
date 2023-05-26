@@ -26,9 +26,9 @@ package io.github.lucanicoladebiasi.jsong1
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.*
-import io.github.lucanicoladebiasi.jsong1.antlr.JSongBaseVisitor
-import io.github.lucanicoladebiasi.jsong1.antlr.JSongLexer
-import io.github.lucanicoladebiasi.jsong1.antlr.JSongParser
+import io.github.lucanicoladebiasi.jsong.antlr.JSongBaseVisitor
+import io.github.lucanicoladebiasi.jsong.antlr.JSongLexer
+import io.github.lucanicoladebiasi.jsong.antlr.JSongParser
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import java.lang.reflect.InvocationTargetException

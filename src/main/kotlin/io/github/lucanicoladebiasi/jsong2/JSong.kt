@@ -2,8 +2,8 @@ package io.github.lucanicoladebiasi.jsong2
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import io.github.lucanicoladebiasi.jsong1.antlr.JSong2Lexer
-import io.github.lucanicoladebiasi.jsong1.antlr.JSong2Parser
+import io.github.lucanicoladebiasi.jsong.antlr.JSong2Lexer
+import io.github.lucanicoladebiasi.jsong.antlr.JSong2Parser
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 

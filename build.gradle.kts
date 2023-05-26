@@ -115,7 +115,7 @@ tasks.compileTestKotlin {
 
 
 tasks.generateGrammarSource {
-    outputDirectory = file("${outputDirectory.path}/io/github/lucanicoladebiasi/jsong1/antlr")
+    outputDirectory = file("${outputDirectory.path}/io/github/lucanicoladebiasi/jsong/antlr")
     maxHeapSize = "64m"
     arguments = arguments + listOf("-visitor", "-long-messages")
 }

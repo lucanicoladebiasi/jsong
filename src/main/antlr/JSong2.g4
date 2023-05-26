@@ -25,7 +25,7 @@ SOFTWARE.
 grammar JSong2;
 
 @header {
-    package io.github.lucanicoladebiasi.jsong1.antlr;
+    package io.github.lucanicoladebiasi.jsong.antlr;
 }
 
 // PARSER RULES
@@ -40,7 +40,8 @@ exp :   ID                                  # select
     |   '$$'                                # root
     |   '->' exp                            # goto
     |   '.' exp                             # map
-    |  '[' exp ']'                          # filter
+    |  '[' exp  (',' exp)* ']'              # array
+    |  lhs = exp '[' rhs = exp ']'          # filter
     |   '{' (field (',' field)*)? '}'       # object
     |   (TRUE | FALSE)                      # boolean
     |   SUB exp                             # negative

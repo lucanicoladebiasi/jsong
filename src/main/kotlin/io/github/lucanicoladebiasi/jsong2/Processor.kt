@@ -36,6 +36,8 @@ class Processor(
 
     private val operands = Operands()
 
+    private val path = Stack<String>()
+
     init {
         operands.push(Sequence(nf).append(root))
     }
@@ -73,6 +75,7 @@ class Processor(
             visit(exp)
             array.add(operands.pop().value)
         }
+
         return operands.push(Sequence(nf).append(array))
     }
 
@@ -141,6 +144,8 @@ class Processor(
         }
         return operands.push(result)
     }
+
+  
 
     override fun visitMap(
         ctx: JSong2Parser.MapContext

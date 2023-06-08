@@ -5,7 +5,8 @@ open class Stack<T>() : AbstractMutableList<T>() {
     override val size: Int
         get() = deck.size
 
-    private val deck = ArrayDeque<T>()
+    private var deck = ArrayDeque<T>()
+
     override fun add(index: Int, element: T) {
         deck.add(index, element)
     }
@@ -28,7 +29,11 @@ open class Stack<T>() : AbstractMutableList<T>() {
     }
 
     override fun set(index: Int, element: T): T {
-        return deck.set(index, element)
+        when (index < deck.size) {
+            true -> deck.set(index, element)
+            else -> deck.add(index, element)
+        }
+        return element
     }
 
-}
+} //~ Stack

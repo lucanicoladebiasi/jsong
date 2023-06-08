@@ -91,17 +91,17 @@ publishing {
             }
         }
     }
-    repositories {
-        maven {
-            val releasesRepoUrl = uri("https://s01.oss.sonatype.org/repos/releases")
-            val snapshotsRepoUrl = uri("https://s01.oss.sonatype.org/repos/snapshots")
-            url = if (version.toString().endsWith("SNAPSHOT")) snapshotsRepoUrl else releasesRepoUrl
-            credentials {
-                username = providers.gradleProperty("repoUser").get()
-                password = providers.gradleProperty("repoPassword").get()
-            }
-        }
-    }
+//    repositories {
+//        maven {
+//            val releasesRepoUrl = uri("https://s01.oss.sonatype.org/repos/releases")
+//            val snapshotsRepoUrl = uri("https://s01.oss.sonatype.org/repos/snapshots")
+//            url = if (version.toString().endsWith("SNAPSHOT")) snapshotsRepoUrl else releasesRepoUrl
+//            credentials {
+//                username = providers.gradleProperty("repoUser").get()
+//                password = providers.gradleProperty("repoPassword").get()
+//            }
+//        }
+//    }
 }
 
 signing {

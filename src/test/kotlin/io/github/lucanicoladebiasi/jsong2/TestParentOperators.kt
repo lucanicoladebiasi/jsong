@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import kotlin.test.assertEquals
@@ -99,6 +98,20 @@ class TestParentOperators {
         )
         val actual = JSong.expression(expression).evaluate(node)
         assertEquals(expected, actual)
+    }
+
+    @Test
+    fun `test`() {
+        val expression =
+            """
+            Account.Order.Product.{
+                'Product': `Product Name`,
+                'Colour': Description.Colour
+            }
+            """.trimIndent()
+
+        val actual = JSong.expression(expression).evaluate(node)
+        println(actual)
     }
 
 }

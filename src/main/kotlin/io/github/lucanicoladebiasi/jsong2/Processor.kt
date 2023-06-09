@@ -32,27 +32,27 @@ class Processor(
 
     } //~ companion
 
+    private val cursors = Stack<Int>()
+
     private val nf = mapr.nodeFactory
 
-    private val operands = Operands()
-
-    private val path = Stack<String>()
+    private val operands = Stack<Sequence>()
 
     init {
         operands.push(Sequence(nf).append(root))
-        path.push("")
     }
 
     private fun descendants(
         node: JsonNode
     ): Sequence {
         val result = Sequence(nf)
-        when(node) {
+        when (node) {
             is ArrayNode -> {
                 node.forEach {
                     result.addAll(descendants(it))
                 }
             }
+
             is ObjectNode -> {
                 result.add(node)
                 node.fields().forEach { field ->
@@ -61,6 +61,7 @@ class Processor(
                     }
                 }
             }
+
             else -> {
                 result.add(node)
             }
@@ -72,9 +73,11 @@ class Processor(
         ctx: JSong2Parser.ArrayContext
     ): Sequence {
         val array = nf.arrayNode()
+        val context = operands.pop() ?: Sequence(nf)
         ctx.exp().forEach { exp ->
+            operands.push(context)
             visit(exp)
-            array.add(operands.pop().value)
+            array.add(operands.pop()?.value)
         }
 
         return operands.push(Sequence(nf).append(array))
@@ -90,7 +93,7 @@ class Processor(
         ctx: JSong2Parser.DescendantsContext
     ): Sequence {
         val result = Sequence(nf)
-        val context = operands.pop().value
+        val context = operands.pop()?.value
         if (context != null) {
             result.append(descendants(context))
         }
@@ -101,14 +104,14 @@ class Processor(
         ctx: JSong2Parser.Exp_to_eofContext
     ): Sequence {
         super.visitExp_to_eof(ctx)
-        return operands.pop()
+        return operands.pop() ?: Sequence(nf)
     }
 
     override fun visitFields(
         ctx: JSong2Parser.FieldsContext
     ): Sequence {
         val result = Sequence(nf)
-        val context = operands.pop().value
+        val context = operands.pop()?.value
         if (context is ObjectNode) {
             context.fields().forEach { field ->
                 if (field.value != null) {
@@ -124,8 +127,8 @@ class Processor(
     ): Sequence {
         visit(ctx.lhs)
         visit(ctx.rhs)
-        val predicate = operands.pop().value
-        val pop = operands.pop()
+        val predicate = operands.pop()?.value
+        val pop = operands.pop() ?: Sequence(nf)
         val result = Sequence(nf)
         if (predicate != null) {
             when {
@@ -146,18 +149,20 @@ class Processor(
         return operands.push(result)
     }
 
-  
-
     override fun visitMap(
         ctx: JSong2Parser.MapContext
     ): Sequence {
         val result = Sequence(nf)
-        path.push("")
-        operands.pop().flatten.forEachIndexed { index, context ->
+        val pop = operands.pop()?.flatten ?: Sequence(nf)
+        cursors.push(0)
+        pop.forEachIndexed { index, context ->
+            cursors.poke(index)
+            println("map: ${cursors.size}, ${cursors.peek()}")
             operands.push(Sequence(nf).append(context))
             visit(ctx.exp())
             result.append(operands.pop())
         }
+        cursors.pop()
         return operands.push(result)
     }
 
@@ -167,7 +172,7 @@ class Processor(
         visit(ctx.exp())
         val context = operands.pop()
         val number =
-            context.value?.decimalValue()?.negate() ?: throw NotNumericException(ctx, "${ctx.text} not a number")
+            context?.value?.decimalValue()?.negate() ?: throw NotNumericException(ctx, "${ctx.text} not a number")
         return operands.push(Sequence(nf).append(DecimalNode(number)))
     }
 
@@ -187,28 +192,19 @@ class Processor(
         ctx: JSong2Parser.ObjectContext
     ): Sequence {
         val obj = ObjectNode(nf)
-        val mark = path.size
+        val context = operands.pop() ?: Sequence(nf)
         ctx.field().forEachIndexed { index, field ->
+            operands.push(context)
             visit(field.key)
-            val key = operands.pop().value?.asText() ?: index.toString()
+            val key = operands.pop()?.value?.asText() ?: index.toString()
+            operands.push(context)
             field.value.forEach {
                 visit(it)
             }
-            val value = operands.pop().value ?: NullNode.instance
+            val value = operands.pop()?.value ?: NullNode.instance
             obj.set<JsonNode>(key, value)
-            while (path.size > mark) {
-                path.pop()
-            }
         }
         return operands.push(Sequence(nf).append(obj))
-    }
-
-    override fun visitParent(
-        ctx: JSong2Parser.ParentContext
-    ): Sequence {
-        path[path.size - 1] = ctx.text
-        println(path)
-        return operands.push(Sequence(nf))
     }
 
     override fun visitSelect(
@@ -216,9 +212,8 @@ class Processor(
     ): Sequence {
         val result = Sequence(nf)
         val id = sanitise(ctx.ID().text)
-        path[path.size - 1] = id
-        println(path)
-        operands.pop().forEach { context ->
+        println("sel: $id")
+        operands.pop()?.forEach { context ->
             context.filterIsInstance<ObjectNode>().filter { node ->
                 node.has(id)
             }.forEach { node ->

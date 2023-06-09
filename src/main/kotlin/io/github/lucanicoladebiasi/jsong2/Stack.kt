@@ -15,6 +15,18 @@ open class Stack<T>() : AbstractMutableList<T>() {
         return deck.get(index)
     }
 
+    open fun peek(): T? {
+        return deck.lastOrNull()
+    }
+
+    open fun poke(element: T): T {
+        when(deck.isEmpty()) {
+            true -> push(element)
+            else -> deck[deck.size - 1] = element
+        }
+        return element
+    }
+
     open fun pop(): T? {
         return deck.removeLastOrNull()
     }

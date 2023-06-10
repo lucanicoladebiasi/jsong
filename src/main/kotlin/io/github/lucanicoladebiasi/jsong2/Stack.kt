@@ -19,13 +19,13 @@ open class Stack<T>() : AbstractMutableList<T>() {
         return deck.lastOrNull()
     }
 
-    open fun poke(element: T): T {
-        when(deck.isEmpty()) {
-            true -> push(element)
-            else -> deck[deck.size - 1] = element
-        }
-        return element
-    }
+//    open fun poke(element: T): T {
+//        when(deck.isEmpty()) {
+//            true -> push(element)
+//            else -> deck[deck.size - 1] = element
+//        }
+//        return element
+//    }
 
     open fun pop(): T? {
         return deck.removeLastOrNull()
@@ -42,7 +42,7 @@ open class Stack<T>() : AbstractMutableList<T>() {
 
     override fun set(index: Int, element: T): T {
         when (index < deck.size) {
-            true -> deck.set(index, element)
+            true -> deck[index] = element
             else -> deck.add(index, element)
         }
         return element

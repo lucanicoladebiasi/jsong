@@ -4,10 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.*
 import io.github.lucanicoladebiasi.jsong.antlr.JSong2BaseVisitor
-import io.github.lucanicoladebiasi.jsong.antlr.JSong2Lexer
 import io.github.lucanicoladebiasi.jsong.antlr.JSong2Parser
-import org.antlr.v4.runtime.CharStreams
-import org.antlr.v4.runtime.CommonTokenStream
 import org.apache.commons.text.StringEscapeUtils
 
 class Processor(
@@ -16,20 +13,6 @@ class Processor(
 ) : JSong2BaseVisitor<Sequence>() {
 
     companion object {
-
-        private fun resolve(
-            path: Stack<String>,
-            parentToken: String
-        ): Stack<String> {
-            val solved = Stack<String>()
-            path.forEach {
-                when(parentToken == it) {
-                    true -> solved.pop()
-                    else -> solved.push(it)
-                }
-            }
-            return solved
-        }
 
         fun sanitise(
             txt: String
@@ -50,17 +33,16 @@ class Processor(
 
     } //~ companion
 
-    //private val cursors = Stack<Int>()
-
     private val nf = mapr.nodeFactory
+
+    private val loop = Stack<Int>()
 
     private val operands = Stack<Sequence>()
 
-    private val path = Stack<String>()
+    private val path = Stack<Sequence>()
 
     init {
-        operands.push(Sequence(nf).append(root))
-        path.add("")
+        operands.push(path.push(Sequence(nf).append(root)))
     }
 
     private fun descendants(
@@ -173,17 +155,15 @@ class Processor(
         ctx: JSong2Parser.MapContext
     ): Sequence {
         val result = Sequence(nf)
-        val pop = operands.pop()?.flatten ?: Sequence(nf)
-        path.push("")
-        //cursors.push(0)
-        pop.forEachIndexed { index, context ->
-            //cursors.poke(index)
-            //println("map: ${cursors.size}, ${cursors.peek()}")
+        loop.push(-1)
+        operands.pop()?.flatten?.forEachIndexed { index, context ->
+            loop[loop.size -1] = index
             operands.push(Sequence(nf).append(context))
             visit(ctx.exp())
             result.append(operands.pop())
         }
-        return operands.push(result)
+        loop.pop()
+        return operands.push(path.push(result))
     }
 
     override fun visitNegative(
@@ -213,7 +193,7 @@ class Processor(
     ): Sequence {
         val obj = ObjectNode(nf)
         //cursors.push(0)
-        val mark = path.size
+        //val mark = path.size
         val context = operands.pop() ?: Sequence(nf)
         ctx.field().forEachIndexed { index, field ->
             //cursors.poke(index)
@@ -230,9 +210,9 @@ class Processor(
 //            while (cursors.size > mark) {
 //                cursors.pop()
 //            }
-            while (path.size > mark) {
-                path.pop()
-            }
+//            while (path.size > mark) {
+//                path.pop()
+//            }
         }
         //cursors.pop()
         return operands.push(Sequence(nf).append(obj))
@@ -241,14 +221,17 @@ class Processor(
     override fun visitParent(
         ctx: JSong2Parser.ParentContext
     ): Sequence {
-        path.add("%")
-        val expr = resolve(path, "%").joinToString(".")
-        val parser = JSong2Parser(CommonTokenStream(JSong2Lexer(CharStreams.fromString(expr))))
-        val evaluation = Processor(root, mapr).visit(parser.exp_to_eof())
-        val result = Sequence(nf)
-        val pop = operands.pop()?.flatten ?: Sequence(nf)
-        repeat(pop.size()) {
-            result.append(evaluation)
+        val result =  Sequence(nf)
+        operands.pop()
+        val parent = path.pop()
+        if (parent != null) {
+            if (path.isNotEmpty()) {
+                path.peek()?.flatten?.forEach { context ->
+                    repeat(parent.size()) {
+                        result.append(context)
+                    }
+                }
+            }
         }
         return operands.push(result)
     }
@@ -258,7 +241,6 @@ class Processor(
     ): Sequence {
         val result = Sequence(nf)
         val id = sanitise(ctx.ID().text)
-        path[path.size - 1] = id
         operands.pop()?.forEach { context ->
             context.filterIsInstance<ObjectNode>().filter { node ->
                 node.has(id)

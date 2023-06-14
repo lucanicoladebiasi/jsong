@@ -34,11 +34,11 @@ exp_to_eof  :   exp* EOF
             ;
 
 exp :   ID                                  # select
-    |   MODULE                              # parent
     |   '*'                                 # fields
     |   '**'                                # descendants
     |   '$$'                                # root
     |   '->' exp                            # goto
+    |   '.' MODULE ('.' MODULE)*            # parent
     |   '.' exp                             # map
     |  '[' exp  (',' exp)* ']'              # array
     |  lhs = exp '[' rhs = exp ']'          # filter

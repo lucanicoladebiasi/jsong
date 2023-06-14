@@ -35,8 +35,6 @@ class Processor(
 
     private val nf = mapr.nodeFactory
 
-    private val loop = Stack<Int>()
-
     private val operands = Stack<Sequence>()
 
     private val path = Stack<Sequence>()
@@ -155,14 +153,11 @@ class Processor(
         ctx: JSong2Parser.MapContext
     ): Sequence {
         val result = Sequence(nf)
-        loop.push(-1)
         operands.pop()?.flatten?.forEachIndexed { index, context ->
-            loop[loop.size -1] = index
             operands.push(Sequence(nf).append(context))
             visit(ctx.exp())
             result.append(operands.pop())
         }
-        loop.pop()
         return operands.push(path.push(result))
     }
 
@@ -222,16 +217,11 @@ class Processor(
         ctx: JSong2Parser.ParentContext
     ): Sequence {
         val result =  Sequence(nf)
-        operands.pop()
-        val parent = path.pop()
-        if (parent != null) {
-            if (path.isNotEmpty()) {
-                path.peek()?.flatten?.forEach { context ->
-                    repeat(parent.size()) {
-                        result.append(context)
-                    }
-                }
-            }
+        val context = operands.pop()?.flatten ?: Sequence(nf)
+        val parent = path[path.size - ctx.MODULE().size - 1].flatten
+        val ratio = parent.size().toFloat() / context.size().toFloat()
+        repeat(context.size()) {index ->
+            result.append(parent[(ratio * index).toInt()])
         }
         return operands.push(result)
     }

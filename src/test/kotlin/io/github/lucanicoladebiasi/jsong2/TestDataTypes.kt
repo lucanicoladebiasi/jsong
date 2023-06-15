@@ -49,7 +49,7 @@ class TestDataTypes {
             ]
             """
         val expected = mapr.readTree(expression)
-        val actual = JSong.expression(expression).evaluate()
+        val actual = JSong(expression).evaluate()
         assertEquals(expected, actual)
     }
 
@@ -60,7 +60,7 @@ class TestDataTypes {
     fun `Literal - false`() {
         val expression = "false"
         val expected = BooleanNode.FALSE
-        val actual = JSong.expression(expression).evaluate()
+        val actual = JSong(expression).evaluate()
         assertEquals(expected, actual)
     }
 
@@ -71,7 +71,7 @@ class TestDataTypes {
     fun `Literal - null`() {
         val expression = "null"
         val expected = NullNode.instance
-        val actual = JSong.expression(expression).evaluate()
+        val actual = JSong(expression).evaluate()
         assertEquals(expected, actual)
     }
 
@@ -82,7 +82,7 @@ class TestDataTypes {
     fun `Literal - number`() {
         val expression = "-12.35e+7"
         val expected = DecimalNode("-12.35e+7".toBigDecimal())
-        val actual = JSong.expression(expression).evaluate()
+        val actual = JSong(expression).evaluate()
         assertEquals(expected, actual)
     }
 
@@ -99,7 +99,7 @@ class TestDataTypes {
         }
         """.trimIndent()
         val expected = mapr.readTree(expression)
-        val actual = JSong.expression(expression).evaluate()
+        val actual = JSong(expression).evaluate()
         assertEquals(expected, actual)
     }
 
@@ -169,7 +169,7 @@ class TestDataTypes {
             "God's in his heaven — All's right with the world!"
         """.trimIndent()
         val expected = mapr.readTree(expression)
-        val actual = JSong.expression(expression).evaluate()
+        val actual = JSong(expression).evaluate()
         assertEquals(expected, actual)
     }
 
@@ -180,7 +180,7 @@ class TestDataTypes {
     fun `Literal - true`() {
         val expression = "true"
         val expected = BooleanNode.TRUE
-        val actual = JSong.expression(expression).evaluate()
+        val actual = JSong(expression).evaluate()
         assertEquals(expected, actual)
     }
 

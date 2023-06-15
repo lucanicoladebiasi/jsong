@@ -33,7 +33,7 @@ class TestParentOperators {
             ["order103","order103","order104","order104"]  
             """.trimIndent()
         )
-        val actual = JSong.expression(expression).evaluate(node)
+        val actual = JSong(expression).evaluate(node)
         assertEquals(expected, actual)
     }
 
@@ -50,7 +50,7 @@ class TestParentOperators {
             ["Firefly", "Firefly", "Firefly", "Firefly"]
             """.trimIndent()
         )
-        val actual = JSong.expression(expression).evaluate(node)
+        val actual = JSong(expression).evaluate(node)
         assertEquals(expected, actual)
     }
 
@@ -96,7 +96,7 @@ class TestParentOperators {
             ]
             """.trimIndent()
         )
-        val actual = JSong.expression(expression).evaluate(node)
+        val actual = JSong(expression).evaluate(node)
         assertEquals(expected, actual)
     }
 
@@ -110,7 +110,7 @@ class TestParentOperators {
             }
             """.trimIndent()
 
-        val actual = JSong.expression(expression).evaluate(node)
+        val actual = JSong(expression).evaluate(node)
         println(actual)
     }
 

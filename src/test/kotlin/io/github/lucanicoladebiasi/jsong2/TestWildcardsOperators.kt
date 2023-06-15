@@ -33,7 +33,7 @@ class TestWildcardsOperators {
             [ "Hursley Park", "Winchester", "SO21 2JN" ]
             """.trimIndent()
         )
-        val actual = JSong.expression(expression).evaluate(node)
+        val actual = JSong(expression).evaluate(node)
         assertEquals(expected, actual)
     }
 
@@ -50,7 +50,7 @@ class TestWildcardsOperators {
             "SO21 2JN"
             """.trimIndent()
         )
-        val actual = JSong.expression(expression).evaluate(node)
+        val actual = JSong(expression).evaluate(node)
         assertEquals(expected, actual)
     }
 
@@ -73,7 +73,7 @@ class TestWildcardsOperators {
             ]
             """.trimIndent()
         )
-        val actual = JSong.expression(expression).evaluate(node)
+        val actual = JSong(expression).evaluate(node)
         assertEquals(expected, actual)
     }
 
@@ -90,7 +90,7 @@ class TestWildcardsOperators {
             [ "SO21 2JN", "E1 6RF" ]
             """.trimIndent()
         )
-        val actual = JSong.expression(expression).evaluate(node)
+        val actual = JSong(expression).evaluate(node)
         assertEquals(expected, actual)
     }
 
@@ -129,7 +129,7 @@ class TestWildcardsOperators {
             ]
             """.trimIndent()
         )
-        val actual = JSong.expression(expression).evaluate(node)
+        val actual = JSong(expression).evaluate(node)
         assertEquals(expected, actual)
     }
 
@@ -272,7 +272,7 @@ class TestWildcardsOperators {
             """.trimIndent()
         )
 
-        val actual = JSong.expression(expression).evaluate(node)
+        val actual = JSong(expression).evaluate(node)
         assertEquals(expected, actual)
     }
 

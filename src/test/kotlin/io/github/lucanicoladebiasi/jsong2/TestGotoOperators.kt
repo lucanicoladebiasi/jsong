@@ -39,7 +39,7 @@ class TestGotoOperators {
               ]
             """.trimIndent()
         )
-        val actual = JSong.expression(expression).evaluate(node)
+        val actual = JSong(expression).evaluate(node)
         assertEquals(expected, actual)
     }
 
@@ -88,7 +88,7 @@ class TestGotoOperators {
             ]
             """.trimIndent()
         )
-        val actual = JSong.expression(expression).evaluate(node)
+        val actual = JSong(expression).evaluate(node)
         assertEquals(expected, actual)
     }
 

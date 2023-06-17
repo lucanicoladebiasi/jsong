@@ -34,27 +34,17 @@ exp_to_eof  :   exp* EOF
             ;
 
 exp :   ID                                  # select
-    |   '*'                                 # fields
-    |   '**'                                # descendants
-    |   '$$'                                # root
-    |   '->' exp                            # goto
-    |   '.' MODULE ('.' MODULE)*            # parent
-    |   '.' exp                             # map
-    |  '[' exp  (',' exp)* ']'              # array
-    |  lhs = exp '[' rhs = exp ']'          # filter
-    |   '{' (field (',' field)*)? '}'       # object
-    |   (TRUE | FALSE)                      # boolean
-    |   SUB exp                             # negative
-    |   '(' (exp (';' (exp)?)*)? ')'        # block
-    |   number                              # decimal
-    |   STRING                              # string
     |   NULL                                # null
+    |   (TRUE | FALSE)                      # boolean
+    |   STRING                              # string
+    |   SUB? NUMBER                         # number
+    |  '{' (field (',' field)*)? '}'        # object
+    |   '[' exp ']'                         # predicate
+    |   '.' exp                             # map
+    |   '(' (exp (';' (exp)?)*)? ')'        # block
     ;
 
 field   : key = exp ':' value += exp+;
-
-number  : NUMBER;
-
 
 // LEXER RULES
 

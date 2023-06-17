@@ -5,26 +5,27 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 
-class ResultSequence : List<JsonNode> {
+class ResultSequence : List<Context> {
 
-    private val list = mutableListOf<JsonNode>()
+    private val list = mutableListOf<Context>()
 
-    fun add(element: JsonNode?): ResultSequence {
-        if (element != null) {
-            when (element) {
-                is ArrayNode -> list.addAll(element)
-                else -> list.add(element)
+    fun add(context: Context): ResultSequence {
+        when (context.node) {
+            is ArrayNode -> context.node.forEach {
+                list.add(Context(it, context.prev))
             }
+
+            else -> list.add(context)
         }
         return this
     }
 
     fun select(fieldName: String): ResultSequence {
         val rs = ResultSequence()
-        list.filter { node ->
-            node is ObjectNode && node.has(fieldName)
-        }.forEach { node ->
-            rs.add(node[fieldName])
+        list.filter { context ->
+            context.node is ObjectNode && context.node.has(fieldName)
+        }.forEach { context ->
+            rs.add(Context(context.node[fieldName], context.prev))
         }
         return rs
     }
@@ -41,27 +42,27 @@ class ResultSequence : List<JsonNode> {
     fun value(mapper: ObjectMapper = ObjectMapper()): JsonNode? {
         return when (size) {
             0 -> null
-            1 -> list[0]
-            else -> mapper.createArrayNode().addAll(list)
+            1 -> list[0].node
+            else -> mapper.createArrayNode().addAll(list.map { it.node })
         }
     }
 
     override val size: Int
         get() = list.size
 
-    override fun contains(element: JsonNode): Boolean {
+    override fun contains(element: Context): Boolean {
         return list.contains(element)
     }
 
-    override fun containsAll(elements: Collection<JsonNode>): Boolean {
+    override fun containsAll(elements: Collection<Context>): Boolean {
         return list.containsAll(elements)
     }
 
-    override fun get(index: Int): JsonNode {
+    override fun get(index: Int): Context {
         return list.get(index)
     }
 
-    override fun indexOf(element: JsonNode): Int {
+    override fun indexOf(element: Context): Int {
         return list.indexOf(element)
     }
 
@@ -69,23 +70,23 @@ class ResultSequence : List<JsonNode> {
         return list.isEmpty()
     }
 
-    override fun iterator(): Iterator<JsonNode> {
+    override fun iterator(): Iterator<Context> {
         return list.iterator()
     }
 
-    override fun lastIndexOf(element: JsonNode): Int {
+    override fun lastIndexOf(element: Context): Int {
         return list.lastIndexOf(element)
     }
 
-    override fun listIterator(): ListIterator<JsonNode> {
+    override fun listIterator(): ListIterator<Context> {
         return list.listIterator()
     }
 
-    override fun listIterator(index: Int): ListIterator<JsonNode> {
+    override fun listIterator(index: Int): ListIterator<Context> {
         return list.listIterator(index)
     }
 
-    override fun subList(fromIndex: Int, toIndex: Int): List<JsonNode> {
+    override fun subList(fromIndex: Int, toIndex: Int): List<Context> {
         return list.subList(fromIndex, toIndex)
     }
 

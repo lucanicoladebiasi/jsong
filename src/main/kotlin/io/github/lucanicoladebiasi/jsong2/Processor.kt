@@ -49,10 +49,11 @@ class Processor(
     override fun visitFilter(ctx: JSong2Parser.FilterContext): ResultSequence {
         visit(ctx.lhs)
         visit(ctx.rhs)
-        when(val predicate = stack.pop().value()) {
+        when (val predicate = stack.pop().value()) {
             is NumericNode -> {
                 stack.push(stack.pop().select(predicate.asInt()))
             }
+
             else -> TODO()
         }
         return stack.peek()
@@ -60,11 +61,11 @@ class Processor(
 
     override fun visitMap(ctx: JSong2Parser.MapContext): ResultSequence {
         val rs = ResultSequence()
-        stack.pop().forEach { context ->
-            stack.push(ResultSequence().add(context))
+        stack.pop().forEach { lhs ->
+            stack.push(ResultSequence().add(lhs))
             visit(ctx.exp())
-            stack.pop().forEach { node ->
-                rs.add(node)
+            stack.pop().forEach { rhs ->
+                rs.add(Context(rhs.node, lhs))
             }
         }
         return stack.push(rs)
@@ -73,16 +74,17 @@ class Processor(
     override fun visitNumber(ctx: JSong2Parser.NumberContext): ResultSequence {
         val digits = ctx.NUMBER().text
         val rs = ResultSequence().add(
-            DecimalNode(
-                when (ctx.SUB() == null) {
-                    true -> digits.toBigDecimal()
-                    else -> digits.toBigDecimal().negate()
-                }
+            Context(
+                DecimalNode(
+                    when (ctx.SUB() == null) {
+                        true -> digits.toBigDecimal()
+                        else -> digits.toBigDecimal().negate()
+                    }
+                )
             )
         )
         return stack.push(rs)
     }
-
 
     override fun visitSelect(ctx: JSong2Parser.SelectContext): ResultSequence {
         val fieldName = sanitise(ctx.ID().text)

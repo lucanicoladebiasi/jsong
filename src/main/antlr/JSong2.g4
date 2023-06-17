@@ -34,6 +34,7 @@ exp_to_eof  :   exp* EOF
             ;
 
 exp :   ID                                  # select
+    | '.' MODULE ('.' MODULE)*              # parent
     |   NULL                                # null
     |   (TRUE | FALSE)                      # boolean
     |   STRING                              # string

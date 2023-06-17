@@ -15,8 +15,8 @@ class JSong(
     fun evaluate(
         node: JsonNode? = null,
     ): JsonNode? {
-        val root = node?.let { ResultSequence().add(it) } ?: ResultSequence()
+        val root = node?.let { ResultSequence().add(Context(it)) } ?: ResultSequence()
         return Processor(root).visit(parser.exp_to_eof()).value()
     }
 
-} //~ Jsong
+} //~ JSong

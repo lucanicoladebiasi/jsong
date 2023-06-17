@@ -39,7 +39,7 @@ exp :   ID                                  # select
     |   STRING                              # string
     |   SUB? NUMBER                         # number
     |  '{' (field (',' field)*)? '}'        # object
-    |   '[' exp ']'                         # predicate
+    |   lhs = exp '[' rhs = exp ']'         # filter
     |   '.' exp                             # map
     |   '(' (exp (';' (exp)?)*)? ')'        # block
     ;

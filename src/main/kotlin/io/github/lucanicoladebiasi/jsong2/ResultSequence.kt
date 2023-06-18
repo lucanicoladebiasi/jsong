@@ -14,10 +14,26 @@ class ResultSequence : List<Context> {
             is ArrayNode -> context.node.forEach {
                 list.add(Context(it, context.prev))
             }
-
             else -> list.add(context)
         }
         return this
+    }
+
+    fun back(steps: Int): ResultSequence {
+        val rs = ResultSequence()
+        list.forEach { context ->
+            rs.add(context.back(steps))
+        }
+        return rs
+    }
+
+    fun filter(index: Int): ResultSequence {
+        val rs = ResultSequence()
+        val offset = if (index < 0) size + index else index
+        if (offset in 0 until size) {
+            rs.add(list[offset])
+        }
+        return rs
     }
 
     fun select(fieldName: String): ResultSequence {
@@ -25,16 +41,7 @@ class ResultSequence : List<Context> {
         list.filter { context ->
             context.node is ObjectNode && context.node.has(fieldName)
         }.forEach { context ->
-            rs.add(Context(context.node[fieldName], context.prev))
-        }
-        return rs
-    }
-
-    fun select(index: Int): ResultSequence {
-        val rs = ResultSequence()
-        val offset = if (index < 0) size + index else index
-        if (offset in 0 until size) {
-            rs.add(list[offset])
+            rs.add(Context(context.node[fieldName], context))
         }
         return rs
     }

@@ -51,7 +51,7 @@ class Processor(
         visit(ctx.rhs)
         when (val predicate = stack.pop().value()) {
             is NumericNode -> {
-                stack.push(stack.pop().select(predicate.asInt()))
+                stack.push(stack.pop().filter(predicate.asInt()))
             }
 
             else -> TODO()
@@ -84,6 +84,11 @@ class Processor(
             )
         )
         return stack.push(rs)
+    }
+
+    override fun visitParent(ctx: JSong2Parser.ParentContext): ResultSequence {
+        val steps = ctx.MODULE().size
+        return stack.push(stack.pop().back(steps))
     }
 
     override fun visitSelect(ctx: JSong2Parser.SelectContext): ResultSequence {

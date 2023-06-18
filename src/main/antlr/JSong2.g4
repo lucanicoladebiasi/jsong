@@ -34,6 +34,8 @@ exp_to_eof  :   exp* EOF
             ;
 
 exp :   ID                                  # select
+    | USD                                   # context
+    | USD USD                               # root
     | '.' MODULE ('.' MODULE)*              # parent
     |   NULL                                # null
     |   (TRUE | FALSE)                      # boolean
@@ -69,6 +71,9 @@ WS      : [ \t\r\n]+ -> skip;              // ignore whitespace
 COMMENT : '/*' .*? '*/' -> skip;      // allow comments
 
 // Assign token names used in above grammar
+
+USD:    '$';
+
 GOTO    : '->';
 CHAIN   : '~>' ;
 ASSIGN  : ':=' ;

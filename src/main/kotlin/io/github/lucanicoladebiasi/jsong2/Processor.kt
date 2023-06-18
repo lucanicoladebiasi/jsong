@@ -91,6 +91,10 @@ class Processor(
         return stack.push(stack.pop().back(steps))
     }
 
+    override fun visitRoot(ctx: JSong2Parser.RootContext): ResultSequence {
+        return stack.push(root)
+    }
+
     override fun visitSelect(ctx: JSong2Parser.SelectContext): ResultSequence {
         val fieldName = sanitise(ctx.ID().text)
         return stack.push(stack.pop().select(fieldName))

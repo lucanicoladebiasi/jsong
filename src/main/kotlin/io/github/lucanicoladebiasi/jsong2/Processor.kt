@@ -1,13 +1,18 @@
 package io.github.lucanicoladebiasi.jsong2
 
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.DecimalNode
+import com.fasterxml.jackson.databind.node.NullNode
 import com.fasterxml.jackson.databind.node.NumericNode
+import com.fasterxml.jackson.databind.node.TextNode
 import io.github.lucanicoladebiasi.jsong.antlr.JSong2BaseVisitor
 import io.github.lucanicoladebiasi.jsong.antlr.JSong2Parser
 import org.apache.commons.text.StringEscapeUtils
 
 class Processor(
     private val root: ResultSequence,
+    private val mapper: ObjectMapper
 ) : JSong2BaseVisitor<ResultSequence>() {
 
     companion object {
@@ -86,6 +91,25 @@ class Processor(
         return stack.push(rs)
     }
 
+    override fun visitObject(ctx: JSong2Parser.ObjectContext): ResultSequence {
+        val rs = ResultSequence()
+        stack.pop().forEach { context ->
+            val objectNode = mapper.createObjectNode()
+            ctx.field().forEachIndexed { index, field ->
+                visit(field.key)
+                val propertyName = stack.pop().value(mapper)?.asText() ?: index.toString()
+                stack.push(ResultSequence().add(context))
+                field.value.forEach { exp ->
+                    visit(exp)
+                }
+                val propertyValue = stack.pop().value(mapper) ?: NullNode.instance
+                objectNode.set<JsonNode>(propertyName, propertyValue)
+            }
+            rs.add(Context(objectNode, context))
+        }
+        return stack.push(rs)
+    }
+
     override fun visitParent(ctx: JSong2Parser.ParentContext): ResultSequence {
         val steps = ctx.MODULE().size
         return stack.push(stack.pop().back(steps))
@@ -98,6 +122,10 @@ class Processor(
     override fun visitSelect(ctx: JSong2Parser.SelectContext): ResultSequence {
         val fieldName = sanitise(ctx.ID().text)
         return stack.push(stack.pop().select(fieldName))
+    }
+
+    override fun visitString(ctx: JSong2Parser.StringContext): ResultSequence {
+        return stack.push(ResultSequence().add(Context(TextNode(ctx.STRING().text))))
     }
 
 }

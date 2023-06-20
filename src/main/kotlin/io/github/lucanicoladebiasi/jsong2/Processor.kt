@@ -97,7 +97,7 @@ class Processor(
             val objectNode = mapper.createObjectNode()
             ctx.field().forEachIndexed { index, field ->
                 visit(field.key)
-                val propertyName = stack.pop().value(mapper)?.asText() ?: index.toString()
+                val propertyName = stack.pop().value(mapper)?.let { sanitise(it.textValue()) } ?: index.toString()
                 stack.push(ResultSequence().add(context))
                 field.value.forEach { exp ->
                     visit(exp)

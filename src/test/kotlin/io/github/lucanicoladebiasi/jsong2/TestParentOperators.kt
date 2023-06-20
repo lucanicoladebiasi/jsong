@@ -100,18 +100,4 @@ class TestParentOperators {
         assertEquals(expected, actual)
     }
 
-    @Test
-    fun `test`() {
-        val expression =
-            """
-            Account.Order.Product.{
-                'Product': `Product Name`,
-                'Colour': Description.Colour
-            }
-            """.trimIndent()
-
-        val actual = JSong(expression).evaluate(node)
-        println(actual)
-    }
-
 }

@@ -33,18 +33,18 @@ grammar JSong2;
 exp_to_eof  :   exp* EOF
             ;
 
-exp :   ID                                  # select
-    | USD                                   # context
-    | USD USD                               # root
-    | '.' MODULE ('.' MODULE)*              # parent
-    |   NULL                                # null
-    |   (TRUE | FALSE)                      # boolean
-    |   STRING                              # string
-    |   SUB? NUMBER                         # number
-    |  '{' (field (',' field)*)? '}'        # object
-    |   lhs = exp '[' rhs = exp ']'         # filter
-    |   '.' exp                             # map
-    |   '(' (exp (';' (exp)?)*)? ')'        # block
+exp :   ID                              # select
+    |   USD                             # context
+    |   USD USD                         # root
+    |   MODULE ('.' MODULE)*            # parent
+    |   NULL                            # null
+    |   (TRUE | FALSE)                  # boolean
+    |   STRING                          # string
+    |   SUB? NUMBER                     # number
+    |  '{' (field (',' field)*)? '}'    # object
+    |   lhs = exp '[' rhs = exp ']'     # filter
+    |   '.' exp                         # map
+    |   '(' (exp (';' (exp)?)*)? ')'    # block
     ;
 
 field   : key = exp ':' value += exp+;

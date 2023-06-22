@@ -30,24 +30,28 @@ grammar JSong2;
 
 // PARSER RULES
 
-exp_to_eof  :   exp* EOF
-            ;
+jsong  :   exp* EOF;
 
-exp :   ID                              # select
-    |   USD                             # context
-    |   USD USD                         # root
-    |   MODULE ('.' MODULE)*            # parent
-    |   NULL                            # null
-    |   (TRUE | FALSE)                  # boolean
-    |   STRING                          # string
-    |   SUB? NUMBER                     # number
-    |  '{' (field (',' field)*)? '}'    # object
-    |   lhs = exp '[' rhs = exp ']'     # filter
-    |   '.' exp                         # map
-    |   '(' (exp (';' (exp)?)*)? ')'    # block
-    ;
+exp     :   ID                              # select
+        |   USD                             # context
+        |   USD USD                         # root
+        |   MODULE ('.' MODULE)*            # parent
+        |   NULL                            # null
+        |   (TRUE | FALSE)                  # boolean
+        |   STRING                          # string
+        |   SUB? NUMBER                     # number
+        | '[' range (',' range)* ']'        # ranges
+        |  '{' (field (',' field)*)? '}'    # object
+        |   lhs = exp '[' rhs = exp ']'     # filter
+        |   '.' exp                         # map
+        |   '(' exp+ ')'                    # block
+        ;
 
 field   : key = exp ':' value += exp+;
+
+range   : min = exp '..' max = exp;
+
+// stmnt   : exp+ ';'? ;
 
 // LEXER RULES
 

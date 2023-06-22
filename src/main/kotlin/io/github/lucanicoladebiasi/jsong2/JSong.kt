@@ -18,7 +18,7 @@ class JSong(
         mapper: ObjectMapper = ObjectMapper()
     ): JsonNode? {
         val root = node?.let { ResultSequence().add(Context(it)) } ?: ResultSequence()
-        return Processor(root, mapper).visit(parser.exp_to_eof()).value()
+        return Processor(root, mapper).visit(parser.jsong()).value()
     }
 
 } //~ JSong

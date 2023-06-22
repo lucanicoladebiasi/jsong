@@ -9,6 +9,7 @@ import com.fasterxml.jackson.databind.node.TextNode
 import io.github.lucanicoladebiasi.jsong.antlr.JSong2BaseVisitor
 import io.github.lucanicoladebiasi.jsong.antlr.JSong2Parser
 import org.apache.commons.text.StringEscapeUtils
+import java.math.BigDecimal
 
 class Processor(
     private val root: ResultSequence,
@@ -43,13 +44,13 @@ class Processor(
         stack.push(root)
     }
 
-    override fun visitExp_to_eof(ctx: JSong2Parser.Exp_to_eofContext): ResultSequence {
-        ctx.exp().forEach {
-            visit(it)
+    override fun visitBlock(ctx: JSong2Parser.BlockContext): ResultSequence {
+        ctx.exp().forEach { exp ->
+            visit(exp)
         }
-        return stack.pop()
+        val rs = stack.pop()
+        return stack.push(rs)
     }
-
 
     override fun visitFilter(ctx: JSong2Parser.FilterContext): ResultSequence {
         visit(ctx.lhs)
@@ -62,6 +63,13 @@ class Processor(
             else -> TODO()
         }
         return stack.peek()
+    }
+
+    override fun visitJsong(ctx: JSong2Parser.JsongContext): ResultSequence {
+        ctx.exp().forEach { exp ->
+            visit(exp)
+        }
+        return stack.pop()
     }
 
     override fun visitMap(ctx: JSong2Parser.MapContext): ResultSequence {
@@ -113,6 +121,18 @@ class Processor(
     override fun visitParent(ctx: JSong2Parser.ParentContext): ResultSequence {
         val steps = ctx.MODULE().size
         return stack.push(stack.pop().back(steps))
+    }
+
+    override fun visitRanges(ctx: JSong2Parser.RangesContext): ResultSequence {
+        val rs = ResultSequence()
+        ctx.range().forEach { range ->
+            visit(range.min)
+            visit(range.max)
+            val max = stack.pop().value()?.decimalValue() ?: BigDecimal.ZERO
+            val min = stack.pop().value()?.decimalValue() ?: BigDecimal.ZERO
+            rs.add(Context(RangeNode.between(min, max, mapper)))
+        }
+        return stack.push(rs)
     }
 
     override fun visitRoot(ctx: JSong2Parser.RootContext): ResultSequence {

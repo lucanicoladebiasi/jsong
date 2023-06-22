@@ -278,21 +278,21 @@ class TestSimpleQueries {
     /**
      * https://docs.jsonata.org/simple#navigating-json-arrays
      */
-//    @Test
-//    fun `Returns a range of items by creating an array of indexes`() {
-//        val expression = "Phone[[0..1]]"
-//        @Language("JSON")
-//        val expected = TestResources.mapper.readTree(
-//            """
-//            [
-//              { "type": "home", "number": "0203 544 1234" },
-//              { "type": "office", "number": "01962 001234" }
-//            ]
-//        """.trimIndent()
-//        )
-//        val actual = JSong(expression).evaluate(TestResources.address)
-//        assertEquals(expected, actual)
-//    }
+    @Test
+    fun `Returns a range of items by creating an array of indexes`() {
+        val expression = "Phone[[0..1]]"
+        @Language("JSON")
+        val expected = mapr.readTree(
+            """
+            [
+              { "type": "home", "number": "0203 544 1234" },
+              { "type": "office", "number": "01962 001234" }
+            ]
+        """.trimIndent()
+        )
+        val actual = JSong(expression).evaluate(node)
+        assertEquals(expected, actual)
+    }
 
     /**
      * https://docs.jsonata.org/simple#top-level-arrays-nested-arrays-and-array-flattening

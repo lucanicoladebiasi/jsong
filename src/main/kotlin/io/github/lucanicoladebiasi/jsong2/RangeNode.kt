@@ -30,6 +30,15 @@ class RangeNode private constructor(
 
     } //~ companion
 
+    val indexes: List<Int>
+        get() {
+            val set = mutableSetOf<Int>()
+            for(index in min.asInt() .. max.asInt()) {
+                set.add(index)
+            }
+            return set.sorted()
+        }
+
     val max get() = this[io.github.lucanicoladebiasi.jsong1.RangeNode.MAX_TAG] as DecimalNode
 
     val min get() = this[io.github.lucanicoladebiasi.jsong1.RangeNode.MIN_TAG] as DecimalNode

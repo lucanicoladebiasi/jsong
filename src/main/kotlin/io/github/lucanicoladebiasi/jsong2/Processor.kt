@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.DecimalNode
 import com.fasterxml.jackson.databind.node.NullNode
-import com.fasterxml.jackson.databind.node.NumericNode
 import com.fasterxml.jackson.databind.node.TextNode
 import io.github.lucanicoladebiasi.jsong.antlr.JSong2BaseVisitor
 import io.github.lucanicoladebiasi.jsong.antlr.JSong2Parser
@@ -55,11 +54,12 @@ class Processor(
     override fun visitFilter(ctx: JSong2Parser.FilterContext): ResultSequence {
         visit(ctx.lhs)
         visit(ctx.rhs)
-        when (val predicate = stack.pop().value()) {
-            is NumericNode -> {
-                stack.push(stack.pop().filter(predicate.asInt()))
+        val predicate = stack.pop()
+        val indexes = predicate.indexes
+        when {
+            indexes.isNotEmpty() -> {
+                stack.push(stack.pop().filter(indexes))
             }
-
             else -> TODO()
         }
         return stack.peek()

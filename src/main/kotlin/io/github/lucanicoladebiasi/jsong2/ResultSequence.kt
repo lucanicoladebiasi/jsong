@@ -3,11 +3,23 @@ package io.github.lucanicoladebiasi.jsong2
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
+import com.fasterxml.jackson.databind.node.NumericNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 
 class ResultSequence : List<Context> {
 
     private val list = mutableListOf<Context>()
+
+    val indexes: List<Int> get() {
+        val set = mutableSetOf<Int>()
+        list.forEach { context ->
+            when(context.node) {
+                is RangeNode -> set.addAll(context.node.indexes)
+                is NumericNode -> set.add(context.node.asInt())
+            }
+        }
+        return set.sorted()
+    }
 
     fun add(context: Context): ResultSequence {
         when (context.node) {
@@ -27,11 +39,13 @@ class ResultSequence : List<Context> {
         return rs
     }
 
-    fun filter(index: Int): ResultSequence {
+    fun filter(indexes: Collection<Int>): ResultSequence {
         val rs = ResultSequence()
-        val offset = if (index < 0) size + index else index
-        if (offset in 0 until size) {
-            rs.add(list[offset])
+        indexes.forEach { index ->
+            val offset = if (index < 0) size + index else index
+            if (offset in 0 until size) {
+                rs.add(list[offset])
+            }
         }
         return rs
     }
@@ -97,4 +111,5 @@ class ResultSequence : List<Context> {
         return list.subList(fromIndex, toIndex)
     }
 
-} //~ Result
+} //~ ResultSequence
+

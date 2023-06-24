@@ -30,81 +30,69 @@ grammar JSong2;
 
 // PARSER RULES
 
-jsong  :   exp* EOF;
+jsong   :   exp* EOF;
 
-exp     :   ID                              # select
-        |   USD                             # context
-        |   USD USD                         # root
-        |   MODULE ('.' MODULE)*            # parent
-        |   NULL                            # null
-        |   (TRUE | FALSE)                  # boolean
-        |   STRING                          # string
-        |   SUB? NUMBER                     # number
-        | '[' range (',' range)* ']'        # ranges
-        |  '{' (field (',' field)*)? '}'    # object
-        |   lhs = exp '[' rhs = exp ']'     # filter
-        |   '.' exp                         # map
-        |   '(' exp+ ')'                    # block
+elm     :   exp | rng;
+
+exp     :   ltr                                         # literal
+        |   pth                                         # path
+        |   VAR_ID ':=' exp                             # assign
+        |   '[' elm (',' elm)* ']'                      # array
+        |   '{' fld (';' fld)* '}'                      # object
+        |   exp '.' exp                                 # map
+        |   exp '[' exp ']'                             # filter
+        |   exp op = ('*'|'/'|'%') exp                  # product
+        |   exp op = ('+'|'-') exp                      # sum
+        |   exp '&' exp                                 # concatenate
+        |   exp op = ('<'|'<='|'>'|'>='|'!='|'=') exp   # compare
+        |   '(' exp (';' exp?)* ')'                     # block
         ;
 
-field   : key = exp ':' value += exp+;
+fld     :   key = exp ':' val = exp;
 
-range   : min = exp '..' max = exp;
+ltr     :   STRING  # text
+        |   NUMBER  # number
+        |   '-'     # negative
+        |   FALSE   # false
+        |   TRUE    # true
+        |   NULL    # null
+        ;
 
-// stmnt   : exp+ ';'? ;
+pth     :   '$$'    # root
+        |   '$'     # context
+        |   '*'     # wildcard
+        |   '**'    # descendants
+        |   ID      # select
+        ;
+
+rng     : exp '..' exp
+        ;
 
 // LEXER RULES
 
-TRUE    : 'true';
-FALSE   : 'false';
+FUNC    : ('function' | 'λ') ;
 
-STRING  : '\'' (ESC | ~['\\])* '\''
-	    | '"'  (ESC | ~["\\])* '"'
-	    ;
+ID      : [\p{L}_] [\p{L}0-9_]*
+	    | BACK_QUOTE ~[`]* BACK_QUOTE;
 
-NULL : 'null';
+VAR_ID  : '$' ID;
+
+NULL    : 'null';
 
 NUMBER  : INT '.' [0-9]+ EXP? // 1.35, 1.35E-9, 0.3
         | INT EXP             // 1e10 3e4
         | INT                 // 3, 45
         ;
 
-FUNCTIONID : ('function' | 'λ') ;
+STRING  : '\'' (ESC | ~['\\])* '\''
+	    | '"'  (ESC | ~["\\])* '"'
+	    ;
 
-WS      : [ \t\r\n]+ -> skip;              // ignore whitespace
+TRUE    : 'true';
+FALSE   : 'false';
+
+WS      : [ \t\r\n]+ -> skip;         // ignore whitespace
 COMMENT : '/*' .*? '*/' -> skip;      // allow comments
-
-// Assign token names used in above grammar
-
-USD:    '$';
-
-GOTO    : '->';
-CHAIN   : '~>' ;
-ASSIGN  : ':=' ;
-MUL     : '*' ;
-DIV     : '/' ;
-ADD     : '+' ;
-SUB     : '-' ;
-MODULE  : '%' ;
-EQ      : '=' ;
-NOT_EQ  : '!=' ;
-LT      : '<' ;
-LE      : '<=' ;
-GT      : '>' ;
-GE      : '>=' ;
-CONCAT  : '&';
-CIRCUM  : '^';
-PIPE    : '|';
-UNDER   : '_';
-AND     : 'and';
-OR      : 'or';
-
-
-VAR_ID  : '$' ID ;
-
-ID      : [\p{L}_] [\p{L}0-9_]*
-	    | BACK_QUOTE ~[`]* BACK_QUOTE;
-
 
 // LEXER FRAGMENTS
 

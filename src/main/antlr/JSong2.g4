@@ -84,7 +84,7 @@ path    :   '$$'    # root
         |   ID      # id
         ;
 
-range   : exp '..' exp;
+range   : min = exp '..' max = exp;
 
 args    : '(' (VAR_ID (',' VAR_ID)*)* ')';
 

@@ -4,7 +4,15 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 
-class Results(nf: JsonNodeFactory) : ArrayNode(nf) {
+class ResultNode(nf: JsonNodeFactory) : ArrayNode(nf) {
+
+    val indexes: Set<Int> get() {
+        val set = mutableSetOf<Int>()
+        filterIsInstance<RangeNode>().forEach { range ->
+            set.addAll(range.indexes)
+        }
+        return set.sorted().toSet()
+    }
 
     val value: JsonNode?
         get() {
@@ -15,7 +23,7 @@ class Results(nf: JsonNodeFactory) : ArrayNode(nf) {
             }
         }
 
-    override fun add(node: JsonNode?): Results {
+    override fun add(node: JsonNode?): ResultNode {
         if (node != null) when (node) {
             is ArrayNode -> super.addAll(node)
             else -> super.add(node)

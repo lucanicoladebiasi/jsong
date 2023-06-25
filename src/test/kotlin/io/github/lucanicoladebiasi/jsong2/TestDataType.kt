@@ -31,7 +31,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class TestDataTypes {
+class TestDataType {
 
     private val mapper = ObjectMapper()
 
@@ -67,53 +67,6 @@ class TestDataTypes {
         val actual = JSong(expression).evaluate()
         assertEquals(expected, actual)
     }
-
-
-
-//    @Test
-//    fun `Literal - range twisted`() {
-//        val expression = "[3.14159265359..2.718281828459]"
-//        val expected = RangesNode().add(RangeNode.of("2.718281828459".toBigDecimal(), "3.14159265359".toBigDecimal()))
-//        val actual = Processor().evaluate(expression)
-//        assertEquals(expected, actual)
-//    }
-
-    /**
-     * https://docs.jsonata.org/numeric-operators#-range
-     */
-//    @Test
-//    fun `Literal - range as array`() {
-//        val expression = "[1..3]"
-//        val expected = TestResources1.mapper.createArrayNode().add(1).add(2).add(3)
-//        val actual = Processor().evaluate(expression)
-//        assertTrue(actual is RangesNode)
-//        assertEquals(expected, actual.indexes)
-//    }
-
-    /**
-     * https://docs.jsonata.org/numeric-operators#-range
-     */
-//    @Test
-//    fun `Literal - range with gap`() {
-//        val expression = "[1..3, 5..7]"
-//        val expected = TestResources1.mapper.createArrayNode().add(1).add(2).add(3).add(5).add(6).add(7)
-//        val actual = Processor().evaluate(expression)
-//        assertTrue(actual is RangesNode)
-//        assertEquals(expected, actual.indexes)
-//    }
-
-    /**
-     * https://docs.jsonata.org/numeric-operators#-range
-     */
-//    @Test
-//    fun `Literal - range with overlapping gap`() {
-//        val expression = "[1..3, 5..7, 2..4]"
-//        val expected = TestResources1.mapper.createArrayNode().add(1).add(2).add(3).add(4).add(5).add(6).add(7)
-//        val actual = Processor().evaluate(expression)
-//        assertTrue(actual is RangesNode)
-//        assertEquals(expected, actual.indexes)
-//    }
-
 
     /**
      * https://docs.jsonata.org/regex

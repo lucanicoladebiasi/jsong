@@ -34,23 +34,43 @@ jsong   :   exp* EOF;
 
 elm     :   exp | rng;
 
-exp     :   ltr                                         # literal
-        |   pth                                         # path
-        |   VAR_ID ':=' exp                             # assign
-        |   '[' elm (',' elm)* ']'                      # array
-        |   '{' fld (';' fld)* '}'                      # object
-        |   exp '.' exp                                 # map
-        |   exp '[' exp ']'                             # filter
-        |   exp op = ('*'|'/'|'%') exp                  # product
-        |   exp op = ('+'|'-') exp                      # sum
-        |   exp '&' exp                                 # concatenate
+//exp     :   ltr                                         # literal
+//        |   pth                                         # path
+//        |   VAR_ID                                      # argument
+//        |   FUNC args '{' exp (',' exp)* '}'            # decleare
+//        |   VAR_ID ':=' exp                             # assign
+//        |   '[' elm (',' elm)* ']'                      # array
+//        |   '{' fld (';' fld)* '}'                      # object
+//        |   exp '.' exp                                 # map
+//        |   exp '[' exp ']'                             # filter
+//        |   exp op = ('+'|'-') exp                      # sumsub
+//        |   exp op = ('*'|'/'|'%') exp                  # muldiv
+//        |   exp '&' exp                                 # concatenate
+//        |   exp op = ('<'|'<='|'>'|'>='|'!='|'=') exp   # compare
+//        |   '(' exp (';' exp?)* ')'                     # block
+//        ;
+
+exp     :   '(' exp (';' exp?)* ')'                     # block
+        |   exp op = (AND | OR)                         # andor
         |   exp op = ('<'|'<='|'>'|'>='|'!='|'=') exp   # compare
-        |   '(' exp (';' exp?)* ')'                     # block
+        |   exp op = ('+'|'-') exp                      # sumsub
+        |   exp op = ('*'|'/'|'%') exp                  # muldiv
+        |   exp '&' exp                                 # concatenate
+        |   exp '[' exp ']'                             # filter
+        |   exp '.' exp                                 # map
+        |   '{' fld (';' fld)* '}'                      # object
+        |   '[' elm (',' elm)* ']'                      # array
+        |   VAR_ID ':=' exp                             # assign
+        |   FUNC args '{' exp (',' exp)* '}'            # define
+        |   VAR_ID '(' (exp (',' exp)*)* ')'            # call
+        |   VAR_ID                                      # var
+        |   path                                        # select
+        |   literal                                     # const
         ;
 
 fld     :   key = exp ':' val = exp;
 
-ltr     :   STRING  # text
+literal :   STRING  # text
         |   NUMBER  # number
         |   '-'     # negative
         |   FALSE   # false
@@ -58,19 +78,20 @@ ltr     :   STRING  # text
         |   NULL    # null
         ;
 
-pth     :   '$$'    # root
+path    :   '$$'    # root
         |   '$'     # context
         |   '*'     # wildcard
         |   '**'    # descendants
-        |   ID      # select
+        |   ID      # id
         ;
 
-rng     : exp '..' exp
-        ;
+rng     : exp '..' exp;
+
+args    : '(' (VAR_ID (',' VAR_ID)*)* ')';
 
 // LEXER RULES
 
-FUNC    : ('function' | 'λ') ;
+FUNC    : ('function' | 'fun' | 'λ') ;
 
 ID      : [\p{L}_] [\p{L}0-9_]*
 	    | BACK_QUOTE ~[`]* BACK_QUOTE;
@@ -87,6 +108,9 @@ NUMBER  : INT '.' [0-9]+ EXP? // 1.35, 1.35E-9, 0.3
 STRING  : '\'' (ESC | ~['\\])* '\''
 	    | '"'  (ESC | ~["\\])* '"'
 	    ;
+
+AND     : 'and';
+OR      : 'or';
 
 TRUE    : 'true';
 FALSE   : 'false';

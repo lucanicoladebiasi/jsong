@@ -30,9 +30,9 @@ grammar JSong2;
 
 // PARSER RULES
 
-jsong   :   exp* EOF;
+jsong   :   exp? EOF;
 
-elm     :   exp | rng;
+element     :   exp | range;
 
 //exp     :   ltr                                         # literal
 //        |   pth                                         # path
@@ -58,24 +58,23 @@ exp     :   '(' exp (';' exp?)* ')'                     # block
         |   exp '&' exp                                 # concatenate
         |   exp '[' exp ']'                             # filter
         |   exp '.' exp                                 # map
-        |   '{' fld (';' fld)* '}'                      # object
-        |   '[' elm (',' elm)* ']'                      # array
+        |   '{' field (',' field)* '}'                  # object
+        |   '[' element (',' element)* ']'              # array
         |   VAR_ID ':=' exp                             # assign
         |   FUNC args '{' exp (',' exp)* '}'            # define
         |   VAR_ID '(' (exp (',' exp)*)* ')'            # call
         |   VAR_ID                                      # var
         |   path                                        # select
-        |   literal                                     # const
+        |   type                                        # literal
         ;
 
-fld     :   key = exp ':' val = exp;
+field   :   key = exp ':' val = exp;
 
-literal :   STRING  # text
-        |   NUMBER  # number
-        |   '-'     # negative
-        |   FALSE   # false
-        |   TRUE    # true
-        |   NULL    # null
+type    :   STRING          # text
+        |   MINUS? NUMBER   # number
+        |   FALSE           # false
+        |   TRUE            # true
+        |   NULL            # null
         ;
 
 path    :   '$$'    # root
@@ -85,20 +84,28 @@ path    :   '$$'    # root
         |   ID      # id
         ;
 
-rng     : exp '..' exp;
+range   : exp '..' exp;
 
 args    : '(' (VAR_ID (',' VAR_ID)*)* ')';
 
 // LEXER RULES
 
+MINUS   : '-';
+
 FUNC    : ('function' | 'fun' | 'λ') ;
 
-ID      : [\p{L}_] [\p{L}0-9_]*
-	    | BACK_QUOTE ~[`]* BACK_QUOTE;
+NULL    : 'null';
+
+AND     : 'and';
+OR      : 'or';
+
+FALSE   : 'false';
+TRUE    : 'true';
 
 VAR_ID  : '$' ID;
 
-NULL    : 'null';
+ID      : [\p{L}_] [\p{L}0-9_]*
+	    | BACK_QUOTE ~[`]* BACK_QUOTE;
 
 NUMBER  : INT '.' [0-9]+ EXP? // 1.35, 1.35E-9, 0.3
         | INT EXP             // 1e10 3e4
@@ -108,12 +115,6 @@ NUMBER  : INT '.' [0-9]+ EXP? // 1.35, 1.35E-9, 0.3
 STRING  : '\'' (ESC | ~['\\])* '\''
 	    | '"'  (ESC | ~["\\])* '"'
 	    ;
-
-AND     : 'and';
-OR      : 'or';
-
-TRUE    : 'true';
-FALSE   : 'false';
 
 WS      : [ \t\r\n]+ -> skip;         // ignore whitespace
 COMMENT : '/*' .*? '*/' -> skip;      // allow comments

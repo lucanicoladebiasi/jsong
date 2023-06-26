@@ -2,19 +2,16 @@ package io.github.lucanicoladebiasi.jsong2
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.node.BooleanNode
-import com.fasterxml.jackson.databind.node.DecimalNode
-import com.fasterxml.jackson.databind.node.NullNode
-import com.fasterxml.jackson.databind.node.ObjectNode
-import com.fasterxml.jackson.databind.node.TextNode
+import com.fasterxml.jackson.databind.node.*
 import io.github.lucanicoladebiasi.jsong.antlr.JSong2BaseVisitor
 import io.github.lucanicoladebiasi.jsong.antlr.JSong2Parser
 import org.apache.commons.text.StringEscapeUtils
+import java.math.BigDecimal
 
 class Processor(
     val root: JsonNode?,
     val mapper: ObjectMapper
-) : JSong2BaseVisitor<ResultNode>() {
+) : JSong2BaseVisitor<ResultSequence>() {
 
     companion object {
 
@@ -38,79 +35,85 @@ class Processor(
 
     private val nf = mapper.nodeFactory
 
-    override fun visitArray(ctx: JSong2Parser.ArrayContext): ResultNode {
-        val rs = ResultNode(nf)
+    override fun visitArray(ctx: JSong2Parser.ArrayContext): ResultSequence {
+        val rs = ResultSequence()
         ctx.element().forEach { element ->
-            when{
+            when {
                 element.exp() != null -> rs.add(visit(element.exp()))
-                element.range() != null-> rs.add(visit(element.range()))
+                element.range() != null -> rs.add(visit(element.range()))
             }
         }
         return rs
     }
 
-    override fun visitFalse(ctx: JSong2Parser.FalseContext): ResultNode {
-        return ResultNode(nf).add(BooleanNode.FALSE)
+    override fun visitFalse(ctx: JSong2Parser.FalseContext): ResultSequence {
+        return ResultSequence().add(Context(BooleanNode.FALSE))
     }
 
-    override fun visitJsong(ctx: JSong2Parser.JsongContext): ResultNode {
-        val rs = ResultNode(nf)
+    override fun visitId(ctx: JSong2Parser.IdContext): ResultSequence {
+        return super.visitId(ctx)
+    }
+
+    override fun visitJsong(ctx: JSong2Parser.JsongContext): ResultSequence {
+        val rs = ResultSequence()
         ctx.exp()?.let { exp ->
-            rs.add(visit(exp).value)
+            rs.add(visit(exp))
         }
         return rs
     }
 
-    override fun visitNull(ctx: JSong2Parser.NullContext?): ResultNode {
-        return ResultNode(nf).add(NullNode.instance)
+    override fun visitNull(ctx: JSong2Parser.NullContext?): ResultSequence {
+        return ResultSequence().add(Context(NullNode.instance))
     }
 
-    override fun visitNumber(ctx: JSong2Parser.NumberContext): ResultNode {
+    override fun visitNumber(ctx: JSong2Parser.NumberContext): ResultSequence {
         val number = ctx.NUMBER().text.toBigDecimal()
-        return ResultNode(nf).add(
-            DecimalNode(
-                when (ctx.MINUS() != null) {
-                    true -> number.negate()
-                    else -> number
-                }
+        return ResultSequence().add(
+            Context(
+                DecimalNode(
+                    when (ctx.MINUS() != null) {
+                        true -> number.negate()
+                        else -> number
+                    }
+                )
             )
         )
     }
 
-    override fun visitObject(ctx: JSong2Parser.ObjectContext): ResultNode {
+    override fun visitObject(ctx: JSong2Parser.ObjectContext): ResultSequence {
         val obj = ObjectNode(nf)
         ctx.field().forEachIndexed() { index, field ->
-            val propertyName = visit(field.key).value?.asText() ?: index.toString()
-            val value = visit(field.`val`).value ?: NullNode.instance
+            val propertyName = visit(field.key).value(nf)?.asText() ?: index.toString()
+            val value = visit(field.`val`).value(nf) ?: NullNode.instance
             obj.set<JsonNode>(propertyName, value)
         }
-        return ResultNode(nf).add(obj)
+        return ResultSequence().add(Context(obj))
     }
 
-    override fun visitRange(ctx: JSong2Parser.RangeContext): ResultNode {
-        return ResultNode(nf).add(
-            RangeNode.between(visit(ctx.min).value!!.decimalValue() ,visit(ctx.max).value!!.decimalValue(), nf)
-        )
+    override fun visitRange(ctx: JSong2Parser.RangeContext): ResultSequence {
+        val min = visit(ctx.min).value(nf)?.decimalValue() ?: BigDecimal.ZERO
+        val max = visit(ctx.max).value(nf)?.decimalValue() ?: BigDecimal.ZERO
+        return ResultSequence().add(Context(RangeNode.between(min, max, nf)))
     }
 
-    override fun visitRegex(ctx: JSong2Parser.RegexContext): ResultNode {
-        return ResultNode(nf).add(RegexNode.of(ctx.text))
+    override fun visitRegex(ctx: JSong2Parser.RegexContext): ResultSequence {
+        return ResultSequence().add(Context(RegexNode.of(ctx.text)))
     }
 
-    override fun visitRegexci(ctx: JSong2Parser.RegexciContext): ResultNode {
-        return ResultNode(nf).add(RegexNode.ci(ctx.text))
+    override fun visitRegexci(ctx: JSong2Parser.RegexciContext): ResultSequence {
+        return ResultSequence().add(Context(RegexNode.ci(ctx.text)))
     }
 
-    override fun visitRegexml(ctx: JSong2Parser.RegexmlContext): ResultNode {
-        return ResultNode(nf).add(RegexNode.ml(ctx.text))
+    override fun visitRegexml(ctx: JSong2Parser.RegexmlContext): ResultSequence {
+        return ResultSequence().add(Context(RegexNode.ml(ctx.text)))
     }
 
-    override fun visitText(ctx: JSong2Parser.TextContext): ResultNode {
-        return ResultNode(nf).add(TextNode(sanitise(ctx.STRING().text)))
+    override fun visitText(ctx: JSong2Parser.TextContext): ResultSequence {
+        return ResultSequence().add(Context(TextNode(sanitise(ctx.STRING().text))))
     }
 
-    override fun visitTrue(ctx: JSong2Parser.TrueContext): ResultNode {
-        return ResultNode(nf).add(BooleanNode.TRUE)
+    override fun visitTrue(ctx: JSong2Parser.TrueContext): ResultSequence {
+        return ResultSequence().add(Context(BooleanNode.TRUE))
     }
 
 } //~ Processor

@@ -72,9 +72,7 @@ class TestArrayType {
         val expected = mutableSetOf<Int>()
         expected.addAll((lmin .. lmax).toSet())
         expected.addAll((rmin .. rmax).toSet())
-        val actual = JSong(expression).evaluate()
-        assertTrue(actual is ResultNode)
-        actual as ResultNode
+        val actual = JSong(expression).process()
         assertEquals(expected, actual.indexes)
     }
 
@@ -94,9 +92,7 @@ class TestArrayType {
         expected.addAll((lmin .. lmax).toSet())
         expected.addAll((rmin .. rmax).toSet())
         expected.addAll((omin .. omax).toSet())
-        val actual = JSong(expression).evaluate()
-        assertTrue(actual is ResultNode)
-        actual as ResultNode
+        val actual = JSong(expression).process()
         assertEquals(expected, actual.indexes)
     }
 

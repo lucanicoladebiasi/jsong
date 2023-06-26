@@ -32,23 +32,9 @@ grammar JSong2;
 
 jsong   :   exp? EOF;
 
-element     :   exp | range;
+args    : '(' (VAR_ID (',' VAR_ID)*)* ')';
 
-//exp     :   ltr                                         # literal
-//        |   pth                                         # path
-//        |   VAR_ID                                      # argument
-//        |   FUNC args '{' exp (',' exp)* '}'            # decleare
-//        |   VAR_ID ':=' exp                             # assign
-//        |   '[' elm (',' elm)* ']'                      # array
-//        |   '{' fld (';' fld)* '}'                      # object
-//        |   exp '.' exp                                 # map
-//        |   exp '[' exp ']'                             # filter
-//        |   exp op = ('+'|'-') exp                      # sumsub
-//        |   exp op = ('*'|'/'|'%') exp                  # muldiv
-//        |   exp '&' exp                                 # concatenate
-//        |   exp op = ('<'|'<='|'>'|'>='|'!='|'=') exp   # compare
-//        |   '(' exp (';' exp?)* ')'                     # block
-//        ;
+element :   exp | range;
 
 exp     :   '(' exp (';' exp?)* ')'                     # block
         |   exp op = (AND | OR)                         # andor
@@ -64,6 +50,9 @@ exp     :   '(' exp (';' exp?)* ')'                     # block
         |   FUNC args '{' exp (',' exp)* '}'            # define
         |   VAR_ID '(' (exp (',' exp)*)* ')'            # call
         |   VAR_ID                                      # var
+        |   '/' pattern '/' 'i'                         # regexci
+        |   '/' pattern '/' 'm'                         # regexml
+        |   '/' pattern '/'                             # regex
         |   path                                        # select
         |   type                                        # literal
         ;
@@ -84,9 +73,9 @@ path    :   '$$'    # root
         |   ID      # id
         ;
 
-range   : min = exp '..' max = exp;
+pattern : (~'/' | '\\' '/')*;
 
-args    : '(' (VAR_ID (',' VAR_ID)*)* ')';
+range   : min = exp '..' max = exp;
 
 // LEXER RULES
 

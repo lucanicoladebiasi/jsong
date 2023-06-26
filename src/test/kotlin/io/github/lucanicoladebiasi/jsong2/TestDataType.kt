@@ -69,17 +69,6 @@ class TestDataType {
     }
 
     /**
-     * https://docs.jsonata.org/regex
-     */
-//    @Test
-//    fun REGEX() {
-//        val expression = "/[a-z]*an[a-z]*/i"
-//        val expected = RegexNode(expression)
-//        val actual = Processor().evaluate(expression)
-//        assertEquals(expected, actual)
-//    }
-
-    /**
      * https://docs.jsonata.org/construction#json-literals
      */
     @Test

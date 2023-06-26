@@ -93,6 +93,18 @@ class Processor(
         )
     }
 
+    override fun visitRegex(ctx: JSong2Parser.RegexContext): ResultNode {
+        return ResultNode(nf).add(RegexNode.of(ctx.text))
+    }
+
+    override fun visitRegexci(ctx: JSong2Parser.RegexciContext): ResultNode {
+        return ResultNode(nf).add(RegexNode.ci(ctx.text))
+    }
+
+    override fun visitRegexml(ctx: JSong2Parser.RegexmlContext): ResultNode {
+        return ResultNode(nf).add(RegexNode.ml(ctx.text))
+    }
+
     override fun visitText(ctx: JSong2Parser.TextContext): ResultNode {
         return ResultNode(nf).add(TextNode(sanitise(ctx.STRING().text)))
     }

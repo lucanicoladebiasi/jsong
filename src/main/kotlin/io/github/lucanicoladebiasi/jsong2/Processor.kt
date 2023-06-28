@@ -9,8 +9,8 @@ import org.apache.commons.text.StringEscapeUtils
 import java.math.BigDecimal
 
 class Processor(
-    val root: JsonNode?,
-    val mapper: ObjectMapper
+    root: JsonNode?,
+    mapper: ObjectMapper
 ) : JSong2BaseVisitor<ResultSequence>() {
 
     companion object {
@@ -35,23 +35,65 @@ class Processor(
 
     private val nf = mapper.nodeFactory
 
+    private var context = Context(root ?: NullNode.instance)
+
     override fun visitArray(ctx: JSong2Parser.ArrayContext): ResultSequence {
-        val rs = ResultSequence()
+        val array = ArrayNode(nf)
         ctx.element().forEach { element ->
             when {
-                element.exp() != null -> rs.add(visit(element.exp()))
-                element.range() != null -> rs.add(visit(element.range()))
+                element.exp() != null -> array.add(visit(element.exp()).value(nf))
+                element.range() != null -> array.add(visit(element.range()).value(nf))
+            }
+        }
+        return ResultSequence(Context(array))
+    }
+
+    override fun visitFalse(ctx: JSong2Parser.FalseContext): ResultSequence {
+        return ResultSequence(Context(BooleanNode.FALSE))
+    }
+
+    override fun visitFilter(ctx: JSong2Parser.FilterContext): ResultSequence {
+        val rs = ResultSequence()
+        val lhs = visit(ctx.lhs)
+        lhs.forEach { context ->
+            this.context = context
+            val rhs = visit(ctx.rhs)
+            when (val predicate = rhs.value(nf)) {
+                is NumericNode -> {
+                    val index = predicate.asInt()
+                    when(context.node) {
+                        is ArrayNode -> {
+                            val offset = if (index < 0) context.node.size() + index else index
+                            if (offset in 0 until context.node.size()) {
+                                rs.add(Context(context.node[offset], context))
+                            }
+                        }
+                        else -> if (index == 0) {
+                            rs.add(Context(context.node, context))
+                        }
+                    }
+                }
+
+                else -> TODO()
             }
         }
         return rs
     }
 
-    override fun visitFalse(ctx: JSong2Parser.FalseContext): ResultSequence {
-        return ResultSequence().add(Context(BooleanNode.FALSE))
-    }
-
     override fun visitId(ctx: JSong2Parser.IdContext): ResultSequence {
-        return super.visitId(ctx)
+        val fieldName = sanitise(ctx.ID().text)
+        val rs = ResultSequence()
+        when(context.node) {
+            is ArrayNode -> context.node.filter { node ->
+                node.isObject && node.has(fieldName)
+            }.forEach { node ->
+                rs.add(Context(node[fieldName], context))
+            }
+            is ObjectNode -> if (context.node.has(fieldName)) {
+                rs.add(Context(context.node[fieldName], context))
+            }
+        }
+        return rs
     }
 
     override fun visitJsong(ctx: JSong2Parser.JsongContext): ResultSequence {
@@ -62,16 +104,27 @@ class Processor(
         return rs
     }
 
+    override fun visitMap(ctx: JSong2Parser.MapContext): ResultSequence {
+        val rs = ResultSequence()
+        val lhs = visit(ctx.lhs)
+        lhs.forEach { context ->
+            this.context = context
+            val rhs = visit(ctx.rhs)
+            rs.add(rhs)
+        }
+        return rs
+    }
+
     override fun visitNull(ctx: JSong2Parser.NullContext?): ResultSequence {
-        return ResultSequence().add(Context(NullNode.instance))
+        return ResultSequence(Context(NullNode.instance))
     }
 
     override fun visitNumber(ctx: JSong2Parser.NumberContext): ResultSequence {
         val number = ctx.NUMBER().text.toBigDecimal()
-        return ResultSequence().add(
+        return ResultSequence(
             Context(
                 DecimalNode(
-                    when (ctx.MINUS() != null) {
+                    when (ctx.SUB() != null) {
                         true -> number.negate()
                         else -> number
                     }
@@ -87,33 +140,33 @@ class Processor(
             val value = visit(field.`val`).value(nf) ?: NullNode.instance
             obj.set<JsonNode>(propertyName, value)
         }
-        return ResultSequence().add(Context(obj))
+        return ResultSequence(Context(obj))
     }
 
     override fun visitRange(ctx: JSong2Parser.RangeContext): ResultSequence {
         val min = visit(ctx.min).value(nf)?.decimalValue() ?: BigDecimal.ZERO
         val max = visit(ctx.max).value(nf)?.decimalValue() ?: BigDecimal.ZERO
-        return ResultSequence().add(Context(RangeNode.between(min, max, nf)))
+        return ResultSequence(Context(RangeNode.between(min, max, nf)))
     }
 
     override fun visitRegex(ctx: JSong2Parser.RegexContext): ResultSequence {
-        return ResultSequence().add(Context(RegexNode.of(ctx.text)))
+        return ResultSequence(Context(RegexNode.of(ctx.text)))
     }
 
-    override fun visitRegexci(ctx: JSong2Parser.RegexciContext): ResultSequence {
-        return ResultSequence().add(Context(RegexNode.ci(ctx.text)))
+    override fun visitRegexCI(ctx: JSong2Parser.RegexCIContext): ResultSequence {
+        return ResultSequence(Context(RegexNode.ci(ctx.text)))
     }
 
-    override fun visitRegexml(ctx: JSong2Parser.RegexmlContext): ResultSequence {
-        return ResultSequence().add(Context(RegexNode.ml(ctx.text)))
+    override fun visitRegexML(ctx: JSong2Parser.RegexMLContext): ResultSequence {
+        return ResultSequence(Context(RegexNode.ml(ctx.text)))
     }
 
     override fun visitText(ctx: JSong2Parser.TextContext): ResultSequence {
-        return ResultSequence().add(Context(TextNode(sanitise(ctx.STRING().text))))
+        return ResultSequence(Context(TextNode(sanitise(ctx.STRING().text))))
     }
 
     override fun visitTrue(ctx: JSong2Parser.TrueContext): ResultSequence {
-        return ResultSequence().add(Context(BooleanNode.TRUE))
+        return ResultSequence(Context(BooleanNode.TRUE))
     }
 
 } //~ Processor

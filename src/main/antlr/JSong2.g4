@@ -36,31 +36,31 @@ args    : '(' (VAR_ID (',' VAR_ID)*)* ')';
 
 element :   exp | range;
 
-exp     :   '(' exp (';' exp?)* ')'                     # block
-        |   exp op = (AND | OR)                         # andor
-        |   exp op = ('<'|'<='|'>'|'>='|'!='|'=') exp   # compare
-        |   exp op = ('+'|'-') exp                      # sumsub
-        |   exp op = ('*'|'/'|'%') exp                  # muldiv
-        |   exp '&' exp                                 # concatenate
-        |   exp '[' exp ']'                             # filter
-        |   exp '.' exp                                 # map
-        |   '{' field (',' field)* '}'                  # object
-        |   '[' element (',' element)* ']'              # array
-        |   VAR_ID ':=' exp                             # assign
-        |   FUNC args '{' exp (',' exp)* '}'            # define
-        |   VAR_ID '(' (exp (',' exp)*)* ')'            # call
-        |   VAR_ID                                      # var
-        |   '/' pattern '/' 'i'                         # regexci
-        |   '/' pattern '/' 'm'                         # regexml
-        |   '/' pattern '/'                             # regex
-        |   path                                        # select
-        |   type                                        # literal
+exp     :   '(' exp (';' exp?)* ')'                                 # block
+        |   lhs = exp op = (AND | OR) rhs = exp                     # andor
+        |   lhs = exp op = (LT | LE | GE | GT | NE | EQ) rhs = exp  # compare
+        |   lhs = exp op = (SUM | SUB) rhs = exp                    # sumsub
+        |   lhs = exp op = (MUL | DIV | MOD) exp                    # muldiv
+        |   lhs = exp '&' rhs = exp                                 # concatenate
+        |   lhs = exp '[' rhs = exp ']'                             # filter
+        |   lhs = exp '.' rhs = exp                                 # map
+        |   '{' field (',' field)* '}'                              # object
+        |   '[' element (',' element)* ']'                          # array
+        |   VAR_ID ':=' exp                                         # assign
+        |   FUNC args '{' exp (',' exp)* '}'                        # define
+        |   VAR_ID '(' (exp (',' exp)*)* ')'                        # call
+        |   VAR_ID                                                  # var
+        |   '/' pattern '/' 'i'                                     # regexCI
+        |   '/' pattern '/' 'm'                                     # regexML
+        |   '/' pattern '/'                                         # regex
+        |   path                                                    # select
+        |   type                                                    # literal
         ;
 
 field   :   key = exp ':' val = exp;
 
 type    :   STRING          # text
-        |   MINUS? NUMBER   # number
+        |   SUB? NUMBER     # number
         |   FALSE           # false
         |   TRUE            # true
         |   NULL            # null
@@ -79,7 +79,18 @@ range   : min = exp '..' max = exp;
 
 // LEXER RULES
 
-MINUS   : '-';
+LT      : '<';
+LE      : '<=';
+GT      : '>';
+GE      : '>=';
+NE      : '!=';
+EQ      : '=';
+
+DIV     : '/';
+SUB     : '-';
+MOD     : '%';
+MUL     : '*';
+SUM     : '+';
 
 FUNC    : ('function' | 'fun' | 'λ') ;
 

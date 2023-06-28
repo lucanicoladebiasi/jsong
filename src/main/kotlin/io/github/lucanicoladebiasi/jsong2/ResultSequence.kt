@@ -5,17 +5,30 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 
-class ResultSequence : List<Context> {
+class ResultSequence(element: Context? = null) : List<Context> {
 
     private val list = mutableListOf<Context>()
 
-    val indexes: Set<Int> get() {
-        val set = mutableSetOf<Int>()
-        list.filter { it.node is RangeNode}.forEach {
-            set.addAll((it.node as RangeNode).indexes)
-        }
-        return set.sorted().toSet()
+    init {
+        element?.let { list.add(element) }
     }
+
+    val indexes: Set<Int>
+        get() {
+            val set = mutableSetOf<Int>()
+            list.filter { it.node is RangeNode }.forEach {
+                set.addAll((it.node as RangeNode).indexes)
+            }
+            return set.sorted().toSet()
+        }
+
+//    fun add(element: Context): ResultSequence {
+//        when(element.node) {
+//            is ArrayNode -> element.node.forEach { list.add(Context(it, element.prev)) }
+//            else -> list.add(element)
+//        }
+//        return this
+//    }
 
     fun add(element: Context): ResultSequence {
         list.add(element)
@@ -23,12 +36,12 @@ class ResultSequence : List<Context> {
     }
 
     fun add(resultSequence: ResultSequence): ResultSequence {
-        list.addAll(resultSequence)
+        list.addAll(resultSequence.list)
         return this
     }
 
     fun value(nf: JsonNodeFactory = ObjectMapper().nodeFactory): JsonNode? {
-        return when(size) {
+        return when (size) {
             0 -> null
             1 -> list[0].node
             else -> ArrayNode(nf).addAll(list.map { it.node })

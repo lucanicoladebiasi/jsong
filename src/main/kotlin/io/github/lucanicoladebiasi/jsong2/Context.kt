@@ -15,6 +15,8 @@ class Context(
 //        return null
 //    }
 
+
+
     operator fun get(index: Int): Context? {
         when(node) {
             is ArrayNode -> {
@@ -29,5 +31,7 @@ class Context(
         }
         return null
     }
+
+
 
 } //~ Context

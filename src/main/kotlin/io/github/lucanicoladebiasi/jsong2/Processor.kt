@@ -58,24 +58,14 @@ class Processor(
         lhs.forEach { context ->
             this.context = context
             val rhs = visit(ctx.rhs)
-            when (val predicate = rhs.value(nf)) {
-                is NumericNode -> {
-                    this.context[predicate.asInt()] ?.let { rs.add(it) }
-//                    val index = predicate.asInt()
-//                    when(context.node) {
-//                        is ArrayNode -> {
-//                            val offset = if (index < 0) context.node.size() + index else index
-//                            if (offset in 0 until context.node.size()) {
-//                                rs.add(Context(context.node[offset], context))
-//                            }
-//                        }
-//                        else -> if (index == 0) {
-//                            rs.add(Context(context.node, context))
-//                        }
-//                    }
+            val predicate = rhs.value(nf)
+            if (predicate != null) {
+                val indexes = RangeNode.indexes(predicate)
+                if (indexes.isNotEmpty()) {
+                    indexes.forEach { index ->
+                        this.context[index]?.let { rs.add(it) }
+                    }
                 }
-
-                else -> TODO()
             }
         }
         return rs

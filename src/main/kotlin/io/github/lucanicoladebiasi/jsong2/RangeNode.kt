@@ -29,7 +29,7 @@ class RangeNode(
             return RangeNode(DecimalNode(x.min(y)), DecimalNode(x.max(y)), nf)
         }
 
-        fun indexes(node: JsonNode): Set<Int> {
+        fun indexes(node: JsonNode?): Set<Int> {
             val set = mutableSetOf<Int>()
             when(node) {
                 is ArrayNode -> node.forEach { element ->

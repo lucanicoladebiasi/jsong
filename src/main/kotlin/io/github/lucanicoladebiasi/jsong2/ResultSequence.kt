@@ -13,14 +13,14 @@ class ResultSequence(element: Context? = null) : List<Context> {
         element?.let { list.add(element) }
     }
 
-    val indexes: Set<Int>
-        get() {
-            val set = mutableSetOf<Int>()
-            list.filter { it.node is RangeNode }.forEach {
-                set.addAll((it.node as RangeNode).indexes)
-            }
-            return set.sorted().toSet()
-        }
+//    val indexes: Set<Int>
+//        get() {
+//            val set = mutableSetOf<Int>()
+//            list.filter { it.node is RangeNode }.forEach {
+//                set.addAll((it.node as RangeNode).indexes)
+//            }
+//            return set.sorted().toSet()
+//        }
 
 //    fun add(element: Context): ResultSequence {
 //        when(element.node) {

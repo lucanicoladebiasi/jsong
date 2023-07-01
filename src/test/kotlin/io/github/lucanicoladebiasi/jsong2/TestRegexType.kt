@@ -2,8 +2,10 @@ package io.github.lucanicoladebiasi.jsong2
 
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import java.util.regex.Pattern
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class TestRegexType {
 
     /**

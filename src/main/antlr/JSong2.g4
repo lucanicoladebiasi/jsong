@@ -66,11 +66,12 @@ type    :   STRING          # text
         |   NULL            # null
         ;
 
-path    :   '$$'    # root
-        |   '$'     # context
-        |   '*'     # wildcard
-        |   '**'    # descendants
-        |   ID      # id
+path    :   MOD ('.' MOD)*  # parent
+        |   '$$'            # root
+        |   '$'             # context
+        |   '*'             # wildcard
+        |   '**'            # descendants
+        |   ID              # id
         ;
 
 pattern : (~'/' | '\\' '/')*;

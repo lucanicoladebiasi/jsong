@@ -7,6 +7,8 @@ import io.github.lucanicoladebiasi.jsong.antlr.JSong2BaseVisitor
 import io.github.lucanicoladebiasi.jsong.antlr.JSong2Parser
 import org.apache.commons.text.StringEscapeUtils
 import java.math.BigDecimal
+import java.util.Deque
+import kotlin.math.sign
 
 class Processor(
     root: JsonNode?,
@@ -36,6 +38,8 @@ class Processor(
     private val nf = mapper.nodeFactory
 
     private var context = Context(root ?: NullNode.instance)
+
+    private var index: Int? = null
 
     override fun visitArray(ctx: JSong2Parser.ArrayContext): ResultSequence {
         val array = ArrayNode(nf)
@@ -98,11 +102,13 @@ class Processor(
     override fun visitMap(ctx: JSong2Parser.MapContext): ResultSequence {
         val rs = ResultSequence()
         val lhs = visit(ctx.lhs)
-        lhs.forEach { context ->
+        lhs.forEachIndexed { index, context ->
+            this.index = index
             this.context = context
             val rhs = visit(ctx.rhs)
             rs.add(rhs)
         }
+        this.index = null
         return rs
     }
 
@@ -132,6 +138,18 @@ class Processor(
             obj.set<JsonNode>(propertyName, value)
         }
         return ResultSequence(Context(obj))
+    }
+
+    override fun visitParent(ctx: JSong2Parser.ParentContext): ResultSequence {
+        val rs = ResultSequence()
+        val steps = ctx.MOD().size
+        when(context.node) {
+            is ArrayNode -> repeat(context.node.size()) {
+                context.back(steps)?.let { rs.add(it) }
+            }
+            else -> context.back(steps)?.let { rs.add(it) }
+        }
+        return rs
     }
 
     override fun visitRange(ctx: JSong2Parser.RangeContext): ResultSequence {

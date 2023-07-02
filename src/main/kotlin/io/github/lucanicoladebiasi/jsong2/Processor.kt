@@ -7,19 +7,36 @@ import io.github.lucanicoladebiasi.jsong.antlr.JSong2BaseVisitor
 import io.github.lucanicoladebiasi.jsong.antlr.JSong2Parser
 import org.apache.commons.text.StringEscapeUtils
 import java.math.BigDecimal
-import java.util.Deque
-import kotlin.math.sign
 
 class Processor(
     root: JsonNode?,
     mapper: ObjectMapper
-) : JSong2BaseVisitor<ResultSequence>() {
+) : JSong2BaseVisitor<JsonNode?>() {
 
     companion object {
 
-        fun sanitise(
-            txt: String
-        ): String {
+        fun expand(nf: JsonNodeFactory, node: JsonNode?): ArrayNode {
+            val array = ArrayNode(nf)
+            if (node != null) when (node) {
+                is ArrayNode -> array.addAll(node)
+                else -> array.add(node)
+            }
+            return array
+        }
+
+        fun reduce(node: JsonNode?): JsonNode? {
+            return when (node) {
+                is ArrayNode -> when (node.size()) {
+                    0 -> null
+                    1 -> node[0]
+                    else -> node
+                }
+
+                else -> node
+            }
+        }
+
+        fun sanitise(txt: String): String {
             return StringEscapeUtils.unescapeJson(
                 when {
                     txt.startsWith("`") && txt.endsWith("`")
@@ -33,149 +50,136 @@ class Processor(
             )
         }
 
+        fun select(array: ArrayNode, index: Int): JsonNode? {
+            val offset = if (index < 0) array.size() + index else index
+            return if (offset in 0 until array.size()) {
+                array[offset]
+            } else null
+        }
+
     } //~ companion
 
     private val nf = mapper.nodeFactory
 
-    private var context = Context(root ?: NullNode.instance)
+    private var context: JsonNode? = root
 
-    private var index: Int? = null
-
-    override fun visitArray(ctx: JSong2Parser.ArrayContext): ResultSequence {
+    override fun visitArray(ctx: JSong2Parser.ArrayContext): ArrayNode {
         val array = ArrayNode(nf)
         ctx.element().forEach { element ->
             when {
-                element.exp() != null -> array.add(visit(element.exp()).value(nf))
-                element.range() != null -> array.add(visit(element.range()).value(nf))
+                element.exp() != null -> array.add(visit(element.exp()))
+                element.range() != null -> array.add(visit(element.range()))
             }
         }
-        return ResultSequence(Context(array))
+        return array
     }
 
-    override fun visitFalse(ctx: JSong2Parser.FalseContext): ResultSequence {
-        return ResultSequence(Context(BooleanNode.FALSE))
+    override fun visitFalse(ctx: JSong2Parser.FalseContext): BooleanNode {
+        return BooleanNode.FALSE
     }
 
-    override fun visitFilter(ctx: JSong2Parser.FilterContext): ResultSequence {
-        val rs = ResultSequence()
-        val lhs = visit(ctx.lhs)
+    override fun visitFilter(ctx: JSong2Parser.FilterContext): ArrayNode {
+        val array = ArrayNode(nf)
+        val lhs = expand(nf, visit(ctx.lhs))
+        val rhs = visit(ctx.rhs)
+        val indexes = RangeNode.indexes(rhs)
+        if (indexes.isNotEmpty()) {
+            indexes.forEach { index ->
+                select(lhs, index)?.let { array.add(it) }
+            }
+        }
+        return array
+    }
+
+    override fun visitId(ctx: JSong2Parser.IdContext): JsonNode? {
+        val fieldName = sanitise(ctx.ID().text)
+        val context = this.context
+        return if (context is ObjectNode && context.has(fieldName)) {
+            return context[fieldName]
+        } else null
+    }
+
+    override fun visitJsong(ctx: JSong2Parser.JsongContext): JsonNode? {
+        var rs: JsonNode? = null
+        ctx.exp()?.let { exp ->
+            rs = visit(exp)
+        }
+        return rs
+    }
+
+    override fun visitMap(ctx: JSong2Parser.MapContext): ArrayNode {
+        val rs = ArrayNode(nf)
+        val lhs = expand(nf, visit(ctx.lhs))
         lhs.forEach { context ->
             this.context = context
-            val rhs = visit(ctx.rhs)
-            val predicate = rhs.value(nf)
-            if (predicate != null) {
-                val indexes = RangeNode.indexes(predicate)
-                if (indexes.isNotEmpty()) {
-                    indexes.forEach { index ->
-                        this.context[index]?.let { rs.add(it) }
-                    }
-                }
+            when (val rhs = visit(ctx.rhs)) {
+                is ArrayNode -> rs.addAll(rhs)
+                else -> rhs?.let { rs.add(rhs) }
             }
         }
         return rs
     }
 
-    override fun visitId(ctx: JSong2Parser.IdContext): ResultSequence {
-        val fieldName = sanitise(ctx.ID().text)
-        val rs = ResultSequence()
-        when(context.node) {
-            is ArrayNode -> context.node.filter { node ->
-                node.isObject && node.has(fieldName)
-            }.forEach { node ->
-                rs.add(Context(node[fieldName], context))
-            }
-            is ObjectNode -> if (context.node.has(fieldName)) {
-                rs.add(Context(context.node[fieldName], context))
-            }
-        }
-        return rs
+    override fun visitNull(ctx: JSong2Parser.NullContext?): NullNode {
+        return NullNode.instance
     }
 
-    override fun visitJsong(ctx: JSong2Parser.JsongContext): ResultSequence {
-        val rs = ResultSequence()
-        ctx.exp()?.let { exp ->
-            rs.add(visit(exp))
-        }
-        return rs
-    }
-
-    override fun visitMap(ctx: JSong2Parser.MapContext): ResultSequence {
-        val rs = ResultSequence()
-        val lhs = visit(ctx.lhs)
-        lhs.forEachIndexed { index, context ->
-            this.index = index
-            this.context = context
-            val rhs = visit(ctx.rhs)
-            rs.add(rhs)
-        }
-        this.index = null
-        return rs
-    }
-
-    override fun visitNull(ctx: JSong2Parser.NullContext?): ResultSequence {
-        return ResultSequence(Context(NullNode.instance))
-    }
-
-    override fun visitNumber(ctx: JSong2Parser.NumberContext): ResultSequence {
+    override fun visitNumber(ctx: JSong2Parser.NumberContext): DecimalNode {
         val number = ctx.NUMBER().text.toBigDecimal()
-        return ResultSequence(
-            Context(
-                DecimalNode(
-                    when (ctx.SUB() != null) {
-                        true -> number.negate()
-                        else -> number
-                    }
-                )
-            )
+        return DecimalNode(
+            when (ctx.SUB() != null) {
+                true -> number.negate()
+                else -> number
+            }
         )
     }
 
-    override fun visitObject(ctx: JSong2Parser.ObjectContext): ResultSequence {
+    override fun visitObject(ctx: JSong2Parser.ObjectContext): ObjectNode {
         val obj = ObjectNode(nf)
-        ctx.field().forEachIndexed() { index, field ->
-            val propertyName = visit(field.key).value(nf)?.asText() ?: index.toString()
-            val value = visit(field.`val`).value(nf) ?: NullNode.instance
+        ctx.field().forEachIndexed { index, field ->
+            val propertyName = visit(field.key)?.asText() ?: index.toString()
+            val value = visit(field.`val`) ?: NullNode.instance
             obj.set<JsonNode>(propertyName, value)
         }
-        return ResultSequence(Context(obj))
+        return obj
     }
 
-    override fun visitParent(ctx: JSong2Parser.ParentContext): ResultSequence {
-        val rs = ResultSequence()
-        val steps = ctx.MOD().size
-        when(context.node) {
-            is ArrayNode -> repeat(context.node.size()) {
-                context.back(steps)?.let { rs.add(it) }
-            }
-            else -> context.back(steps)?.let { rs.add(it) }
-        }
-        return rs
+//    override fun visitParent(ctx: JSong2Parser.ParentContext): ResultSequence {
+//        val rs = ResultSequence()
+//        val steps = ctx.MOD().size
+//        when(context.node) {
+//            is ArrayNode -> repeat(context.node.size()) {
+//                context.back(steps)?.let { rs.add(it) }
+//            }
+//            else -> context.back(steps)?.let { rs.add(it) }
+//        }
+//        return rs
+//    }
+
+    override fun visitRange(ctx: JSong2Parser.RangeContext): RangeNode {
+        val min = visit(ctx.min)?.decimalValue() ?: BigDecimal.ZERO
+        val max = visit(ctx.max)?.decimalValue() ?: BigDecimal.ZERO
+        return RangeNode.between(min, max, nf)
     }
 
-    override fun visitRange(ctx: JSong2Parser.RangeContext): ResultSequence {
-        val min = visit(ctx.min).value(nf)?.decimalValue() ?: BigDecimal.ZERO
-        val max = visit(ctx.max).value(nf)?.decimalValue() ?: BigDecimal.ZERO
-        return ResultSequence(Context(RangeNode.between(min, max, nf)))
+    override fun visitRegex(ctx: JSong2Parser.RegexContext): RegexNode {
+        return RegexNode.of(ctx.text)
     }
 
-    override fun visitRegex(ctx: JSong2Parser.RegexContext): ResultSequence {
-        return ResultSequence(Context(RegexNode.of(ctx.text)))
+    override fun visitRegexCI(ctx: JSong2Parser.RegexCIContext): RegexNode {
+        return RegexNode.ci(ctx.text)
     }
 
-    override fun visitRegexCI(ctx: JSong2Parser.RegexCIContext): ResultSequence {
-        return ResultSequence(Context(RegexNode.ci(ctx.text)))
+    override fun visitRegexML(ctx: JSong2Parser.RegexMLContext): RegexNode {
+        return RegexNode.ml(ctx.text)
     }
 
-    override fun visitRegexML(ctx: JSong2Parser.RegexMLContext): ResultSequence {
-        return ResultSequence(Context(RegexNode.ml(ctx.text)))
+    override fun visitText(ctx: JSong2Parser.TextContext): TextNode {
+        return TextNode(sanitise(ctx.STRING().text))
     }
 
-    override fun visitText(ctx: JSong2Parser.TextContext): ResultSequence {
-        return ResultSequence(Context(TextNode(sanitise(ctx.STRING().text))))
-    }
-
-    override fun visitTrue(ctx: JSong2Parser.TrueContext): ResultSequence {
-        return ResultSequence(Context(BooleanNode.TRUE))
+    override fun visitTrue(ctx: JSong2Parser.TrueContext): BooleanNode {
+        return BooleanNode.TRUE
     }
 
 } //~ Processor

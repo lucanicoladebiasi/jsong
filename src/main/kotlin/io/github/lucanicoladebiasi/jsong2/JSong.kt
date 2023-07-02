@@ -14,12 +14,12 @@ class JSong(
 
     private val parser = JSong2Parser(CommonTokenStream(JSong2Lexer(CharStreams.fromString(expression))))
 
-    fun process(node: JsonNode? = null): ResultSequence {
+    fun process(node: JsonNode? = null): JsonNode? {
         return Processor(node, mapper).visit(parser.jsong())
     }
 
     fun evaluate(node: JsonNode? = null): JsonNode? {
-        return process(node).value(mapper.nodeFactory)
+        return Processor.reduce(process(node))
     }
 
 } //~ JSong

@@ -50,7 +50,7 @@ class Processor(
             )
         }
 
-        fun select(array: ArrayNode, index: Int): JsonNode? {
+        private fun select(array: ArrayNode, index: Int): JsonNode? {
             val offset = if (index < 0) array.size() + index else index
             return if (offset in 0 until array.size()) {
                 array[offset]
@@ -59,17 +59,33 @@ class Processor(
 
     } //~ companion
 
+    private var context: JsonNode? = root
+
     private val nf = mapper.nodeFactory
 
-    private var context: JsonNode? = root
+    private val pm = mutableMapOf<JsonNode, JsonNode>()
+
+    private fun back(node: JsonNode, step: Int): JsonNode? {
+        return when (step) {
+            0 -> {
+                node
+            }
+
+            else -> {
+                pm[node]?.let { back(it, step - 1) }
+            }
+        }
+    }
 
     override fun visitArray(ctx: JSong2Parser.ArrayContext): ArrayNode {
         val array = ArrayNode(nf)
         ctx.element().forEach { element ->
+            val context = this.context
             when {
                 element.exp() != null -> array.add(visit(element.exp()))
                 element.range() != null -> array.add(visit(element.range()))
             }
+            this.context = context
         }
         return array
     }
@@ -113,8 +129,15 @@ class Processor(
         lhs.forEach { context ->
             this.context = context
             when (val rhs = visit(ctx.rhs)) {
-                is ArrayNode -> rs.addAll(rhs)
-                else -> rhs?.let { rs.add(rhs) }
+                is ArrayNode -> rhs.forEach {
+                    rs.add(it)
+                    pm[it] = context
+                }
+
+                else -> rhs?.let {
+                    rs.add(rhs)
+                    pm[rhs] = context
+                }
             }
         }
         return rs
@@ -137,24 +160,19 @@ class Processor(
     override fun visitObject(ctx: JSong2Parser.ObjectContext): ObjectNode {
         val obj = ObjectNode(nf)
         ctx.field().forEachIndexed { index, field ->
-            val propertyName = visit(field.key)?.asText() ?: index.toString()
-            val value = visit(field.`val`) ?: NullNode.instance
+            val context = this.context
+            val propertyName = reduce(visit(field.key))?.asText() ?: index.toString()
+            this.context = context
+            val value = reduce(visit(field.`val`)) ?: NullNode.instance
+            this.context = context
             obj.set<JsonNode>(propertyName, value)
         }
         return obj
     }
 
-//    override fun visitParent(ctx: JSong2Parser.ParentContext): ResultSequence {
-//        val rs = ResultSequence()
-//        val steps = ctx.MOD().size
-//        when(context.node) {
-//            is ArrayNode -> repeat(context.node.size()) {
-//                context.back(steps)?.let { rs.add(it) }
-//            }
-//            else -> context.back(steps)?.let { rs.add(it) }
-//        }
-//        return rs
-//    }
+    override fun visitParent(ctx: JSong2Parser.ParentContext): JsonNode? {
+        return context?.let { back(it, ctx.MOD().size) }
+    }
 
     override fun visitRange(ctx: JSong2Parser.RangeContext): RangeNode {
         val min = visit(ctx.min)?.decimalValue() ?: BigDecimal.ZERO

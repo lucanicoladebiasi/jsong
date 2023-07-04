@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import kotlin.test.assertEquals
@@ -59,7 +58,6 @@ class TestParentOperators {
      * https://docs.jsonata.org/path-operators#-parent
      */
     @Test
-    @Disabled
     fun `Parent - composite`() {
         val expression =
             """

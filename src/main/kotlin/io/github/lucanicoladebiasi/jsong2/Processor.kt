@@ -137,7 +137,11 @@ class Processor(
 
     override fun visitMap(ctx: JSong2Parser.MapContext): ArrayNode {
         val rs = ArrayNode(nf)
-        val lhs = expand(nf, visit(ctx.lhs))
+        var lhs = expand(nf, visit(ctx.lhs))
+        val indexes = RangeNode.indexes(lhs)
+        if (indexes.isNotEmpty()) {
+            lhs = ArrayNode(nf).addAll(indexes.map { IntNode(it) })
+        }
         lhs.forEach { context ->
             this.context = context
             when (val rhs = visit(ctx.rhs)) {
@@ -163,7 +167,7 @@ class Processor(
             val rhs = reduce(visit(ctx.rhs))
             if (rhs != null && rhs.isNumber) {
                 this.context = context
-                val value = when(ctx.op.type) {
+                val value = when (ctx.op.type) {
                     JSong2Parser.SUM -> lhs.decimalValue().add(rhs.decimalValue())
                     JSong2Parser.SUB -> lhs.decimalValue().subtract(rhs.decimalValue())
                     else -> throw UnsupportedOperationException("Unknown operator in ${ctx.text} expression!")
@@ -181,7 +185,7 @@ class Processor(
             val rhs = reduce(visit(ctx.rhs))
             if (rhs != null && rhs.isNumber) {
                 this.context = context
-                val value = when(ctx.op.type) {
+                val value = when (ctx.op.type) {
                     JSong2Parser.MUL -> lhs.decimalValue().multiply(rhs.decimalValue())
                     JSong2Parser.DIV -> lhs.decimalValue().divide(rhs.decimalValue())
                     JSong2Parser.MOD -> lhs.decimalValue().remainder(rhs.decimalValue())

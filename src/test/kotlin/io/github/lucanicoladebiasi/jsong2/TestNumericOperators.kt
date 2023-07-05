@@ -155,16 +155,15 @@ class TestNumericOperators {
      * https://docs.jsonata.org/numeric-operators#-range
      */
     @Test
-    @Disabled
     fun `Range context`() {
         val expression = "[1..5].(\$ * \$)"
 
         @Language("JSON")
-        val expected = mapper.readTree(
+        val expected = JSong(
             """
             [1, 4, 9, 16, 25]
             """.trimIndent()
-        )
+        ).evaluate()
         val actual = JSong(expression).evaluate()
         assertEquals(expected, actual)
     }

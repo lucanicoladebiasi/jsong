@@ -98,6 +98,10 @@ class Processor(
         return rs
     }
 
+    override fun visitContext(ctx: JSong2Parser.ContextContext): JsonNode? {
+        return this.context
+    }
+
     override fun visitFalse(ctx: JSong2Parser.FalseContext): BooleanNode {
         return BooleanNode.FALSE
     }

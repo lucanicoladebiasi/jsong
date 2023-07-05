@@ -46,6 +46,16 @@ class TestSimpleQueries {
 
     private var node: JsonNode? = null
 
+    @Language("JSON")
+    private val array = mapper.readTree(
+        """
+        [
+            { "ref": [ 1,2 ] },
+            { "ref": [ 3,4 ] }
+        ]            
+        """.trimIndent()
+    )
+
     @BeforeAll
     fun setUp() {
         node = mapper.readTree(Thread.currentThread().contextClassLoader.getResource("address.json"))
@@ -80,7 +90,7 @@ class TestSimpleQueries {
     fun `Field references are separated by dot`() {
         val expression = "Address.City"
         val expected = TextNode("Winchester")
-        val actual =JSong(expression).evaluate(node)
+        val actual = JSong(expression).evaluate(node)
         assertEquals(expected, actual)
     }
 
@@ -122,6 +132,7 @@ class TestSimpleQueries {
     @Test
     fun `Returns the first item`() {
         val expression = "Phone[0]"
+
         @Language("JSON")
         val expected = mapper.readTree(
             """
@@ -141,6 +152,7 @@ class TestSimpleQueries {
     @Test
     fun `Returns the second item`() {
         val expression = "Phone[1]"
+
         @Language("JSON")
         val expected = mapper.readTree(
             """
@@ -159,6 +171,7 @@ class TestSimpleQueries {
     @Test
     fun `Return the last item`() {
         val expression = "Phone[-1]"
+
         @Language("JSON")
         val expected = mapper.readTree(
             """
@@ -166,7 +179,7 @@ class TestSimpleQueries {
               "type": "mobile", 
               "number": "077 7700 1234"
             }
-        """.trimIndent()
+            """.trimIndent()
         )
         val actual = JSong(expression).evaluate(node)
         assertEquals(expected, actual)
@@ -178,6 +191,7 @@ class TestSimpleQueries {
     @Test
     fun `Negative indexed count from the end`() {
         val expression = "Phone[-2]"
+
         @Language("JSON")
         val expected = mapper.readTree(
             """
@@ -185,7 +199,7 @@ class TestSimpleQueries {
               "type": "office",
               "number": "01962 001235"
             }
-        """.trimIndent()
+            """.trimIndent()
         )
         val actual = JSong(expression).evaluate(node)
         assertEquals(expected, actual)
@@ -207,15 +221,16 @@ class TestSimpleQueries {
     @Test
     fun `Selects the number field in the first item`() {
         val expression = "Phone[0].number"
+
         @Language("JSON")
         val expected = mapper.readTree(
             """
             "0203 544 1234"
-        """.trimIndent()
+            """.trimIndent()
         )
         val actual = JSong(expression).evaluate(node)
         assertEquals(expected, actual)
- }
+    }
 
     /**
      * https://docs.jsonata.org/simple#navigating-json-arrays
@@ -223,6 +238,7 @@ class TestSimpleQueries {
     @Test
     fun `No index is given to Phone so it selects all of them (the whole array), then it selects all the number fields for each of them`() {
         val expression = "Phone.number"
+
         @Language("JSON")
         val expected = mapper.readTree(
             """
@@ -244,6 +260,7 @@ class TestSimpleQueries {
     @Test
     fun `Might expect it to just return the first number, but it returns the first number of each of the items selected by Phone`() {
         val expression = "Phone.number[0]"
+
         @Language("JSON")
         val expected = mapper.readTree(
             """
@@ -265,6 +282,7 @@ class TestSimpleQueries {
     @Test
     fun `Applies the index to the array returned by Phone dot number`() {
         val expression = "(Phone.number)[0]"
+
         @Language("JSON")
         val expected = mapper.readTree(
             """
@@ -281,6 +299,7 @@ class TestSimpleQueries {
     @Test
     fun `Returns a range of items by creating an array of indexes`() {
         val expression = "Phone[[0..1]]"
+
         @Language("JSON")
         val expected = mapper.readTree(
             """
@@ -297,48 +316,63 @@ class TestSimpleQueries {
     /**
      * https://docs.jsonata.org/simple#top-level-arrays-nested-arrays-and-array-flattening
      */
-//    @Test
-//    fun `$ at the start of an expression refers to the entire input document`() {
-//        val expression = "$[0]"
-//        @Language("JSON")
-//        val expected = TestResources.mapper.readTree("""
-//            { "ref": [ 1,2 ] }
-//        """.trimIndent())
-//        val actual = JSong(expression).evaluate(TestResources.array)
-//        assertEquals(expected, actual)
-//    }
+    @Test
+    fun `$ at the start of an expression refers to the entire input document`() {
+        val expression = "$[0]"
+
+        @Language("JSON")
+        val expected = mapper.readTree(
+            """
+            { "ref": [ 1,2 ] }
+            """.trimIndent()
+        )
+        val actual = JSong(expression).evaluate(array)
+        assertEquals(expected, actual)
+    }
 
     /**
      * https://docs.jsonata.org/simple#top-level-arrays-nested-arrays-and-array-flattening
      */
-//    @Test
-//    fun `Dot ref here returns the entire internal array`() {
-//        val expression = "$[0].ref"
-//        val expected = TestResources.mapper.readTree("[1, 2]")
-//        val actual = JSong(expression).evaluate(TestResources.address)
-//        assertEquals(expected, actual)
-//    }
+    @Test
+    fun `Dot ref here returns the entire internal array`() {
+        val expression = "$[0].ref"
+
+        @Language("JSON")
+        val expected = mapper.readTree(
+            """
+            [1, 2]                    
+            """.trimIndent()
+        )
+        val actual = JSong(expression).evaluate(array)
+        assertEquals(expected, actual)
+    }
 
     /**
      * https://docs.jsonata.org/simple#top-level-arrays-nested-arrays-and-array-flattening
      */
-//    @Test
-//    fun `Returns element on first position of the internal array`() {
-//        val expression = "$[0].ref[0]"
-//        val expected = TestResources.mapper.readTree("1")
-//        val actual = JSong(expression).evaluate(TestResources.address)
-//        assertEquals(expected, actual)
-//    }
+    @Test
+    fun `Returns element on first position of the internal array`() {
+        val expression = "$[0].ref[0]"
+        val expected = mapper.readTree("1")
+        val actual = JSong(expression).evaluate(array)
+        assertEquals(expected, actual)
+    }
 
     /**
      * https://docs.jsonata.org/simple#top-level-arrays-nested-arrays-and-array-flattening
      */
-//    @Test
-//    fun `Despite the structure of the nested array, the resultant selection is flattened into a single flat array`() {
-//        val expression = "$.ref"
-//        val expected = TestResources.mapper.readTree("[1, 2, 3, 4]")
-//        val actual = JSong(expression).evaluate(TestResources.address)
-//        assertEquals(expected, actual)
-//    }
+    @Test
+    fun `Despite the structure of the nested array, the resultant selection is flattened into a single flat array`() {
+        val expression = "$.ref"
+
+        @Language("JSON")
+        val expected = mapper.readTree(
+            """
+            [1, 2, 3, 4]                
+            """.trimIndent()
+        )
+        val actual = JSong(expression).evaluate(array)
+        assertEquals(expected, actual)
+    }
 
 }

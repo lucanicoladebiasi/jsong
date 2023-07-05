@@ -63,7 +63,7 @@ class Processor(
 
     private val nf = mapper.nodeFactory
 
-    private val pm = mutableMapOf<JsonNode, JsonNode>()
+    private val parents = mutableMapOf<JsonNode, JsonNode>()
 
     private fun back(node: JsonNode, step: Int): JsonNode? {
         return when (step) {
@@ -72,7 +72,7 @@ class Processor(
             }
 
             else -> {
-                pm[node]?.let { back(it, step - 1) }
+                parents[node]?.let { back(it, step - 1) }
             }
         }
     }
@@ -88,6 +88,14 @@ class Processor(
             this.context = context
         }
         return array
+    }
+
+    override fun visitBlock(ctx: JSong2Parser.BlockContext): JsonNode? {
+        var rs: JsonNode? = null
+        ctx.exp().forEach { exp ->
+            rs = reduce(visit(exp))
+        }
+        return rs
     }
 
     override fun visitFalse(ctx: JSong2Parser.FalseContext): BooleanNode {
@@ -131,12 +139,12 @@ class Processor(
             when (val rhs = visit(ctx.rhs)) {
                 is ArrayNode -> rhs.forEach {
                     rs.add(it)
-                    pm[it] = context
+                    parents[it] = context
                 }
 
                 else -> rhs?.let {
                     rs.add(rhs)
-                    pm[rhs] = context
+                    parents[rhs] = context
                 }
             }
         }

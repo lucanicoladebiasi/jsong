@@ -37,13 +37,14 @@ args    : '(' (VAR_ID (',' VAR_ID)*)* ')';
 element :   exp | range;
 
 exp     :   '(' exp (';' exp?)* ')'                                 # block
-        |   lhs = exp op = (AND | OR) rhs = exp                     # andor
+        |   lhs = exp op = (AND | OR) rhs = exp                     # logic
         |   lhs = exp op = (LT | LE | GE | GT | NE | EQ) rhs = exp  # compare
         |   lhs = exp op = (SUM | SUB) rhs = exp                    # sumsub
         |   lhs = exp op = (MUL | DIV | MOD) exp                    # muldiv
         |   lhs = exp '&' rhs = exp                                 # concatenate
         |   lhs = exp '[' rhs = exp ']'                             # filter
         |   lhs = exp '.' rhs = exp                                 # map
+        |   lhs = exp '.' rhs = exp ((AT | HASH) VAR_ID)+           # mapandbind
         |   '{' field (',' field)* '}'                              # object
         |   '[' element (',' element)* ']'                          # array
         |   VAR_ID ':=' exp                                         # assign
@@ -79,6 +80,9 @@ pattern : (~'/' | '\\' '/')*;
 range   : min = exp '..' max = exp;
 
 // LEXER RULES
+
+AT      : '@';
+HASH    : '#';
 
 LT      : '<';
 LE      : '<=';

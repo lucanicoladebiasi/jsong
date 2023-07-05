@@ -262,18 +262,18 @@ class TestSimpleQueries {
     /**
      * https://docs.jsonata.org/simple#navigating-json-arrays
      */
-//    @Test
-//    fun `Applies the index to the array returned by Phone dot number`() {
-//        val expression = "(Phone.number)[0]"
-//        @Language("JSON")
-//        val expected = mapper.readTree(
-//            """
-//            "0203 544 1234"
-//            """.trimIndent()
-//        )
-//        val actual = JSong(expression).evaluate(node)
-//        assertEquals(expected, actual)
-//    }
+    @Test
+    fun `Applies the index to the array returned by Phone dot number`() {
+        val expression = "(Phone.number)[0]"
+        @Language("JSON")
+        val expected = mapper.readTree(
+            """
+            "0203 544 1234"
+            """.trimIndent()
+        )
+        val actual = JSong(expression).evaluate(node)
+        assertEquals(expected, actual)
+    }
 
     /**
      * https://docs.jsonata.org/simple#navigating-json-arrays

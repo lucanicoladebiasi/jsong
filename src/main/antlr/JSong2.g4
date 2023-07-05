@@ -39,8 +39,8 @@ element :   exp | range;
 exp     :   '(' exp (';' exp?)* ')'                                 # block
         |   lhs = exp op = (AND | OR) rhs = exp                     # logic
         |   lhs = exp op = (LT | LE | GE | GT | NE | EQ) rhs = exp  # compare
-        |   lhs = exp op = (SUM | SUB) rhs = exp                    # sumsub
-        |   lhs = exp op = (MUL | DIV | MOD) exp                    # muldiv
+        |   lhs = exp op = (SUM | SUB) rhs = exp                    # mathSUMorSUB
+        |   lhs = exp op = (MUL | DIV | MOD) rhs = exp              # mathMULorDIVorMOD
         |   lhs = exp '&' rhs = exp                                 # concatenate
         |   lhs = exp '[' rhs = exp ']'                             # filter
         |   lhs = exp '.' rhs = exp                                 # map

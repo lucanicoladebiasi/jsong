@@ -155,6 +155,43 @@ class Processor(
         return rs
     }
 
+    override fun visitMathSUMorSUB(ctx: JSong2Parser.MathSUMorSUBContext): DecimalNode {
+        val context = this.context
+        val lhs = reduce(visit(ctx.lhs))
+        if (lhs != null && lhs.isNumber) {
+            this.context = context
+            val rhs = reduce(visit(ctx.rhs))
+            if (rhs != null && rhs.isNumber) {
+                this.context = context
+                val value = when(ctx.op.type) {
+                    JSong2Parser.SUM -> lhs.decimalValue().add(rhs.decimalValue())
+                    JSong2Parser.SUB -> lhs.decimalValue().subtract(rhs.decimalValue())
+                    else -> throw UnsupportedOperationException("Unknown operator in ${ctx.text} expression!")
+                }
+                return DecimalNode(value)
+            } else throw IllegalArgumentException("RHS ${ctx.lhs.text} not a number in ${ctx.text} expression!")
+        } else throw IllegalArgumentException("RHS ${ctx.lhs.text} not a number in ${ctx.text} expression!")
+    }
+
+    override fun visitMathMULorDIVorMOD(ctx: JSong2Parser.MathMULorDIVorMODContext): JsonNode {
+        val context = this.context
+        val lhs = reduce(visit(ctx.lhs))
+        if (lhs != null && lhs.isNumber) {
+            this.context = context
+            val rhs = reduce(visit(ctx.rhs))
+            if (rhs != null && rhs.isNumber) {
+                this.context = context
+                val value = when(ctx.op.type) {
+                    JSong2Parser.MUL -> lhs.decimalValue().multiply(rhs.decimalValue())
+                    JSong2Parser.DIV -> lhs.decimalValue().divide(rhs.decimalValue())
+                    JSong2Parser.MOD -> lhs.decimalValue().remainder(rhs.decimalValue())
+                    else -> throw UnsupportedOperationException("Unknown operator in ${ctx.text} expression!")
+                }
+                return DecimalNode(value)
+            } else throw IllegalArgumentException("RHS ${ctx.lhs.text} not a number in ${ctx.text} expression!")
+        } else throw IllegalArgumentException("RHS ${ctx.lhs.text} not a number in ${ctx.text} expression!")
+    }
+
     override fun visitNull(ctx: JSong2Parser.NullContext?): NullNode {
         return NullNode.instance
     }
@@ -203,6 +240,7 @@ class Processor(
     override fun visitRegexML(ctx: JSong2Parser.RegexMLContext): RegexNode {
         return RegexNode.ml(ctx.text)
     }
+
 
     override fun visitText(ctx: JSong2Parser.TextContext): TextNode {
         return TextNode(sanitise(ctx.STRING().text))

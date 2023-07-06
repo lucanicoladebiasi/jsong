@@ -48,6 +48,25 @@ class Processor(
             return array
         }
 
+        private fun predicate(node: JsonNode?): Boolean {
+            when(node) {
+                null -> return false
+                is ArrayNode -> {
+                    node.forEach { argument ->
+                        if (predicate(argument)) {
+                            return true
+                        }
+                    }
+                    return false
+                }
+                is BooleanNode -> return node.booleanValue()
+                is NumericNode -> return node.decimalValue() != DecimalNode.ZERO
+                is ObjectNode -> return node.size() > 0
+                is TextNode -> return node.textValue().isNotEmpty()
+                else -> return false
+            }
+        }
+
         internal fun reduce(node: JsonNode?): JsonNode? {
             return when (node) {
                 is ArrayNode -> when (node.size()) {
@@ -72,13 +91,6 @@ class Processor(
                     else -> txt
                 }
             )
-        }
-
-        private fun select(array: ArrayNode, index: Int): JsonNode? {
-            val offset = if (index < 0) array.size() + index else index
-            return if (offset in 0 until array.size()) {
-                array[offset]
-            } else null
         }
 
     } //~ companion
@@ -138,19 +150,49 @@ class Processor(
         return BooleanNode.FALSE
     }
 
+//    override fun visitFilter(ctx: JSong2Parser.FilterContext): ArrayNode {
+//        val array = ArrayNode(nf)
+//        val lhs = expand(nf, visit(ctx.lhs))
+//        val rhs = visit(ctx.rhs)
+//        val indexes = RangeNode.indexes(rhs)
+//        if (indexes.isNotEmpty()) {
+//            indexes.forEach { index ->
+//                select(lhs, index)?.let { array.add(it) }
+//            }
+//        } else {
+//            println(rhs)
+//        }
+//        return array
+//    }
+
     override fun visitFilter(ctx: JSong2Parser.FilterContext): ArrayNode {
-        val array = ArrayNode(nf)
+        val rs = ArrayNode(nf)
         val lhs = expand(nf, visit(ctx.lhs))
-        val rhs = visit(ctx.rhs)
-        val indexes = RangeNode.indexes(rhs)
-        if (indexes.isNotEmpty()) {
-            indexes.forEach { index ->
-                select(lhs, index)?.let { array.add(it) }
+        lhs.forEachIndexed { index, context ->
+            this.context = context
+            val rhs = expand(nf, visit(ctx.rhs))
+            rhs.forEach { argument ->
+                when(argument) {
+                    is NumericNode -> {
+                        val value = argument.asInt()
+                        val offset = if (value < 0) lhs.size() + value else value
+                        if (index == offset) {
+                            rs.add(context)
+                        }
+                    }
+                    is RangeNode -> argument.indexes.forEach { value ->
+                        val offset = if (value < 0) lhs.size() + value else value
+                        if (index == offset) {
+                            rs.add(context)
+                        }
+                    }
+                    else -> if (predicate(argument)) {
+                        rs.add(context)
+                    }
+                }
             }
-        } else {
-            println(rhs)
         }
-        return array
+        return rs
     }
 
     override fun visitId(ctx: JSong2Parser.IdContext): JsonNode? {

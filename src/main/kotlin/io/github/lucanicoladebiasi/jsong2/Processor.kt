@@ -7,15 +7,39 @@ import io.github.lucanicoladebiasi.jsong.antlr.JSong2BaseVisitor
 import io.github.lucanicoladebiasi.jsong.antlr.JSong2Parser
 import org.apache.commons.text.StringEscapeUtils
 import java.math.BigDecimal
+import java.math.MathContext
 
 class Processor(
     root: JsonNode?,
-    mapper: ObjectMapper
+    mapper: ObjectMapper,
+    private val mc: MathContext
 ) : JSong2BaseVisitor<JsonNode?>() {
 
     companion object {
 
-        fun expand(nf: JsonNodeFactory, node: JsonNode?): ArrayNode {
+        private fun back(node: JsonNode, step: Int, parents: Map<JsonNode, JsonNode>): JsonNode? {
+            return when (step) {
+                0 -> {
+                    node
+                }
+
+                else -> {
+                    parents[node]?.let { back(it, step - 1, parents) }
+                }
+            }
+        }
+
+        private fun compare(lhs: JsonNode?, rhs: JsonNode?): Int {
+            return when {
+                lhs == null && rhs == null -> 0
+                lhs == null -> -1
+                rhs == null -> 1
+                lhs.isNumber && rhs.isNumber -> lhs.decimalValue().compareTo(rhs.decimalValue())
+                else -> lhs.textValue().compareTo(rhs.textValue())
+            }
+        }
+
+        private fun expand(nf: JsonNodeFactory, node: JsonNode?): ArrayNode {
             val array = ArrayNode(nf)
             if (node != null) when (node) {
                 is ArrayNode -> array.addAll(node)
@@ -24,7 +48,7 @@ class Processor(
             return array
         }
 
-        fun reduce(node: JsonNode?): JsonNode? {
+        internal fun reduce(node: JsonNode?): JsonNode? {
             return when (node) {
                 is ArrayNode -> when (node.size()) {
                     0 -> null
@@ -36,7 +60,7 @@ class Processor(
             }
         }
 
-        fun sanitise(txt: String): String {
+        private fun sanitise(txt: String): String {
             return StringEscapeUtils.unescapeJson(
                 when {
                     txt.startsWith("`") && txt.endsWith("`")
@@ -65,18 +89,6 @@ class Processor(
 
     private val parents = mutableMapOf<JsonNode, JsonNode>()
 
-    private fun back(node: JsonNode, step: Int): JsonNode? {
-        return when (step) {
-            0 -> {
-                node
-            }
-
-            else -> {
-                parents[node]?.let { back(it, step - 1) }
-            }
-        }
-    }
-
     override fun visitArray(ctx: JSong2Parser.ArrayContext): ArrayNode {
         val array = ArrayNode(nf)
         ctx.element().forEach { element ->
@@ -98,6 +110,26 @@ class Processor(
         return rs
     }
 
+    override fun visitCompare(ctx: JSong2Parser.CompareContext): BooleanNode {
+        val context = this.context
+        val lhs = reduce(visit(ctx.lhs))
+        this.context = context
+        val rhs = reduce(visit(ctx.rhs))
+        this.context = context
+        val value = compare(lhs, rhs)
+        return BooleanNode.valueOf(
+            when (ctx.op.type) {
+                JSong2Parser.LT -> value < 0
+                JSong2Parser.LE -> value <= 0
+                JSong2Parser.GE -> value >= 0
+                JSong2Parser.GT -> value > 0
+                JSong2Parser.NE -> value != 0
+                JSong2Parser.EQ -> value == 0
+                else -> throw UnsupportedOperationException("Unknown operator in ${ctx.text} expression!")
+            }
+        )
+    }
+
     override fun visitContext(ctx: JSong2Parser.ContextContext): JsonNode? {
         return this.context
     }
@@ -115,6 +147,8 @@ class Processor(
             indexes.forEach { index ->
                 select(lhs, index)?.let { array.add(it) }
             }
+        } else {
+            println(rhs)
         }
         return array
     }
@@ -125,6 +159,15 @@ class Processor(
         return if (context is ObjectNode && context.has(fieldName)) {
             return context[fieldName]
         } else null
+    }
+
+    override fun visitInclude(ctx: JSong2Parser.IncludeContext): BooleanNode {
+        val context = this.context
+        val lhs = reduce(visit(ctx.lhs))
+        this.context = context
+        val rhs = expand(nf, visit(ctx.rhs))
+        this.context = context
+        return BooleanNode.valueOf(rhs.contains(lhs))
     }
 
     override fun visitJsong(ctx: JSong2Parser.JsongContext): JsonNode? {
@@ -187,7 +230,7 @@ class Processor(
                 this.context = context
                 val value = when (ctx.op.type) {
                     JSong2Parser.MUL -> lhs.decimalValue().multiply(rhs.decimalValue())
-                    JSong2Parser.DIV -> lhs.decimalValue().divide(rhs.decimalValue())
+                    JSong2Parser.DIV -> lhs.decimalValue().divide(rhs.decimalValue(), mc)
                     JSong2Parser.MOD -> lhs.decimalValue().remainder(rhs.decimalValue())
                     else -> throw UnsupportedOperationException("Unknown operator in ${ctx.text} expression!")
                 }
@@ -224,7 +267,7 @@ class Processor(
     }
 
     override fun visitParent(ctx: JSong2Parser.ParentContext): JsonNode? {
-        return context?.let { back(it, ctx.MOD().size) }
+        return context?.let { back(it, ctx.MOD().size, parents) }
     }
 
     override fun visitRange(ctx: JSong2Parser.RangeContext): RangeNode {

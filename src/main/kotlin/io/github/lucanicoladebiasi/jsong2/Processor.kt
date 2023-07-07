@@ -29,11 +29,8 @@ class Processor(
             }
         }
 
-        private fun compare(lhs: JsonNode?, rhs: JsonNode?): Int {
+        private fun compare(lhs: JsonNode, rhs: JsonNode): Int {
             return when {
-                lhs == null && rhs == null -> 0
-                lhs == null -> -1
-                rhs == null -> 1
                 lhs.isNumber && rhs.isNumber -> lhs.decimalValue().compareTo(rhs.decimalValue())
                 else -> lhs.textValue().compareTo(rhs.textValue())
             }
@@ -128,18 +125,20 @@ class Processor(
         this.context = context
         val rhs = reduce(visit(ctx.rhs))
         this.context = context
-        val value = compare(lhs, rhs)
-        return BooleanNode.valueOf(
-            when (ctx.op.type) {
-                JSong2Parser.LT -> value < 0
-                JSong2Parser.LE -> value <= 0
-                JSong2Parser.GE -> value >= 0
-                JSong2Parser.GT -> value > 0
-                JSong2Parser.NE -> value != 0
-                JSong2Parser.EQ -> value == 0
-                else -> throw UnsupportedOperationException("Unknown operator in ${ctx.text} expression!")
-            }
-        )
+        return if (lhs != null && rhs != null) {
+            val value = compare(lhs, rhs)
+            BooleanNode.valueOf(
+                when (ctx.op.type) {
+                    JSong2Parser.LT -> value < 0
+                    JSong2Parser.LE -> value <= 0
+                    JSong2Parser.GE -> value >= 0
+                    JSong2Parser.GT -> value > 0
+                    JSong2Parser.NE -> value != 0
+                    JSong2Parser.EQ -> value == 0
+                    else -> throw UnsupportedOperationException("Unknown operator in ${ctx.text} expression!")
+                }
+            )
+        } else BooleanNode.FALSE
     }
 
     override fun visitContext(ctx: JSong2Parser.ContextContext): JsonNode? {
@@ -149,21 +148,6 @@ class Processor(
     override fun visitFalse(ctx: JSong2Parser.FalseContext): BooleanNode {
         return BooleanNode.FALSE
     }
-
-//    override fun visitFilter(ctx: JSong2Parser.FilterContext): ArrayNode {
-//        val array = ArrayNode(nf)
-//        val lhs = expand(nf, visit(ctx.lhs))
-//        val rhs = visit(ctx.rhs)
-//        val indexes = RangeNode.indexes(rhs)
-//        if (indexes.isNotEmpty()) {
-//            indexes.forEach { index ->
-//                select(lhs, index)?.let { array.add(it) }
-//            }
-//        } else {
-//            println(rhs)
-//        }
-//        return array
-//    }
 
     override fun visitFilter(ctx: JSong2Parser.FilterContext): ArrayNode {
         val rs = ArrayNode(nf)
@@ -218,6 +202,20 @@ class Processor(
             rs = visit(exp)
         }
         return rs
+    }
+
+    override fun visitLogic(ctx: JSong2Parser.LogicContext): BooleanNode {
+        val context = this.context
+        val lhs = reduce(visit(ctx.lhs))
+        this.context = context
+        val rhs = reduce(visit(ctx.rhs))
+        this.context = context
+        val value = when(ctx.op.type) {
+            JSong2Parser.AND -> predicate(lhs) && predicate(rhs)
+            JSong2Parser.OR ->  predicate( lhs) || predicate(rhs)
+            else -> throw UnsupportedOperationException("Unknown operator in ${ctx.text} expression!")
+        }
+        return BooleanNode.valueOf(value)
     }
 
     override fun visitMap(ctx: JSong2Parser.MapContext): ArrayNode {

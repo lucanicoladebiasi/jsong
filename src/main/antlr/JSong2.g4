@@ -37,11 +37,11 @@ args    : '(' (VAR_ID (',' VAR_ID)*)* ')';
 element :   exp | range;
 
 exp     :   '(' exp (';' exp?)* ')'                                 # block
-        |   lhs = exp op = (AND | OR) rhs = exp                     # logic
         |   lhs = exp 'in' rhs = exp                                # include
         |   lhs = exp op = (MUL | DIV | MOD) rhs = exp              # mathMULorDIVorMOD
         |   lhs = exp op = (SUM | SUB) rhs = exp                    # mathSUMorSUB
         |   lhs = exp op = (LT | LE | GE | GT | NE | EQ) rhs = exp  # compare
+        |   lhs = exp op = (AND | OR) rhs = exp                     # logic
         |   lhs = exp '&' rhs = exp                                 # concatenate
         |   lhs = exp '[' rhs = exp ']'                             # filter
         |   lhs = exp '.' rhs = exp                                 # map

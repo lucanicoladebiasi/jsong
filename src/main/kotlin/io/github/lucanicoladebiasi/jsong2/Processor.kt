@@ -8,6 +8,7 @@ import io.github.lucanicoladebiasi.jsong.antlr.JSong2Parser
 import org.apache.commons.text.StringEscapeUtils
 import java.math.BigDecimal
 import java.math.MathContext
+import kotlin.text.StringBuilder
 
 class Processor(
     root: JsonNode?,
@@ -46,7 +47,7 @@ class Processor(
         }
 
         private fun predicate(node: JsonNode?): Boolean {
-            when(node) {
+            when (node) {
                 null -> return false
                 is ArrayNode -> {
                     node.forEach { argument ->
@@ -56,6 +57,7 @@ class Processor(
                     }
                     return false
                 }
+
                 is BooleanNode -> return node.booleanValue()
                 is NumericNode -> return node.decimalValue() != DecimalNode.ZERO
                 is ObjectNode -> return node.size() > 0
@@ -88,6 +90,14 @@ class Processor(
                     else -> txt
                 }
             )
+        }
+
+        private fun stringify(node: JsonNode?): String {
+            return when (node) {
+                is TextNode -> node.textValue()
+                is NumericNode -> node.asText()
+                else -> ""
+            }
         }
 
     } //~ companion
@@ -141,6 +151,16 @@ class Processor(
         } else BooleanNode.FALSE
     }
 
+    override fun visitConcatenate(ctx: JSong2Parser.ConcatenateContext): TextNode {
+        val sb = StringBuilder()
+        val context = this.context
+        sb.append(stringify( reduce(visit(ctx.lhs))))
+        this.context = context
+        sb.append(stringify( reduce(visit(ctx.rhs))))
+        this.context = context
+        return TextNode(sb.toString())
+    }
+
     override fun visitContext(ctx: JSong2Parser.ContextContext): JsonNode? {
         return this.context
     }
@@ -156,7 +176,7 @@ class Processor(
             this.context = context
             val rhs = expand(nf, visit(ctx.rhs))
             rhs.forEach { argument ->
-                when(argument) {
+                when (argument) {
                     is NumericNode -> {
                         val value = argument.asInt()
                         val offset = if (value < 0) lhs.size() + value else value
@@ -164,12 +184,14 @@ class Processor(
                             rs.add(context)
                         }
                     }
+
                     is RangeNode -> argument.indexes.forEach { value ->
                         val offset = if (value < 0) lhs.size() + value else value
                         if (index == offset) {
                             rs.add(context)
                         }
                     }
+
                     else -> if (predicate(argument)) {
                         rs.add(context)
                     }
@@ -206,13 +228,13 @@ class Processor(
 
     override fun visitLogic(ctx: JSong2Parser.LogicContext): BooleanNode {
         val context = this.context
-        val lhs = reduce(visit(ctx.lhs))
+        val lhs = predicate(reduce(visit(ctx.lhs)))
         this.context = context
-        val rhs = reduce(visit(ctx.rhs))
+        val rhs = predicate(reduce(visit(ctx.rhs)))
         this.context = context
-        val value = when(ctx.op.type) {
-            JSong2Parser.AND -> predicate(lhs) && predicate(rhs)
-            JSong2Parser.OR ->  predicate( lhs) || predicate(rhs)
+        val value = when (ctx.op.type) {
+            JSong2Parser.AND -> lhs && rhs
+            JSong2Parser.OR -> lhs || rhs
             else -> throw UnsupportedOperationException("Unknown operator in ${ctx.text} expression!")
         }
         return BooleanNode.valueOf(value)

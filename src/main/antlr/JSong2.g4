@@ -48,6 +48,7 @@ exp     :   '(' exp (';' exp?)* ')'                                 # block
         |   lhs = exp '.' rhs = exp ((AT | HASH) VAR_ID)+           # mapandbind
         |   '{' field (',' field)* '}'                              # object
         |   '[' element (',' element)* ']'                          # array
+        |   exp '[]'                                                # expand
         |   VAR_ID ':=' exp                                         # assign
         |   FUNC args '{' exp (',' exp)* '}'                        # define
         |   VAR_ID '(' (exp (',' exp)*)* ')'                        # call

@@ -5,10 +5,10 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.*
 import io.github.lucanicoladebiasi.jsong.antlr.JSong2BaseVisitor
 import io.github.lucanicoladebiasi.jsong.antlr.JSong2Parser
+import org.antlr.v4.runtime.tree.ParseTree
 import org.apache.commons.text.StringEscapeUtils
 import java.math.BigDecimal
 import java.math.MathContext
-import kotlin.text.StringBuilder
 
 class Processor(
     root: JsonNode?,
@@ -37,15 +37,6 @@ class Processor(
             }
         }
 
-        private fun expand(nf: JsonNodeFactory, node: JsonNode?): ArrayNode {
-            val array = ArrayNode(nf)
-            if (node != null) when (node) {
-                is ArrayNode -> array.addAll(node)
-                else -> array.add(node)
-            }
-            return array
-        }
-
         private fun predicate(node: JsonNode?): Boolean {
             when (node) {
                 null -> return false
@@ -66,17 +57,6 @@ class Processor(
             }
         }
 
-        internal fun reduce(node: JsonNode?): JsonNode? {
-            return when (node) {
-                is ArrayNode -> when (node.size()) {
-                    0 -> null
-                    1 -> node[0]
-                    else -> node
-                }
-
-                else -> node
-            }
-        }
 
         private fun sanitise(txt: String): String {
             return StringEscapeUtils.unescapeJson(
@@ -104,9 +84,40 @@ class Processor(
 
     private var context: JsonNode? = root
 
+    private var isToReduce = true
+
     private val nf = mapper.nodeFactory
 
     private val parents = mutableMapOf<JsonNode, JsonNode>()
+
+    private fun expand(node: JsonNode?): ArrayNode {
+        val array = ArrayNode(nf)
+        if (node != null) when (node) {
+            is ArrayNode -> array.addAll(node)
+            else -> array.add(node)
+        }
+        return array
+    }
+
+    private fun reduce(node: JsonNode?, isToReduce: Boolean = true): JsonNode? {
+        return when (isToReduce) {
+            true -> when (node) {
+                is ArrayNode -> when (node.size()) {
+                    0 -> null
+                    1 -> node[0]
+                    else -> node
+                }
+
+                else -> node
+            }
+
+            else -> node
+        }
+    }
+
+    override fun visit(tree: ParseTree?): JsonNode? {
+        return reduce(super.visit(tree), isToReduce)
+    }
 
     override fun visitArray(ctx: JSong2Parser.ArrayContext): ArrayNode {
         val array = ArrayNode(nf)
@@ -124,7 +135,8 @@ class Processor(
     override fun visitBlock(ctx: JSong2Parser.BlockContext): JsonNode? {
         var rs: JsonNode? = null
         ctx.exp().forEach { exp ->
-            rs = reduce(visit(exp))
+            rs = reduce(visit(exp), isToReduce)
+            isToReduce = true
         }
         return rs
     }
@@ -154,9 +166,9 @@ class Processor(
     override fun visitConcatenate(ctx: JSong2Parser.ConcatenateContext): TextNode {
         val sb = StringBuilder()
         val context = this.context
-        sb.append(stringify( reduce(visit(ctx.lhs))))
+        sb.append(stringify(reduce(visit(ctx.lhs))))
         this.context = context
-        sb.append(stringify( reduce(visit(ctx.rhs))))
+        sb.append(stringify(reduce(visit(ctx.rhs))))
         this.context = context
         return TextNode(sb.toString())
     }
@@ -169,12 +181,18 @@ class Processor(
         return BooleanNode.FALSE
     }
 
+    override fun visitExpand(ctx: JSong2Parser.ExpandContext): ArrayNode {
+        val exp = expand(visit(ctx.exp()))
+        isToReduce = false
+        return exp
+    }
+
     override fun visitFilter(ctx: JSong2Parser.FilterContext): ArrayNode {
         val rs = ArrayNode(nf)
-        val lhs = expand(nf, visit(ctx.lhs))
+        val lhs = expand(visit(ctx.lhs))
         lhs.forEachIndexed { index, context ->
             this.context = context
-            val rhs = expand(nf, visit(ctx.rhs))
+            val rhs = expand(visit(ctx.rhs))
             rhs.forEach { argument ->
                 when (argument) {
                     is NumericNode -> {
@@ -213,7 +231,7 @@ class Processor(
         val context = this.context
         val lhs = reduce(visit(ctx.lhs))
         this.context = context
-        val rhs = expand(nf, visit(ctx.rhs))
+        val rhs = expand(visit(ctx.rhs))
         this.context = context
         return BooleanNode.valueOf(rhs.contains(lhs))
     }
@@ -242,7 +260,7 @@ class Processor(
 
     override fun visitMap(ctx: JSong2Parser.MapContext): ArrayNode {
         val rs = ArrayNode(nf)
-        var lhs = expand(nf, visit(ctx.lhs))
+        var lhs = expand(visit(ctx.lhs))
         val indexes = RangeNode.indexes(lhs)
         if (indexes.isNotEmpty()) {
             lhs = ArrayNode(nf).addAll(indexes.map { IntNode(it) })
@@ -321,7 +339,7 @@ class Processor(
             val context = this.context
             val propertyName = reduce(visit(field.key))?.asText() ?: index.toString()
             this.context = context
-            val value = reduce(visit(field.`val`)) ?: NullNode.instance
+            val value = reduce(visit(field.`val`), isToReduce) ?: NullNode.instance
             this.context = context
             obj.set<JsonNode>(propertyName, value)
         }

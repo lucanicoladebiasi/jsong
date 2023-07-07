@@ -37,8 +37,9 @@ class TestArrayType {
         val min = 1
         val max = 3
         val expression = "[$min..$max]"
-        val actual = RangeNode.indexes(JSong(expression).evaluate())
-        assertEquals((min..max).toSet(), actual)
+        val expected = (min..max).toSet()
+        val actual = (JSong(expression).evaluate() as RangeNode).indexes
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -46,8 +47,9 @@ class TestArrayType {
         val max = 3.14159265359
         val min = 2.718281828459
         val expression = "[$max..$min]"
-        val actual = RangeNode.indexes(JSong(expression).evaluate())
-        assertEquals((min.toInt() ..max.toInt()).toSet(), actual)
+        val expected = (min.toInt() ..max.toInt()).toSet()
+        val actual = (JSong(expression).evaluate() as RangeNode).indexes
+        assertEquals(expected, actual.sorted().toSet())
     }
 
 
@@ -64,8 +66,9 @@ class TestArrayType {
         val expected = mutableSetOf<Int>()
         expected.addAll((lmin .. lmax).toSet())
         expected.addAll((rmin .. rmax).toSet())
-        val actual = RangeNode.indexes(JSong(expression).evaluate())
-        assertEquals(expected, actual)
+        val actual = mutableSetOf<Int>()
+        JSong(expression).evaluate()?.filterIsInstance<RangeNode>()?.map { actual.addAll(it.indexes) }
+        assertEquals(expected, actual.sorted().toSet())
     }
 
     /**
@@ -84,8 +87,9 @@ class TestArrayType {
         expected.addAll((lmin .. lmax).toSet())
         expected.addAll((rmin .. rmax).toSet())
         expected.addAll((omin .. omax).toSet())
-        val actual = RangeNode.indexes(JSong(expression).evaluate())
-        assertEquals(expected, actual)
+        val actual = mutableSetOf<Int>()
+        JSong(expression).evaluate()?.filterIsInstance<RangeNode>()?.map { actual.addAll(it.indexes) }
+        assertEquals(expected, actual.sorted().toSet())
     }
 
 }

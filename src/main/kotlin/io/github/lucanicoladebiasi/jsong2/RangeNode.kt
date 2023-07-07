@@ -1,11 +1,8 @@
 package io.github.lucanicoladebiasi.jsong2
 
-import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.DecimalNode
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
-import com.fasterxml.jackson.databind.node.NumericNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import java.math.BigDecimal
 
@@ -29,17 +26,17 @@ class RangeNode(
             return RangeNode(DecimalNode(x.min(y)), DecimalNode(x.max(y)), nf)
         }
 
-        fun indexes(node: JsonNode?): Set<Int> {
-            val set = mutableSetOf<Int>()
-            when(node) {
-                is ArrayNode -> node.forEach { element ->
-                    set.addAll(indexes(element))
-                }
-                is NumericNode -> set.add(node.asInt())
-                is RangeNode -> set.addAll(node.indexes)
-            }
-            return set.sorted().toSet()
-        }
+//        fun indexes(node: JsonNode?): Set<Int> {
+//            val set = mutableSetOf<Int>()
+//            when(node) {
+//                is ArrayNode -> node.forEach { element ->
+//                    set.addAll(indexes(element))
+//                }
+//                is NumericNode -> set.add(node.asInt())
+//                is RangeNode -> set.addAll(node.indexes)
+//            }
+//            return set.sorted().toSet()
+//        }
 
     } //~ companion
 

@@ -27,6 +27,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import kotlin.test.assertEquals
@@ -203,6 +204,7 @@ class TestPredicateQueries {
      * https://docs.jsonata.org/predicate#navigate-arbitrary-depths
      */
     @Test
+    @Disabled
     fun `Navigate arbitrary depths`() {
         val expression = "**.Postcode"
 

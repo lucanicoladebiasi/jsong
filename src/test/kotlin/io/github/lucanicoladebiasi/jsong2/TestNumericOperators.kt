@@ -114,7 +114,7 @@ class TestNumericOperators {
     fun `Expression - range`() {
         val expression = "[1..5]"
         val expected = setOf(1, 2, 3, 4, 5)
-        val actual = RangeNode.indexes(JSong(expression).evaluate())
+        val actual = (JSong(expression).evaluate() as RangeNode).indexes
         assertEquals(expected, actual)
     }
 
@@ -125,8 +125,9 @@ class TestNumericOperators {
     fun `Expression - ranges with gap`() {
         val expression = "[1..3, 7..9]"
         val expected = setOf(1, 2, 3, 7, 8, 9)
-        val actual = RangeNode.indexes(JSong(expression).evaluate())
-        assertEquals(expected, actual)
+        val actual = mutableSetOf<Int>()
+        JSong(expression).evaluate()?.filterIsInstance<RangeNode>()?.map { actual.addAll(it.indexes) }
+        assertEquals(expected, actual.sorted().toSet())
     }
 
     /**

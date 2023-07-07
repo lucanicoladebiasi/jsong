@@ -177,6 +177,10 @@ class Processor(
         return this.context
     }
 
+    override fun visitDescendants(ctx: JSong2Parser.DescendantsContext): JsonNode? {
+        return super.visitDescendants(ctx)
+    }
+
     override fun visitFalse(ctx: JSong2Parser.FalseContext): BooleanNode {
         return BooleanNode.FALSE
     }
@@ -260,22 +264,37 @@ class Processor(
 
     override fun visitMap(ctx: JSong2Parser.MapContext): ArrayNode {
         val rs = ArrayNode(nf)
-        var lhs = expand(visit(ctx.lhs))
-        val indexes = RangeNode.indexes(lhs)
-        if (indexes.isNotEmpty()) {
-            lhs = ArrayNode(nf).addAll(indexes.map { IntNode(it) })
-        }
+        val lhs = expand(visit(ctx.lhs))
         lhs.forEach { context ->
-            this.context = context
-            when (val rhs = visit(ctx.rhs)) {
-                is ArrayNode -> rhs.forEach {
-                    rs.add(it)
-                    parents[it] = context
+            when (context) {
+                is RangeNode -> context.indexes.forEach { index ->
+                    this.context = IntNode(index)
+                    when (val rhs = visit(ctx.rhs)) {
+                        is ArrayNode -> rhs.forEach {
+                            rs.add(it)
+                            parents[it] = context
+                        }
+
+                        else -> rhs?.let {
+                            rs.add(rhs)
+                            parents[rhs] = context
+                        }
+                    }
                 }
 
-                else -> rhs?.let {
-                    rs.add(rhs)
-                    parents[rhs] = context
+                else -> {
+                    this.context = context
+                    when (val rhs = visit(ctx.rhs)) {
+                        is ArrayNode -> rhs.forEach {
+                            rs.add(it)
+                            parents[it] = context
+                        }
+
+                        else -> rhs?.let {
+                            rs.add(rhs)
+                            parents[rhs] = context
+                        }
+                    }
                 }
             }
         }
@@ -375,6 +394,17 @@ class Processor(
 
     override fun visitTrue(ctx: JSong2Parser.TrueContext): BooleanNode {
         return BooleanNode.TRUE
+    }
+
+    override fun visitWildcard(ctx: JSong2Parser.WildcardContext): ArrayNode {
+        val rs = ArrayNode(nf)
+        val context = this.context
+        if (context is ObjectNode) {
+            context.fields().forEach { field ->
+                rs.add(field.value)
+            }
+        }
+        return rs
     }
 
 } //~ Processor

@@ -90,6 +90,17 @@ class Processor(
 
     private val parents = mutableMapOf<JsonNode, JsonNode>()
 
+    private fun descendants(node: JsonNode?): ArrayNode {
+        val array = ArrayNode(nf)
+        node?.fields()?.forEach { field ->
+            if (field.value != null) {
+                array.addAll(descendants(field.value))
+                array.add(field.value)
+            }
+        }
+        return array
+    }
+
     private fun expand(node: JsonNode?): ArrayNode {
         val array = ArrayNode(nf)
         if (node != null) when (node) {
@@ -120,16 +131,16 @@ class Processor(
     }
 
     override fun visitArray(ctx: JSong2Parser.ArrayContext): ArrayNode {
-        val array = ArrayNode(nf)
+        val rs = ArrayNode(nf)
         ctx.element().forEach { element ->
             val context = this.context
             when {
-                element.exp() != null -> array.add(visit(element.exp()))
-                element.range() != null -> array.add(visit(element.range()))
+                element.exp() != null -> rs.add(visit(element.exp()))
+                element.range() != null -> rs.add(visit(element.range()))
             }
             this.context = context
         }
-        return array
+        return rs
     }
 
     override fun visitBlock(ctx: JSong2Parser.BlockContext): JsonNode? {
@@ -177,8 +188,8 @@ class Processor(
         return this.context
     }
 
-    override fun visitDescendants(ctx: JSong2Parser.DescendantsContext): JsonNode? {
-        return super.visitDescendants(ctx)
+    override fun visitDescendants(ctx: JSong2Parser.DescendantsContext): ArrayNode {
+        return descendants(context)
     }
 
     override fun visitFalse(ctx: JSong2Parser.FalseContext): BooleanNode {

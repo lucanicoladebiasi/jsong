@@ -90,6 +90,8 @@ class Processor(
 
     private val parents = mutableMapOf<JsonNode, JsonNode>()
 
+    private val variables = mutableMapOf<String, JsonNode>()
+
     private fun descendants(node: JsonNode?): ArrayNode {
         val array = ArrayNode(nf)
         node?.fields()?.forEach { field ->
@@ -108,6 +110,45 @@ class Processor(
             else -> array.add(node)
         }
         return array
+    }
+
+    private fun map(explhs: JSong2Parser.ExpContext, exprhs: JSong2Parser.ExpContext): ArrayNode {
+        val rs = ArrayNode(nf)
+        val lhs = expand(visit(explhs))
+        lhs.forEach { context ->
+            when (context) {
+                is RangeNode -> context.indexes.forEach { index ->
+                    this.context = IntNode(index)
+                    when (val rhs = visit(exprhs)) {
+                        is ArrayNode -> rhs.forEach {
+                            rs.add(it)
+                            parents[it] = context
+                        }
+
+                        else -> rhs?.let {
+                            rs.add(rhs)
+                            parents[rhs] = context
+                        }
+                    }
+                }
+
+                else -> {
+                    this.context = context
+                    when (val rhs = visit(exprhs)) {
+                        is ArrayNode -> rhs.forEach {
+                            rs.add(it)
+                            parents[it] = context
+                        }
+
+                        else -> rhs?.let {
+                            rs.add(rhs)
+                            parents[rhs] = context
+                        }
+                    }
+                }
+            }
+        }
+        return rs
     }
 
     private fun reduce(node: JsonNode?, isToReduce: Boolean = true): JsonNode? {
@@ -274,39 +315,19 @@ class Processor(
     }
 
     override fun visitMap(ctx: JSong2Parser.MapContext): ArrayNode {
-        val rs = ArrayNode(nf)
-        val lhs = expand(visit(ctx.lhs))
-        lhs.forEach { context ->
-            when (context) {
-                is RangeNode -> context.indexes.forEach { index ->
-                    this.context = IntNode(index)
-                    when (val rhs = visit(ctx.rhs)) {
-                        is ArrayNode -> rhs.forEach {
-                            rs.add(it)
-                            parents[it] = context
-                        }
+        return map(ctx.lhs, ctx.rhs)
+    }
 
-                        else -> rhs?.let {
-                            rs.add(rhs)
-                            parents[rhs] = context
-                        }
-                    }
+    override fun visitMapandbind(ctx: JSong2Parser.MapandbindContext): ArrayNode {
+        val rs = map(ctx.lhs, ctx.rhs)
+        ctx.op.forEachIndexed { index, op ->
+            val id = sanitise(ctx.VAR_ID(index).text)
+            when (op.type) {
+                JSong2Parser.HASH -> {
+                    variables[id] = PositionNode(nf).addAll(rs)
                 }
 
-                else -> {
-                    this.context = context
-                    when (val rhs = visit(ctx.rhs)) {
-                        is ArrayNode -> rhs.forEach {
-                            rs.add(it)
-                            parents[it] = context
-                        }
-
-                        else -> rhs?.let {
-                            rs.add(rhs)
-                            parents[rhs] = context
-                        }
-                    }
-                }
+                else -> throw UnsupportedOperationException("Unknown operator in ${ctx.text} expression!")
             }
         }
         return rs
@@ -405,6 +426,17 @@ class Processor(
 
     override fun visitTrue(ctx: JSong2Parser.TrueContext): BooleanNode {
         return BooleanNode.TRUE
+    }
+
+    override fun visitVar(ctx: JSong2Parser.VarContext): JsonNode? {
+        val id = sanitise(ctx.VAR_ID().text)
+        return when (val rs = variables[id]) {
+            is PositionNode -> {
+                rs.position(context)
+            }
+
+            else -> rs
+        }
     }
 
     override fun visitWildcard(ctx: JSong2Parser.WildcardContext): ArrayNode {

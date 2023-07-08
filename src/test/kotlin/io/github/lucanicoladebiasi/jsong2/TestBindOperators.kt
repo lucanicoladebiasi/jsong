@@ -49,10 +49,10 @@ class TestBindOperators {
     @BeforeAll
     fun setUp() {
         node = mapper.readTree(Thread.currentThread().contextClassLoader.getResource("library.json"))
-        books = JSong("library.books").evaluate(node)!!
-        library = JSong("library").evaluate(node)!!
-        loans = JSong("library.loans").evaluate(node)!!
-        titles = JSong("library.books.title").evaluate(node)!!
+//        books = JSong("library.books").evaluate(node)!!
+//        library = JSong("library").evaluate(node)!!
+//        loans = JSong("library.loans").evaluate(node)!!
+//        titles = JSong("library.books.title").evaluate(node)!!
     }
 
 
@@ -60,10 +60,9 @@ class TestBindOperators {
      * https://docs.jsonata.org/path-operators#-positional-variable-binding
      */
     @Test
-    @Disabled
     fun `Positional variable binding`() {
         val expression = "library.books#\$i[\"Kernighan\" in authors].{\"title\": title, \"index\": \$i }"
-
+        //val expression = "library.books#\$i"
         @Language("JSON")
         val expected = mapper.readTree(
             """
@@ -79,7 +78,7 @@ class TestBindOperators {
             ]
             """.trimIndent()
         )
-        val actual = JSong(expression).evaluate()
+        val actual = JSong(expression).evaluate(node)
         assertEquals(expected, actual)
     }
 

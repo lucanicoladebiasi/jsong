@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.*
 import io.github.lucanicoladebiasi.jsong.antlr.JSong2BaseVisitor
 import io.github.lucanicoladebiasi.jsong.antlr.JSong2Parser
+import io.github.lucanicoladebiasi.jsong2.functions.Library
+import io.github.lucanicoladebiasi.jsong2.functions.StringFunctions
 import org.antlr.v4.runtime.tree.ParseTree
 import org.apache.commons.text.StringEscapeUtils
 import java.math.BigDecimal
@@ -86,6 +88,8 @@ class Processor(
 
     private var isToReduce = true
 
+    private val lib = Library().register(StringFunctions::class)
+
     private val nf = mapper.nodeFactory
 
     private val parents = mutableMapOf<JsonNode, JsonNode>()
@@ -112,14 +116,14 @@ class Processor(
         return array
     }
 
-    private fun map(explhs: JSong2Parser.ExpContext, exprhs: JSong2Parser.ExpContext): ArrayNode {
+    private fun map(lec: JSong2Parser.ExpContext, rec: JSong2Parser.ExpContext): ArrayNode {
         val rs = ArrayNode(nf)
-        val lhs = expand(visit(explhs))
+        val lhs = expand(visit(lec))
         lhs.forEach { context ->
             when (context) {
                 is RangeNode -> context.indexes.forEach { index ->
                     this.context = IntNode(index)
-                    when (val rhs = visit(exprhs)) {
+                    when (val rhs = visit(rec)) {
                         is ArrayNode -> rhs.forEach {
                             rs.add(it)
                             parents[it] = context
@@ -134,7 +138,7 @@ class Processor(
 
                 else -> {
                     this.context = context
-                    when (val rhs = visit(exprhs)) {
+                    when (val rhs = visit(rec)) {
                         is ArrayNode -> rhs.forEach {
                             rs.add(it)
                             parents[it] = context
@@ -191,6 +195,18 @@ class Processor(
             isToReduce = true
         }
         return rs
+    }
+
+    override fun visitCall(ctx: JSong2Parser.CallContext): JsonNode? {
+        val name = sanitise(ctx.VAR_ID().text)
+        val args = ArrayDeque<JsonNode?>()
+        val context = this.context
+        ctx.exp().forEach { exp ->
+            args.add(visit(exp))
+            this.context = context
+        }
+        lib.call(name, args)
+        return null
     }
 
     override fun visitCompare(ctx: JSong2Parser.CompareContext): BooleanNode {

@@ -45,7 +45,7 @@ exp     :   '(' exp (';' exp?)* ')'                                 # block
         |   lhs = exp '&' rhs = exp                                 # concatenate
         |   lhs = exp '[' rhs = exp ']'                             # filter
         |   lhs = exp '.' rhs = exp                                 # map
-        |   lhs = exp '.' rhs = exp (op +=(AT | HASH) VAR_ID)+           # mapandbind
+        |   lhs = exp '.' rhs = exp (op +=(AT | HASH) VAR_ID)+      # mapandbind
         |   '{' field (',' field)* '}'                              # object
         |   '[' element (',' element)* ']'                          # array
         |   exp '[]'                                                # expand

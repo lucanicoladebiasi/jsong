@@ -10,7 +10,7 @@ import io.github.lucanicoladebiasi.jsong2.RegexNode
 /**
  * https://docs.jsonata.org/string-functions#string
  */
-class StringFunctions {
+class StringFunctions: Library() {
 
 
     /**
@@ -24,7 +24,7 @@ class StringFunctions {
      * https://docs.jsonata.org/string-functions#length
      */
     fun `$length`(str: TextNode): IntNode {
-        TODO()
+        return IntNode(str.textValue().length)
     }
 
     /**

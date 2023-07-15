@@ -88,7 +88,7 @@ class Processor(
 
     private var isToReduce = true
 
-    private val lib = Library().register(StringFunctions::class)
+    private val lib = Library.register(StringFunctions())
 
     private val nf = mapper.nodeFactory
 
@@ -205,8 +205,7 @@ class Processor(
             args.add(visit(exp))
             this.context = context
         }
-        lib.call(name, args)
-        return null
+        return lib.call(name, args)
     }
 
     override fun visitCompare(ctx: JSong2Parser.CompareContext): BooleanNode {

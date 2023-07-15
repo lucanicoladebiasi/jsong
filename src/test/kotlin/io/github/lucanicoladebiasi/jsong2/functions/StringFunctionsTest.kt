@@ -1,6 +1,7 @@
 package io.github.lucanicoladebiasi.jsong2.functions
 
 import com.fasterxml.jackson.databind.node.IntNode
+import com.fasterxml.jackson.databind.node.TextNode
 import io.github.lucanicoladebiasi.jsong2.JSong
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -22,7 +23,11 @@ class StringFunctionsTest {
     }
 
     @Test
-    fun `$substring`() {
+    fun `$substring - positive start`() {
+        val expression = "\$substring(\"Hello World\", 3)"
+        val actual = JSong(expression).evaluate()
+        val expected = TextNode("\"lo World\"")
+        assertEquals(expected, actual)
     }
 
     @Test

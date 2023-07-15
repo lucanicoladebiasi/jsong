@@ -4,12 +4,14 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.BooleanNode
 import com.fasterxml.jackson.databind.node.IntNode
+import com.fasterxml.jackson.databind.node.NumericNode
 import com.fasterxml.jackson.databind.node.TextNode
 import io.github.lucanicoladebiasi.jsong2.RegexNode
 
 /**
  * https://docs.jsonata.org/string-functions#string
  */
+@Suppress("FunctionName", "unused", "UNUSED_PARAMETER")
 class StringFunctions: Library() {
 
 
@@ -30,8 +32,8 @@ class StringFunctions: Library() {
     /**
      * https://docs.jsonata.org/string-functions#substring
      */
-    fun `$substring`(str: TextNode, start: IntNode, length: IntNode = IntNode(Int.MAX_VALUE)): TextNode {
-        TODO()
+    fun `$substring`(str: TextNode, start: NumericNode, length: NumericNode?): TextNode {
+        return TextNode(str.textValue().substring(start.asInt(), length?.asInt() ?: Int.MAX_VALUE) )
     }
 
     /**

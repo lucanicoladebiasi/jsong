@@ -5,10 +5,7 @@ import kotlin.reflect.KCallable
 
 data class Signature(val instance: Any, val callable: KCallable<*>) {
 
-    fun call(args: MutableList<JsonNode?>): JsonNode? {
-        while (args.size < callable.parameters.size - 1) {
-            args.add(null)
-        }
+    fun call(args: List<JsonNode?>): JsonNode? {
         return callable.call(instance, *args.toTypedArray()) as JsonNode?
     }
 

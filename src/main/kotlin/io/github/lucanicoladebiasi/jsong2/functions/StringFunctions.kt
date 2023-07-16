@@ -32,8 +32,15 @@ class StringFunctions: Library() {
     /**
      * https://docs.jsonata.org/string-functions#substring
      */
-    fun `$substring`(str: TextNode, start: NumericNode, length: NumericNode?): TextNode {
-        return TextNode(str.textValue().substring(start.asInt(), length?.asInt() ?: Int.MAX_VALUE) )
+    fun `$substring`(str: TextNode, start: NumericNode): TextNode {
+        return TextNode(str.textValue().substring(start.asInt()))
+    }
+
+    /**
+     * https://docs.jsonata.org/string-functions#substring
+     */
+    fun `$substring`(str: TextNode, start: NumericNode, length: NumericNode): TextNode {
+        return TextNode(str.textValue().substring(start.asInt(), length.asInt()))
     }
 
     /**

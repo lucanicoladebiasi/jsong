@@ -26,7 +26,7 @@ class StringFunctionsTest {
     fun `$substring - positive start`() {
         val expression = "\$substring(\"Hello World\", 3)"
         val actual = JSong(expression).evaluate()
-        val expected = TextNode("\"lo World\"")
+        val expected = TextNode("lo World")
         assertEquals(expected, actual)
     }
 

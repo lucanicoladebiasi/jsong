@@ -12,7 +12,7 @@ open class Library {
 
         private val map = mutableMapOf<String, Set<Signature>>()
 
-        fun call(name: String, args: MutableList<JsonNode?>): JsonNode? {
+        fun call(name: String, args: List<JsonNode?>): JsonNode? {
             when (val set = map[name]) {
                 null -> throw NoSuchMethodException("$name function not found")
                 else -> return match(set, args)?.call(args)
@@ -21,7 +21,7 @@ open class Library {
 
         @OptIn(ExperimentalStdlibApi::class)
         private fun match(parameters: List<KParameter>, args: List<JsonNode?>): Boolean {
-            when (args.size == parameters.filter { !it.isOptional }.size - 1) {
+            when (args.size == parameters.size - 1) {
                 true -> {
                     for (i in args.indices) {
                         if (args[i] != null) {

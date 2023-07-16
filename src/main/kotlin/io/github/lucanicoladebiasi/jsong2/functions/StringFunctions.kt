@@ -33,14 +33,25 @@ class StringFunctions: Library() {
      * https://docs.jsonata.org/string-functions#substring
      */
     fun `$substring`(str: TextNode, start: NumericNode): TextNode {
-        return TextNode(str.textValue().substring(start.asInt()))
+        val txt = str.textValue()
+        val first = 0
+            .coerceAtLeast(if (start.intValue() < 0) txt.length + start.intValue() else start.intValue())
+            .coerceAtMost(txt.length)
+        return TextNode(txt.substring(first))
     }
 
     /**
      * https://docs.jsonata.org/string-functions#substring
      */
     fun `$substring`(str: TextNode, start: NumericNode, length: NumericNode): TextNode {
-        return TextNode(str.textValue().substring(start.asInt(), length.asInt()))
+        val txt = str.textValue()
+        val first = 0
+            .coerceAtLeast(if (start.intValue() < 0) txt.length + start.intValue() else start.intValue())
+            .coerceAtMost(txt.length)
+        val last = 0
+            .coerceAtLeast(length.let { first + length.asInt() })
+            .coerceAtMost(txt.length)
+        return TextNode(txt.substring(first, last))
     }
 
     /**

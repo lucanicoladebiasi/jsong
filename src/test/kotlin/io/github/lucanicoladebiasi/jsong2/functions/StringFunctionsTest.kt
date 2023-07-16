@@ -14,6 +14,9 @@ class StringFunctionsTest {
     fun `$string`() {
     }
 
+    /**
+     * https://docs.jsonata.org/string-functions#length
+     */
     @Test
     fun `$length`() {
         val expression = "\$length(\"Hello World\")"
@@ -22,11 +25,47 @@ class StringFunctionsTest {
         assertEquals(expected, actual)
     }
 
+    /**
+     * https://docs.jsonata.org/string-functions#substring
+     */
     @Test
     fun `$substring - positive start`() {
         val expression = "\$substring(\"Hello World\", 3)"
         val actual = JSong(expression).evaluate()
         val expected = TextNode("lo World")
+        assertEquals(expected, actual)
+    }
+
+    /**
+     * https://docs.jsonata.org/string-functions#substring
+     */
+    @Test
+    fun `$substring() - positive start and length`() {
+        val expression = "\$substring(\"Hello World\", 3, 5)"
+        val actual = JSong(expression).evaluate()
+        val expected = TextNode("lo Wo")
+        assertEquals(expected, actual)
+    }
+
+    /**
+     * https://docs.jsonata.org/string-functions#substring
+     */
+    @Test
+    fun `$substring() - negative start`() {
+        val expression = "\$substring(\"Hello World\", -4)"
+        val actual = JSong(expression).evaluate()
+        val expected = TextNode("orld")
+        assertEquals(expected, actual)
+    }
+
+    /**
+     * https://docs.jsonata.org/string-functions#substring
+     */
+    @Test
+    fun `$substring() - negative start and length`() {
+        val expression = "\$substring(\"Hello World\", -4, 2)"
+        val actual = JSong(expression).evaluate()
+        val expected = TextNode("or")
         assertEquals(expected, actual)
     }
 

@@ -1,6 +1,7 @@
 package io.github.lucanicoladebiasi.jsong2.functions
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.node.DoubleNode
 import com.fasterxml.jackson.databind.node.IntNode
 import com.fasterxml.jackson.databind.node.TextNode
 import io.github.lucanicoladebiasi.jsong2.JSong
@@ -14,6 +15,16 @@ import org.junit.jupiter.api.TestInstance
 class StringFunctionsTest {
 
     private val mapper = ObjectMapper()
+
+    /**
+     * https://docs.jsonata.org/string-functions#string
+     */
+    @Test
+    fun `$string - NaN`() {
+        assertThrows(IllegalArgumentException::class.java) {
+            StringFunctions(mapper).`$string`(DoubleNode(Double.NaN))
+        }
+    }
 
     /**
      * https://docs.jsonata.org/string-functions#string
@@ -55,13 +66,7 @@ class StringFunctionsTest {
         assertEquals(expected, actual)
     }
 
-    /**
-     * https://docs.jsonata.org/string-functions#string
-     */
-    @Test
-    @Disabled
-    fun `$string - NaN`() {
-    }
+
 
     /**
      * https://docs.jsonata.org/string-functions#length

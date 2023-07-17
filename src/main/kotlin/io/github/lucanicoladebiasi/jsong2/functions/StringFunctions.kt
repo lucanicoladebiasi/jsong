@@ -1,25 +1,49 @@
 package io.github.lucanicoladebiasi.jsong2.functions
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.BooleanNode
 import com.fasterxml.jackson.databind.node.IntNode
+import com.fasterxml.jackson.databind.node.NullNode
 import com.fasterxml.jackson.databind.node.NumericNode
 import com.fasterxml.jackson.databind.node.TextNode
 import io.github.lucanicoladebiasi.jsong2.RegexNode
+import java.lang.IllegalArgumentException
 
 /**
  * https://docs.jsonata.org/string-functions#string
  */
 @Suppress("FunctionName", "unused", "UNUSED_PARAMETER")
-class StringFunctions: Library() {
-
+class StringFunctions(private val mapper: ObjectMapper): Library() {
 
     /**
      * https://docs.jsonata.org/string-functions#string
      */
-    fun `$string`(arg: JsonNode?, prettify: BooleanNode = BooleanNode.FALSE): TextNode {
-        TODO()
+    fun `$string`(arg: JsonNode?): TextNode {
+        return `$string`(arg, BooleanNode.FALSE)
+    }
+
+    /**
+     * https://docs.jsonata.org/string-functions#string
+     */
+    fun `$string`(arg: JsonNode?, prettify: BooleanNode): TextNode {
+        return when(arg) {
+            null -> TextNode("")
+            is NullNode -> TextNode("")
+            is NumericNode -> when(arg.isNaN) {
+                true -> throw IllegalArgumentException()
+                else -> when(prettify.booleanValue()) {
+                    true -> TextNode(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(arg))
+                    else -> TextNode(mapper.writeValueAsString(arg))
+                }
+            }
+            is TextNode -> arg
+            else -> when(prettify.booleanValue()) {
+                true -> TextNode(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(arg))
+                else -> TextNode(mapper.writeValueAsString(arg))
+            }
+        }
     }
 
     /**

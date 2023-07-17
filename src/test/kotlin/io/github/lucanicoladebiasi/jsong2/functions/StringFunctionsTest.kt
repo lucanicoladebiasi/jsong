@@ -19,7 +19,6 @@ class StringFunctionsTest {
      * https://docs.jsonata.org/string-functions#string
      */
     @Test
-    @Disabled
     fun `$string - null`() {
         val expression = "\$string(null)"
         val expected = TextNode("")
@@ -31,7 +30,6 @@ class StringFunctionsTest {
      * https://docs.jsonata.org/string-functions#string
      */
     @Test
-    @Disabled
     fun `$string - numeric`() {
         val expression = "\$string(5)"
         val expected = TextNode("5")

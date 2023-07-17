@@ -1,17 +1,68 @@
 package io.github.lucanicoladebiasi.jsong2.functions
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.IntNode
 import com.fasterxml.jackson.databind.node.TextNode
 import io.github.lucanicoladebiasi.jsong2.JSong
+import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class StringFunctionsTest {
 
+    private val mapper = ObjectMapper()
+
+    /**
+     * https://docs.jsonata.org/string-functions#string
+     */
     @Test
-    fun `$string`() {
+    @Disabled
+    fun `$string - null`() {
+        val expression = "\$string(null)"
+        val expected = TextNode("")
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
+    }
+
+    /**
+     * https://docs.jsonata.org/string-functions#string
+     */
+    @Test
+    @Disabled
+    fun `$string - numeric`() {
+        val expression = "\$string(5)"
+        val expected = TextNode("5")
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
+    }
+
+    /**
+     * https://docs.jsonata.org/string-functions#string
+     */
+    @Test
+    @Disabled
+    fun `$string - no prettify`() {
+        val expression = "[1..5].\$string()"
+
+        @Language("JSON")
+        val expected = mapper.readTree(
+            """
+            ["1", "2", "3", "4", "5"]
+            """.trimIndent()
+        )
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
+    }
+
+    /**
+     * https://docs.jsonata.org/string-functions#string
+     */
+    @Test
+    @Disabled
+    fun `$string - NaN`() {
     }
 
     /**
@@ -20,8 +71,8 @@ class StringFunctionsTest {
     @Test
     fun `$length`() {
         val expression = "\$length(\"Hello World\")"
-        val actual = JSong(expression).evaluate()
         val expected = IntNode(11)
+        val actual = JSong(expression).evaluate()
         assertEquals(expected, actual)
     }
 
@@ -31,8 +82,8 @@ class StringFunctionsTest {
     @Test
     fun `$substring - positive start`() {
         val expression = "\$substring(\"Hello World\", 3)"
-        val actual = JSong(expression).evaluate()
         val expected = TextNode("lo World")
+        val actual = JSong(expression).evaluate()
         assertEquals(expected, actual)
     }
 
@@ -42,8 +93,8 @@ class StringFunctionsTest {
     @Test
     fun `$substring() - positive start and length`() {
         val expression = "\$substring(\"Hello World\", 3, 5)"
-        val actual = JSong(expression).evaluate()
         val expected = TextNode("lo Wo")
+        val actual = JSong(expression).evaluate()
         assertEquals(expected, actual)
     }
 
@@ -53,8 +104,8 @@ class StringFunctionsTest {
     @Test
     fun `$substring() - negative start`() {
         val expression = "\$substring(\"Hello World\", -4)"
-        val actual = JSong(expression).evaluate()
         val expected = TextNode("orld")
+        val actual = JSong(expression).evaluate()
         assertEquals(expected, actual)
     }
 
@@ -64,29 +115,64 @@ class StringFunctionsTest {
     @Test
     fun `$substring() - negative start and length`() {
         val expression = "\$substring(\"Hello World\", -4, 2)"
-        val actual = JSong(expression).evaluate()
         val expected = TextNode("or")
+        val actual = JSong(expression).evaluate()
         assertEquals(expected, actual)
     }
 
+    /**
+     * https://docs.jsonata.org/string-functions#substringbefore
+     */
     @Test
     fun `$substringBefore`() {
+        val expression = "\$substringBefore(\"Hello World\", \" \")"
+        val expected = TextNode("Hello")
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
     }
 
+    /**
+     * https://docs.jsonata.org/string-functions#substringafter
+     */
     @Test
     fun `$substringAfter`() {
+        val expression = "\$substringAfter(\"Hello World\", \" \")"
+        val expected = TextNode("World")
+        val actual = JSong(expression).evaluate()
+        kotlin.test.assertEquals(expected, actual)
     }
 
+    /**
+     * https://docs.jsonata.org/string-functions#uppercase
+     */
     @Test
     fun `$uppercase`() {
+        val expression = "\$uppercase(\"Hello World\")"
+        val expected = TextNode("HELLO WORLD")
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
     }
 
+    /**
+     * https://docs.jsonata.org/string-functions#lowercase
+     */
     @Test
     fun `$lowercase`() {
+        val expression = "\$lowercase(\"Hello World\")"
+        val expected = TextNode("hello world")
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
     }
 
+    /**
+     * https://docs.jsonata.org/string-functions#trim
+     */
     @Test
     fun `$trim`() {
+        val expression = "\$trim(\" Hello \n World \")"
+        val expected = TextNode("Hello World")
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -95,10 +181,6 @@ class StringFunctionsTest {
 
     @Test
     fun `$contains`() {
-    }
-
-    @Test
-    fun `test$contains`() {
     }
 
     @Test

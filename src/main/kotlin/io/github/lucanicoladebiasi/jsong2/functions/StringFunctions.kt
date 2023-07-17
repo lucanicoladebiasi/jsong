@@ -58,35 +58,35 @@ class StringFunctions: Library() {
      * https://docs.jsonata.org/string-functions#substringbefore
      */
     fun `$substringBefore`(str: TextNode, chars: TextNode): TextNode {
-        TODO()
+        return TextNode(str.textValue().substringBefore(chars.textValue()))
     }
 
     /**
      * https://docs.jsonata.org/string-functions#substringafter
      */
     fun `$substringAfter`(str: TextNode, chars: TextNode): TextNode {
-        TODO()
+        return TextNode(str.textValue().substringAfter(chars.textValue()))
     }
 
     /**
      * https://docs.jsonata.org/string-functions#uppercase
      */
     fun `$uppercase`(str: TextNode): TextNode {
-        TODO()
+        return TextNode(str.textValue().uppercase())
     }
 
     /**
      * https://docs.jsonata.org/string-functions#lowercase
      */
     fun `$lowercase`(str: TextNode): TextNode {
-        TODO()
+        return TextNode(str.textValue().lowercase())
     }
 
     /**
      * https://docs.jsonata.org/string-functions#trim
      */
     fun `$trim`(str: TextNode): TextNode {
-        TODO()
+        return TextNode(str.textValue().replace(Regex("\\s+"), " ").trim())
     }
 
     /**

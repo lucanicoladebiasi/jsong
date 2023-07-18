@@ -205,7 +205,7 @@ class Processor(
             args.add(visit(exp))
             this.context = context
         }
-        return lib.call(name, args)
+        return lib.call(name, args, context)
     }
 
     override fun visitCompare(ctx: JSong2Parser.CompareContext): BooleanNode {

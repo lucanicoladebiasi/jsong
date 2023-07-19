@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.node.TextNode
 import io.github.lucanicoladebiasi.jsong2.JSong
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
@@ -52,7 +51,6 @@ class StringFunctionsTest {
      * https://docs.jsonata.org/string-functions#string
      */
     @Test
-    @Disabled
     fun `$string - no prettify`() {
         val expression = "[1..5].\$string()"
 

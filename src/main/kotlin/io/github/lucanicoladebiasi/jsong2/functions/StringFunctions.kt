@@ -116,8 +116,20 @@ class StringFunctions(private val mapper: ObjectMapper): Library() {
     /**
      * https://docs.jsonata.org/string-functions#pad
      */
-    fun `$pad`(str: TextNode, width: IntNode, char: TextNode = TextNode(" ")): TextNode {
-        TODO()
+    fun `$pad`(str: TextNode, width: NumericNode): TextNode {
+        return `$pad`(str, width, TextNode(" "))
+    }
+
+    /**
+     * https://docs.jsonata.org/string-functions#pad
+     */
+    fun `$pad`(str: TextNode, width: NumericNode, char: TextNode): TextNode {
+        val size = width.asInt()
+        val pad = char.textValue()[0]
+        return TextNode(when(size < 0) {
+            true -> str.textValue().padStart(-size, pad)
+            else -> str.textValue().padEnd(size, pad)
+        })
     }
 
     /**

@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.node.TextNode
 import io.github.lucanicoladebiasi.jsong2.JSong
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 
@@ -74,8 +75,6 @@ class StringFunctionsTest {
         val actual = JSong(expression).evaluate()?.textValue()
         assertEquals(expected, actual)
     }
-
-
 
     /**
      * https://docs.jsonata.org/string-functions#length
@@ -187,8 +186,40 @@ class StringFunctionsTest {
         assertEquals(expected, actual)
     }
 
+    /**
+     * http://docs.jsonata.org/string-functions#pad
+     */
     @Test
-    fun `$pad`() {
+    fun `$pad - right - no pad char`() {
+        val expression = "\$pad(\"foo\", 5)"
+        val expected = TextNode("foo  ")
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun `$pad - left - no pad char`() {
+        val expression = "\$pad(\"foo\", -5)"
+        val expected = TextNode("  foo")
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun `$pad - right - pad char`() {
+        val expression = "\$pad(\"foo\", -5, \"#\")"
+        val expected = TextNode("##foo")
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    @Disabled
+    fun `$pad - right - pad char - chained`() {
+        val expression = "\$formatBase(35, 2) ~> \$pad(-8, '0')"
+        val expected = TextNode("00100011")
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
     }
 
     @Test

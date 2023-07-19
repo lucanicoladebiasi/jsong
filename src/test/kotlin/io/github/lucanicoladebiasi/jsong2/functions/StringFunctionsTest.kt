@@ -1,6 +1,7 @@
 package io.github.lucanicoladebiasi.jsong2.functions
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.node.BooleanNode
 import com.fasterxml.jackson.databind.node.DoubleNode
 import com.fasterxml.jackson.databind.node.IntNode
 import com.fasterxml.jackson.databind.node.TextNode
@@ -222,8 +223,79 @@ class StringFunctionsTest {
         assertEquals(expected, actual)
     }
 
+    /**
+     * http://docs.jsonata.org/string-functions#contains
+     */
     @Test
-    fun `$contains`() {
+    fun `$contains - string`() {
+        val expression = "\$contains(\"abracadabra\", \"bra\")"
+        val expected = BooleanNode.TRUE
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
+    }
+
+    /**
+     * http://docs.jsonata.org/string-functions#contains
+     */
+    @Test
+    fun `$contains - regex - true`() {
+        val expression = "\$contains(\"abracadabra\", /a.*a/)"
+        val expected = BooleanNode.TRUE
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
+    }
+
+    /**
+     * http://docs.jsonata.org/string-functions#contains
+     */
+    @Test
+    fun `$contains - regex - false`() {
+        val expression = "\$contains(\"abracadabra\", /ar.*a/)"
+        val expected = BooleanNode.FALSE
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
+    }
+
+    /**
+     * http://docs.jsonata.org/string-functions#contains
+     */
+    @Test
+    fun `$contains - regex - case sensitive`() {
+        val expression = "\$contains(\"Hello World\", /wo/)"
+        val expected = BooleanNode.FALSE
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
+    }
+
+    /**
+     * http://docs.jsonata.org/string-functions#contains
+     */
+    @Test
+    fun `$contains - regex - case insensitive`() {
+        val expression = "\$contains(\"Hello World\", /wo/i)"
+        val expected = BooleanNode.TRUE
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
+    }
+
+    /**
+     * http://docs.jsonata.org/string-functions#contains
+     */
+    @Test
+    fun `$contains - filter`() {
+        val expression = "Phone[\$contains(number, /^077/)]"
+
+        @Language("JSON")
+        val expected = mapper.readTree(
+            """
+            { 
+                "type": "mobile", 
+                "number": "077 7700 1234" 
+            } 
+            """.trimIndent()
+        )
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
     }
 
     @Test

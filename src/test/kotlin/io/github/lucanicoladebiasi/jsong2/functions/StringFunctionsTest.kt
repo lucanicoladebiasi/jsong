@@ -64,6 +64,17 @@ class StringFunctionsTest {
         assertEquals(expected, actual)
     }
 
+    /**
+     * https://docs.jsonata.org/string-functions#string
+     */
+    @Test
+    fun `$string - prettify`() {
+        val expression = "\$string([1..5], true)"
+        val expected = "{\n  \"max\" : 5,\n  \"min\" : 1\n}"
+        val actual = JSong(expression).evaluate()?.textValue()
+        assertEquals(expected, actual)
+    }
+
 
 
     /**

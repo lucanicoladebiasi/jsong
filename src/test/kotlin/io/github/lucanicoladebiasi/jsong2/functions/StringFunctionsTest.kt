@@ -1,5 +1,6 @@
 package io.github.lucanicoladebiasi.jsong2.functions
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.BooleanNode
 import com.fasterxml.jackson.databind.node.DoubleNode
@@ -8,6 +9,7 @@ import com.fasterxml.jackson.databind.node.TextNode
 import io.github.lucanicoladebiasi.jsong2.JSong
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -16,6 +18,13 @@ import org.junit.jupiter.api.TestInstance
 class StringFunctionsTest {
 
     private val mapper = ObjectMapper()
+
+    private var node: JsonNode? = null
+
+    @BeforeAll
+    fun setUp() {
+        node = mapper.readTree(Thread.currentThread().contextClassLoader.getResource("address.json"))
+    }
 
     /**
      * https://docs.jsonata.org/string-functions#string
@@ -294,7 +303,7 @@ class StringFunctionsTest {
             } 
             """.trimIndent()
         )
-        val actual = JSong(expression).evaluate()
+        val actual = JSong(expression).evaluate(node)
         assertEquals(expected, actual)
     }
 

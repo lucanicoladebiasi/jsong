@@ -135,15 +135,11 @@ class StringFunctions(private val mapper: ObjectMapper): Library() {
     /**
      * https://docs.jsonata.org/string-functions#contains
      */
-    fun `$contains`(str: TextNode, pattern: RegexNode): BooleanNode {
-        return BooleanNode.valueOf(str.textValue().contains(pattern.pattern.toRegex()))
-    }
-
-    /**
-     * https://docs.jsonata.org/string-functions#contains
-     */
     fun `$contains`(str: TextNode, pattern: TextNode): BooleanNode {
-        return BooleanNode.valueOf(str.textValue().contains(pattern.textValue()))
+        return when(pattern) {
+            is RegexNode -> BooleanNode.valueOf(str.textValue().contains(pattern.pattern.toRegex()))
+            else -> BooleanNode.valueOf(str.textValue().contains(pattern.textValue()))
+        }
     }
 
     /**

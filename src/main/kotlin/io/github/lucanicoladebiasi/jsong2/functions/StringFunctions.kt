@@ -145,8 +145,24 @@ class StringFunctions(private val mapper: ObjectMapper): Library() {
     /**
      * https://docs.jsonata.org/string-functions#split
      */
-    fun `$split`(str: TextNode, separator: TextNode, limit: IntNode = IntNode(Int.MAX_VALUE)): ArrayNode {
-        TODO()
+    fun `$split`(str: TextNode, separator: TextNode): ArrayNode {
+        return `$split`(str, separator, IntNode(Int.MAX_VALUE))
+    }
+
+    /**
+     * https://docs.jsonata.org/string-functions#split
+     */
+    fun `$split`(str: TextNode, separator: TextNode, limit: NumericNode): ArrayNode {
+        val array = mapper.createArrayNode()
+        val list = when {
+            separator is RegexNode ->
+                str.textValue().split(separator.pattern.toRegex())
+            else -> str.textValue().split(separator.textValue())
+        }
+        for(i in 0 until  minOf(list.size, limit.asInt())) {
+            array.add(TextNode(list[i]))
+        }
+        return array
     }
 
     /**

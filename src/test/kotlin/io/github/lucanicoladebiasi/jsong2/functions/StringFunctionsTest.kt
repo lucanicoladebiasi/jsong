@@ -307,8 +307,52 @@ class StringFunctionsTest {
         assertEquals(expected, actual)
     }
 
+    /**
+     * http://docs.jsonata.org/string-functions#split
+     */
     @Test
-    fun `$split`() {
+    fun `$split - no limit`() {
+        val expression = "\$split(\"so many words\", \" \")"
+        @Language("JSON")
+        val expected = mapper.readTree(
+            """
+            [ "so", "many", "words" ]
+            """.trimIndent()
+        )
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
+    }
+
+    /**
+     * http://docs.jsonata.org/string-functions#split
+     */
+    @Test
+    fun `$split - limited`() {
+        val expression = "\$split(\"so many words\", \" \", 2)"
+        @Language("JSON")
+        val expected = mapper.readTree(
+            """
+            ["so", "many"]        
+            """.trimIndent()
+        )
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
+    }
+
+    /**
+     * http://docs.jsonata.org/string-functions#split
+     */
+    @Test
+    fun `$split - regex`() {
+        val expression = "\$split(\"too much, punctuation. hard; to read\", /[\\s,.;]+/)"
+        @Language("JSON")
+        val expected = mapper.readTree(
+            """
+            ["too", "much", "punctuation", "hard", "to", "read"]
+            """
+        )
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
     }
 
     @Test

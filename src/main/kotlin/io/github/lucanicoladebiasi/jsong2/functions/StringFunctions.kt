@@ -168,8 +168,15 @@ class StringFunctions(private val mapper: ObjectMapper): Library() {
     /**
      * https://docs.jsonata.org/string-functions#join
      */
-    fun `$join`(array: ArrayNode, separator: TextNode = TextNode("")): TextNode {
-        TODO()
+    fun `$join`(array: ArrayNode): TextNode {
+        return `$join`(array, TextNode(("")))
+    }
+
+    /**
+     * https://docs.jsonata.org/string-functions#join
+     */
+    fun `$join`(array: ArrayNode, separator: TextNode): TextNode {
+        return TextNode(array.map { it.textValue() }.joinToString(separator.textValue()))
     }
 
     /**

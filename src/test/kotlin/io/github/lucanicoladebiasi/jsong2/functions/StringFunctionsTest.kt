@@ -355,9 +355,29 @@ class StringFunctionsTest {
         assertEquals(expected, actual)
     }
 
+    /**
+     * http://docs.jsonata.org/string-functions#join
+     */
     @Test
-    fun `$join`() {
+    fun `$join - no separator`() {
+        val expression = "\$join(['a','b','c'])"
+        val expected = TextNode("abc")
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
     }
+
+    /**
+     * http://docs.jsonata.org/string-functions#join
+     */
+    @Test
+    @Disabled
+    fun `$join - with separator`() {
+        val expression = "\$split(\"too much, punctuation. hard; to read\", /[\\s,.;]+/) ~> \$join(', ')"
+        val expected = TextNode("too, much, punctuation")
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
+    }
+
 
     @Test
     fun `$match`() {

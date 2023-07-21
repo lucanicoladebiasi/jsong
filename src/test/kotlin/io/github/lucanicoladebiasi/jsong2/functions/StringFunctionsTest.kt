@@ -313,6 +313,7 @@ class StringFunctionsTest {
     @Test
     fun `$split - no limit`() {
         val expression = "\$split(\"so many words\", \" \")"
+
         @Language("JSON")
         val expected = mapper.readTree(
             """
@@ -329,6 +330,7 @@ class StringFunctionsTest {
     @Test
     fun `$split - limited`() {
         val expression = "\$split(\"so many words\", \" \", 2)"
+
         @Language("JSON")
         val expected = mapper.readTree(
             """
@@ -345,6 +347,7 @@ class StringFunctionsTest {
     @Test
     fun `$split - regex`() {
         val expression = "\$split(\"too much, punctuation. hard; to read\", /[\\s,.;]+/)"
+
         @Language("JSON")
         val expected = mapper.readTree(
             """
@@ -381,6 +384,32 @@ class StringFunctionsTest {
 
     @Test
     fun `$match`() {
+        val expression = "\$match(\"ababbabbcc\",/a(b+)/)"
+
+        @Language("JSON")
+        val expected = mapper.readTree(
+            """
+            [
+              {
+                "match": "ab",
+                "index": 0,
+                "groups": ["b"]
+              },
+              {
+                "match": "abb",
+                "index": 2,
+                "groups": ["bb"]
+              },
+              {
+                "match": "abb",
+                "index": 5,
+                "groups": ["bb" ]
+              }
+            ]
+            """.trimIndent()
+        )
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -392,11 +421,11 @@ class StringFunctionsTest {
     }
 
     @Test
-    fun `$$base64encode`() {
+    fun `$base64encode`() {
     }
 
     @Test
-    fun `$$base64decode`() {
+    fun `$base64decode`() {
     }
 
     @Test
@@ -412,6 +441,6 @@ class StringFunctionsTest {
     }
 
     @Test
-    fun `$$decodeUrl`() {
+    fun `$decodeUrl`() {
     }
 }

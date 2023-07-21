@@ -182,8 +182,26 @@ class StringFunctions(private val mapper: ObjectMapper): Library() {
     /**
      * https://docs.jsonata.org/string-functions#match
      */
-    fun `$match`(str: TextNode, pattern: RegexNode, limit: IntNode = IntNode(Int.MAX_VALUE)): ArrayNode {
-        TODO()
+    fun `$match`(str: TextNode, pattern: RegexNode): ArrayNode {
+        return `$match`(str, pattern, IntNode(Int.MAX_VALUE))
+    }
+
+    /**
+     * https://docs.jsonata.org/string-functions#match
+     */
+    fun `$match`(str: TextNode, pattern: RegexNode, limit: NumericNode): ArrayNode {
+        val array = mapper.createArrayNode()
+        val max = limit.asInt()
+        pattern.pattern.toRegex().findAll(str.textValue()).forEachIndexed { index, matchResult ->
+            if (index < max) {
+                array.add(MatchNode.of(
+                    matchResult.value,
+                    matchResult.range.first,
+                    listOf(matchResult.groupValues.last()),
+                    mapper))
+            }
+        }
+        return array
     }
 
     /**

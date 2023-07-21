@@ -30,7 +30,6 @@ import com.fasterxml.jackson.databind.node.NumericNode
 import com.fasterxml.jackson.databind.node.TextNode
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import kotlin.test.assertEquals
@@ -102,7 +101,6 @@ class TestMapOperators {
      * https://docs.jsonata.org/path-operators
      */
     @Test
-    @Disabled
     fun `map function`() {
         val expression = "Account.Order.OrderID.\$uppercase()"
 

@@ -15,7 +15,7 @@ import java.lang.IllegalArgumentException
  * https://docs.jsonata.org/string-functions#string
  */
 @Suppress("FunctionName", "unused", "UNUSED_PARAMETER")
-class StringFunctions(private val mapper: ObjectMapper): Library() {
+class StringFunctions(private val mapper: ObjectMapper) {
 
     /**
      * https://docs.jsonata.org/string-functions#string

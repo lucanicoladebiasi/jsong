@@ -88,7 +88,7 @@ class Processor(
 
     private var isToReduce = true
 
-    private val lib = Library.register(StringFunctions(mapper))
+    private val lib = Library().register(StringFunctions(mapper))
 
     private val nf = mapper.nodeFactory
 

@@ -7,84 +7,39 @@ import kotlin.reflect.full.memberFunctions
 
 open class Library {
 
-    companion object {
+    private val map = mutableMapOf<String, Set<Function>>()
 
-        private val map = mutableMapOf<String, Set<Signature>>()
-
-        fun call(name: String, args: List<JsonNode?>, context: JsonNode?): JsonNode? {
-
-            map[name]?.let { signatures ->
-                signature@ for(signature in signatures) {
-                when {
-                    signature.callable.parameters.size == 2 && args.isEmpty() -> {
-                        if (context != null) {
-                            if (!context::class.createType().isSubtypeOf(signature.callable.parameters[1].type)) {
-                                continue@signature
-                            }
-                        }
-                        return signature.callable.call(signature.instance, context) as JsonNode?
-                    }
-
-                    signature.callable.parameters.size - 1 == args.size -> {
-                        for (i in args.indices) {
-                            if (args[i] != null) {
-                                if (!args[i]!!::class.createType()
-                                        .isSubtypeOf(signature.callable.parameters[i + 1].type)
-                                ) {
-                                    continue@signature
-                                }
-                            }
-                        }
-                        return signature.callable.call(signature.instance, *args.toTypedArray()) as JsonNode?
+    fun call(name: String, args: List<JsonNode?>, context: JsonNode?): JsonNode? {
+        map[name]?.let { signatures ->
+            val arguments = mutableListOf<JsonNode?>()
+            if (args.size < signatures.last().callable.parameters.size - 1) {
+                arguments.add(context)
+            }
+            arguments.addAll(args)
+            signatures.filter { arguments.size == it.callable.parameters.size - 1 }.forEach { signature ->
+                matching@ for (i in arguments.indices) {
+                    if (arguments[i] != null && !arguments[i]!!::class.createType()
+                            .isSubtypeOf(signature.callable.parameters[i + 1].type)
+                    ) {
+                        continue@matching
                     }
                 }
-            }}
-            throw NoSuchMethodException("$name($args) function not found")
-        }
-
-//        fun call(name: String, args: List<JsonNode?>): JsonNode? {
-//            when (val set = map[name]) {
-//                null -> throw NoSuchMethodException("$name function not found")
-//                else -> return match(set, args)?.call(args)
-//            }
-//        }
-
-        @OptIn(ExperimentalStdlibApi::class)
-//        private fun match(parameters: List<KParameter>, args: List<JsonNode?>): Boolean {
-//            when (args.size == parameters.size - 1) {
-//                true -> {
-//                    for (i in args.indices) {
-//                        if (args[i] != null) {
-//                            if (!args[i]!!::class.createType().isSubtypeOf(parameters[i + 1].type)) {
-//                                return false
-//                            }
-//                        }
-//                    }
-//                    return true
-//                }
-//
-//                else -> return false
-//            }
-//        }
-
-//        private fun match(signatures: Set<Signature>, args: List<JsonNode?>): Signature? {
-//            return signatures.firstOrNull() {
-//                match(it.callable.parameters, args)
-//            }
-//        }
-
-        fun register(library: Library): Companion {
-            val raw = mutableMapOf<String, MutableList<Signature>>()
-            library::class.memberFunctions.forEach {
-                raw.getOrPut(it.name) { mutableListOf() }.add(Signature(library, it))
+                return signature.callable.call(signature.instance, *arguments.toTypedArray()) as JsonNode?
             }
-            raw.forEach { (name, signatures) ->
-                map[name] = signatures.sortedByDescending { it.callable.parameters.size }.toSet()
-            }
-            return this
+            throw NoSuchMethodException("$name($arguments) not found")
         }
+        throw NoSuchMethodException("$name not found")
+    }
 
-    } //~ companion
+    fun register(instance: Any): Library {
+        val map = mutableMapOf<String, MutableList<Function>>()
+        instance::class.memberFunctions.forEach {
+            map.getOrPut(it.name) { mutableListOf() }.add(Function(instance, it))
+        }
+        map.forEach { (name, functions) ->
+            this.map[name] = functions.sortedByDescending { it.callable.parameters.size }.toSet()
+        }
+        return this
+    }
 
-
-}
+} //~ Library

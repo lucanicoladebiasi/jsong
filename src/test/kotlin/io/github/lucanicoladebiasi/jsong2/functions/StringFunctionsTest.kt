@@ -373,9 +373,8 @@ class StringFunctionsTest {
      * http://docs.jsonata.org/string-functions#join
      */
     @Test
-    @Disabled
     fun `$join - with separator`() {
-        val expression = "\$split(\"too much, punctuation. hard; to read\", /[\\s,.;]+/) ~> \$join(', ')"
+        val expression = "\$split(\"too much, punctuation. hard; to read\", /[\\s,.;]+/, 3) ~> \$join(', ')"
         val expected = TextNode("too, much, punctuation")
         val actual = JSong(expression).evaluate()
         assertEquals(expected, actual)

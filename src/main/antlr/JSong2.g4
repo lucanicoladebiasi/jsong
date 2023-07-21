@@ -37,6 +37,7 @@ args    : '(' (VAR_ID (',' VAR_ID)*)* ')';
 element :   exp | range;
 
 exp     :   '(' exp (';' exp?)* ')'                                 # block
+        |   lhs = exp '~>' rhs = exp                                # chain
         |   lhs = exp 'in' rhs = exp                                # include
         |   lhs = exp op = (MUL | DIV | MOD) rhs = exp              # mathMULorDIVorMOD
         |   lhs = exp op = (SUM | SUB) rhs = exp                    # mathSUMorSUB

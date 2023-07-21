@@ -7,26 +7,29 @@ import kotlin.reflect.full.memberFunctions
 
 open class Library {
 
-    private val map = mutableMapOf<String, Set<Function>>()
+    private val map = mutableMapOf<String, List<Function>>()
 
     fun call(name: String, args: List<JsonNode?>, context: JsonNode?): JsonNode? {
-        map[name]?.let { signatures ->
-            val arguments = mutableListOf<JsonNode?>()
-            if (args.size < signatures.last().callable.parameters.size - 1) {
-                arguments.add(context)
-            }
-            arguments.addAll(args)
-            signatures.filter { arguments.size == it.callable.parameters.size - 1 }.forEach { signature ->
-                matching@ for (i in arguments.indices) {
-                    if (arguments[i] != null && !arguments[i]!!::class.createType()
-                            .isSubtypeOf(signature.callable.parameters[i + 1].type)
-                    ) {
-                        continue@matching
-                    }
+        map[name]?.let { functions ->
+            function_match_loop@ for (i in functions.indices) {
+                val func = functions[i]
+                val arguments = mutableListOf<JsonNode?>()
+                if (args.size + 1 == func.callable.parameters.size - 1) {
+                    arguments.add(context)
                 }
-                return signature.callable.call(signature.instance, *arguments.toTypedArray()) as JsonNode?
+                arguments.addAll(args)
+                if (arguments.size == func.callable.parameters.size - 1) {
+                    for (j in arguments.indices) {
+                        val arg = arguments[j]
+                        if (arg != null
+                            && !arg::class.createType().isSubtypeOf(func.callable.parameters[j + 1].type)
+                        ) {
+                            continue@function_match_loop
+                        }
+                    }
+                    return func.callable.call(func.instance, *arguments.toTypedArray()) as JsonNode?
+                }
             }
-            throw NoSuchMethodException("$name($arguments) not found")
         }
         throw NoSuchMethodException("$name not found")
     }
@@ -37,7 +40,7 @@ open class Library {
             map.getOrPut(it.name) { mutableListOf() }.add(Function(instance, it))
         }
         map.forEach { (name, functions) ->
-            this.map[name] = functions.sortedByDescending { it.callable.parameters.size }.toSet()
+            this.map[name] = functions.sortedByDescending { it.callable.parameters.size }
         }
         return this
     }

@@ -208,6 +208,11 @@ class Processor(
         return lib.call(name, args, context)
     }
 
+    override fun visitChain(ctx: JSong2Parser.ChainContext): JsonNode? {
+        this.context = visit(ctx.lhs)
+        return visit(ctx.rhs)
+    }
+
     override fun visitCompare(ctx: JSong2Parser.CompareContext): BooleanNode {
         val context = this.context
         val lhs = reduce(visit(ctx.lhs))

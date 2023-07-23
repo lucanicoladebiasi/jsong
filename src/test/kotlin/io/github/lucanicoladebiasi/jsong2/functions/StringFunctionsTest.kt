@@ -26,6 +26,12 @@ class StringFunctionsTest {
         node = mapper.readTree(Thread.currentThread().contextClassLoader.getResource("address.json"))
     }
 
+    @Test
+    fun lab() {
+        val txt = "God's in his heaven, all right with the world! "
+        val regex = "\\$[0-9]+)"
+    }
+
     /**
      * https://docs.jsonata.org/string-functions#string
      */
@@ -411,9 +417,82 @@ class StringFunctionsTest {
         assertEquals(expected, actual)
     }
 
+    /**
+     * https://docs.jsonata.org/string-functions#replace
+     */
     @Test
-    fun `$replace`() {
+    fun `$replace - text - no limit`() {
+        val expression = "\$replace(\"John Smith and John Jones\", \"John\", \"Mr\")"
+        val expected = TextNode("Mr Smith and Mr Jones")
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
     }
+
+    /**
+     * https://docs.jsonata.org/string-functions#replace
+     */
+    @Test
+    fun `$replace - text - with limit`() {
+        val expression = "\$replace(\"John Smith and John Jones\", \"John\", \"Mr\", 1)"
+        val expected = TextNode("Mr Smith and John Jones")
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
+    }
+
+    /**
+     * https://docs.jsonata.org/string-functions#replace
+     */
+    @Test
+    fun `$replace - regex - text replacement`() {
+        val expression = "\$replace(\"abracadabra\", /a.*?a/, \"*\")"
+        val expected = TextNode("*c*bra")
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
+    }
+
+    /**
+     * https://docs.jsonata.org/string-functions#replace
+     */
+    @Test
+    @Disabled
+    fun `$replace - regex - group reference replacement`() {
+        val expression = "\$replace(\"John Smith\", /(\\w+)\\s(\\w+)/, \"\$2, \$1\")"
+        val expected = TextNode("Smith, John")
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
+    }
+
+    /**
+     * https://docs.jsonata.org/string-functions#replace
+     */
+    @Test
+    @Disabled
+    fun `$replace - regex - escaped $ replacement`() {
+        val expression = "\$replace(\"265USD\", /([0-9]+)USD/, \"\$\$\$1\")"
+        val expected = TextNode("$265")
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
+    }
+
+    /**
+     * https://docs.jsonata.org/string-functions#replace
+     */
+    @Test
+    @Disabled
+    fun `$replace - regex - function replacement`() {
+        val expression = """
+        (
+            {$}convert := function({$}m) {
+                ({$}number({$}m.groups[0]) - 32) * 5/9 & "C"
+            };
+            {$}replace("temperature = 68F today", /(\d+)F/, {$}convert)
+        )  
+        """.trimIndent()
+        val expected = TextNode("temperature = 20C today")
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
+    }
+
 
     @Test
     fun `$eval`() {

@@ -10,12 +10,48 @@ import com.fasterxml.jackson.databind.node.NumericNode
 import com.fasterxml.jackson.databind.node.TextNode
 import io.github.lucanicoladebiasi.jsong2.RegexNode
 import java.lang.IllegalArgumentException
+import java.util.regex.Pattern
 
 /**
  * https://docs.jsonata.org/string-functions#string
  */
 @Suppress("FunctionName", "unused", "UNUSED_PARAMETER")
 class StringFunctions(private val mapper: ObjectMapper) {
+
+    companion object {
+
+        fun replace(str: String, pattern: Pattern, replacement: String, limit: Int): String {
+            var txt = str
+            var countdown = limit
+            while(-- countdown >= 0) {
+                val matcher = pattern.matcher(txt)
+                when(matcher.find()) {
+                    true -> txt = matcher.replaceFirst(replacement)
+                    else -> return txt
+                }
+            }
+            return txt
+        }
+
+        fun replace(str: String, pattern: String, replacement: String, limit: Int): String {
+            when(pattern == replacement) {
+                true -> return str
+                else -> {
+                    var txt = str
+                    var countdown = limit
+                    while (--countdown >= 0) {
+                        when (txt.contains(pattern)) {
+                            true -> txt = txt.replaceFirst(pattern, replacement)
+                            else -> return txt
+                        }
+
+                    }
+                    return txt
+                }
+            }
+        }
+
+    } //~ companion
 
     /**
      * https://docs.jsonata.org/string-functions#string
@@ -28,18 +64,19 @@ class StringFunctions(private val mapper: ObjectMapper) {
      * https://docs.jsonata.org/string-functions#string
      */
     fun `$string`(arg: JsonNode?, prettify: BooleanNode): TextNode {
-        return when(arg) {
+        return when (arg) {
             null -> TextNode("")
             is NullNode -> TextNode("")
-            is NumericNode -> when(arg.isNaN) {
+            is NumericNode -> when (arg.isNaN) {
                 true -> throw IllegalArgumentException()
-                else -> when(prettify.booleanValue()) {
+                else -> when (prettify.booleanValue()) {
                     true -> TextNode(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(arg))
                     else -> TextNode(mapper.writeValueAsString(arg))
                 }
             }
+
             is TextNode -> arg
-            else -> when(prettify.booleanValue()) {
+            else -> when (prettify.booleanValue()) {
                 true -> TextNode(mapper.writerWithDefaultPrettyPrinter().writeValueAsString(arg))
                 else -> TextNode(mapper.writeValueAsString(arg))
             }
@@ -126,17 +163,19 @@ class StringFunctions(private val mapper: ObjectMapper) {
     fun `$pad`(str: TextNode, width: NumericNode, char: TextNode): TextNode {
         val size = width.asInt()
         val pad = char.textValue()[0]
-        return TextNode(when(size < 0) {
-            true -> str.textValue().padStart(-size, pad)
-            else -> str.textValue().padEnd(size, pad)
-        })
+        return TextNode(
+            when (size < 0) {
+                true -> str.textValue().padStart(-size, pad)
+                else -> str.textValue().padEnd(size, pad)
+            }
+        )
     }
 
     /**
      * https://docs.jsonata.org/string-functions#contains
      */
     fun `$contains`(str: TextNode, pattern: TextNode): BooleanNode {
-        return when(pattern) {
+        return when (pattern) {
             is RegexNode -> BooleanNode.valueOf(str.textValue().contains(pattern.pattern.toRegex()))
             else -> BooleanNode.valueOf(str.textValue().contains(pattern.textValue()))
         }
@@ -157,9 +196,10 @@ class StringFunctions(private val mapper: ObjectMapper) {
         val list = when {
             separator is RegexNode ->
                 str.textValue().split(separator.pattern.toRegex())
+
             else -> str.textValue().split(separator.textValue())
         }
-        for(i in 0 until  minOf(list.size, limit.asInt())) {
+        for (i in 0 until minOf(list.size, limit.asInt())) {
             array.add(TextNode(list[i]))
         }
         return array
@@ -194,11 +234,14 @@ class StringFunctions(private val mapper: ObjectMapper) {
         val max = limit.asInt()
         pattern.pattern.toRegex().findAll(str.textValue()).forEachIndexed { index, matchResult ->
             if (index < max) {
-                array.add(MatchNode.of(
-                    matchResult.value,
-                    matchResult.range.first,
-                    listOf(matchResult.groupValues.last()),
-                    mapper))
+                array.add(
+                    MatchNode.of(
+                        matchResult.value,
+                        matchResult.range.first,
+                        listOf(matchResult.groupValues.last()),
+                        mapper
+                    )
+                )
             }
         }
         return array
@@ -207,8 +250,18 @@ class StringFunctions(private val mapper: ObjectMapper) {
     /**
      * https://docs.jsonata.org/string-functions#replace
      */
-    fun `$replace`(str: TextNode, pattern: RegexNode, replacement: TextNode, limit: IntNode = IntNode(Int.MAX_VALUE)): TextNode {
-        TODO()
+    fun `$replace`(str: TextNode, pattern: TextNode, replacement: TextNode): TextNode {
+        return `$replace`(str, pattern, replacement, IntNode(Int.MAX_VALUE))
+    }
+
+    /**
+     * https://docs.jsonata.org/string-functions#replace
+     */
+    fun `$replace`(str: TextNode, pattern: TextNode, replacement: TextNode, limit: NumericNode): TextNode {
+        return TextNode(when (pattern) {
+            is RegexNode -> replace(str.textValue(), pattern.pattern, replacement.textValue(), limit.asInt())
+            else -> replace(str.textValue(), pattern.textValue(), replacement.textValue(), limit.asInt())
+        })
     }
 
     /**
@@ -259,18 +312,6 @@ class StringFunctions(private val mapper: ObjectMapper) {
     fun `$decodeUrl`(str: TextNode): TextNode {
         TODO()
     }
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 }

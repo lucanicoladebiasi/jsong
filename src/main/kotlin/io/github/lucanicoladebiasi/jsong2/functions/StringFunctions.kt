@@ -12,6 +12,7 @@ import io.github.lucanicoladebiasi.jsong2.JSong
 import io.github.lucanicoladebiasi.jsong2.RegexNode
 import java.lang.IllegalArgumentException
 import java.math.MathContext
+import java.util.*
 
 /**
  * https://docs.jsonata.org/string-functions#string
@@ -273,14 +274,14 @@ class StringFunctions(private val mapper: ObjectMapper, private val mathContext:
      * https://docs.jsonata.org/string-functions#base64encode
      */
     fun `$base64encode`(str: TextNode): TextNode {
-        TODO()
+        return TextNode(Base64.getEncoder().encodeToString(str.textValue().toByteArray()))
     }
 
     /**
      * https://docs.jsonata.org/string-functions#base64decode
      */
     fun `$base64decode`(str: TextNode): TextNode {
-        TODO()
+        return TextNode(Base64.getDecoder().decode(str.textValue()).toString(Charsets.UTF_8))
     }
 
     /**

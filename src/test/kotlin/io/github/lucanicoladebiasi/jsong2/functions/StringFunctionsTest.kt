@@ -508,6 +508,9 @@ class StringFunctionsTest {
         assertEquals(expected, actual)
     }
 
+    /**
+     * https://docs.jsonata.org/string-functions#eval
+     */
     @Test
     fun `$eval - with context`() {
         val text = "God's in his heaven— / All's right with the world!"
@@ -517,6 +520,9 @@ class StringFunctionsTest {
         assertEquals(expected, actual)
     }
 
+    /**
+     * https://docs.jsonata.org/string-functions#eval
+     */
     @Test
     fun `$eval - json`() {
         val expression = "\$eval(\"[1,2,3]\")"
@@ -526,6 +532,9 @@ class StringFunctionsTest {
 
     }
 
+    /**
+     * https://docs.jsonata.org/string-functions#eval
+     */
     @Test
     fun `$eval - jsonata`() {
         val expression = "\$eval('[1,\$string(2),3]')"
@@ -534,12 +543,26 @@ class StringFunctionsTest {
         assertEquals(expected, actual)
     }
 
+    /**
+     * https://docs.jsonata.org/string-functions#base64encode
+     */
     @Test
     fun `$base64encode`() {
+        val expression = "\$base64encode(\"myuser:mypass\")"
+        val expected = TextNode("bXl1c2VyOm15cGFzcw==")
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
     }
 
+    /**
+     * https://docs.jsonata.org/string-functions#base64decode
+     */
     @Test
     fun `$base64decode`() {
+        val expression = "\$base64decode(\"bXl1c2VyOm15cGFzcw==\")"
+        val expected = TextNode("myuser:mypass")
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
     }
 
     @Test

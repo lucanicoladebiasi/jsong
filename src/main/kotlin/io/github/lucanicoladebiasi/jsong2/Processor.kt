@@ -15,7 +15,7 @@ import java.math.MathContext
 class Processor(
     root: JsonNode?,
     mapper: ObjectMapper,
-    private val mc: MathContext
+    private val mathContext: MathContext
 ) : JSong2BaseVisitor<JsonNode?>() {
 
     companion object {
@@ -88,7 +88,7 @@ class Processor(
 
     private var isToReduce = true
 
-    private val lib = Library().register(StringFunctions(mapper))
+    private val lib = Library().register(StringFunctions(mapper, mathContext))
 
     private val nf = mapper.nodeFactory
 
@@ -381,7 +381,7 @@ class Processor(
                 this.context = context
                 val value = when (ctx.op.type) {
                     JSong2Parser.MUL -> lhs.decimalValue().multiply(rhs.decimalValue())
-                    JSong2Parser.DIV -> lhs.decimalValue().divide(rhs.decimalValue(), mc)
+                    JSong2Parser.DIV -> lhs.decimalValue().divide(rhs.decimalValue(), mathContext)
                     JSong2Parser.MOD -> lhs.decimalValue().remainder(rhs.decimalValue())
                     else -> throw UnsupportedOperationException("Unknown operator in ${ctx.text} expression!")
                 }

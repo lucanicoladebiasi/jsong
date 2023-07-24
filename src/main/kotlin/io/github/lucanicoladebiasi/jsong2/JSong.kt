@@ -11,13 +11,13 @@ import java.math.MathContext
 class JSong(
     val expression: String,
     val mapper: ObjectMapper = ObjectMapper(),
-    val mc: MathContext = MathContext.DECIMAL128
+    val mathContext: MathContext = MathContext.DECIMAL128
 ) {
 
     private val parser = JSong2Parser(CommonTokenStream(JSong2Lexer(CharStreams.fromString(expression))))
 
     fun evaluate(node: JsonNode? = null): JsonNode? {
-        return Processor(node, mapper, mc).visit(parser.jsong())
+        return Processor(node, mapper, mathContext).visit(parser.jsong())
     }
 
 } //~ JSong

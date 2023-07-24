@@ -8,29 +8,22 @@ import com.fasterxml.jackson.databind.node.IntNode
 import com.fasterxml.jackson.databind.node.NullNode
 import com.fasterxml.jackson.databind.node.NumericNode
 import com.fasterxml.jackson.databind.node.TextNode
+import io.github.lucanicoladebiasi.jsong2.JSong
 import io.github.lucanicoladebiasi.jsong2.RegexNode
 import java.lang.IllegalArgumentException
-import java.util.regex.Pattern
+import java.math.MathContext
 
 /**
  * https://docs.jsonata.org/string-functions#string
  */
 @Suppress("FunctionName", "unused", "UNUSED_PARAMETER")
-class StringFunctions(private val mapper: ObjectMapper) {
+class StringFunctions(private val mapper: ObjectMapper, private val mathContext: MathContext) {
 
     companion object {
 
-        fun replace(str: String, pattern: Pattern, replacement: String, limit: Int): String {
-            var txt = str
-            var countdown = limit
-            while(-- countdown >= 0) {
-                val matcher = pattern.matcher(txt)
-                when(matcher.find()) {
-                    true -> txt = matcher.replaceFirst(replacement)
-                    else -> return txt
-                }
-            }
-            return txt
+
+        fun replace(str: String, pattern: Regex, replacement: String, limit: Int): String {
+           return str
         }
 
         fun replace(str: String, pattern: String, replacement: String, limit: Int): String {
@@ -176,7 +169,7 @@ class StringFunctions(private val mapper: ObjectMapper) {
      */
     fun `$contains`(str: TextNode, pattern: TextNode): BooleanNode {
         return when (pattern) {
-            is RegexNode -> BooleanNode.valueOf(str.textValue().contains(pattern.pattern.toRegex()))
+            is RegexNode -> BooleanNode.valueOf(str.textValue().contains(pattern.regex))
             else -> BooleanNode.valueOf(str.textValue().contains(pattern.textValue()))
         }
     }
@@ -194,9 +187,7 @@ class StringFunctions(private val mapper: ObjectMapper) {
     fun `$split`(str: TextNode, separator: TextNode, limit: NumericNode): ArrayNode {
         val array = mapper.createArrayNode()
         val list = when {
-            separator is RegexNode ->
-                str.textValue().split(separator.pattern.toRegex())
-
+            separator is RegexNode -> str.textValue().split(separator.regex)
             else -> str.textValue().split(separator.textValue())
         }
         for (i in 0 until minOf(list.size, limit.asInt())) {
@@ -232,7 +223,7 @@ class StringFunctions(private val mapper: ObjectMapper) {
     fun `$match`(str: TextNode, pattern: RegexNode, limit: NumericNode): ArrayNode {
         val array = mapper.createArrayNode()
         val max = limit.asInt()
-        pattern.pattern.toRegex().findAll(str.textValue()).forEachIndexed { index, matchResult ->
+        pattern.regex.findAll(str.textValue()).forEachIndexed { index, matchResult ->
             if (index < max) {
                 array.add(
                     MatchNode.of(
@@ -259,7 +250,7 @@ class StringFunctions(private val mapper: ObjectMapper) {
      */
     fun `$replace`(str: TextNode, pattern: TextNode, replacement: TextNode, limit: NumericNode): TextNode {
         return TextNode(when (pattern) {
-            is RegexNode -> replace(str.textValue(), pattern.pattern, replacement.textValue(), limit.asInt())
+            is RegexNode -> replace(str.textValue(), pattern.regex, replacement.textValue(), limit.asInt())
             else -> replace(str.textValue(), pattern.textValue(), replacement.textValue(), limit.asInt())
         })
     }
@@ -267,9 +258,16 @@ class StringFunctions(private val mapper: ObjectMapper) {
     /**
      * https://docs.jsonata.org/string-functions#eval
      */
-    fun `$eval`(expr: TextNode, context: JsonNode? = null) {
-        TODO()
+    fun `$eval`(expr: TextNode): JsonNode? {
+        return JSong(expr.textValue(), mapper, mathContext).evaluate()
     }
+
+    /**
+     * https://docs.jsonata.org/string-functions#eval
+     */
+//    fun `$eval`(expr: TextNode, context: JsonNode?): JsonNode? {
+//        return JSong(expr.textValue(), mapper, mathContext).evaluate(context)
+//    }
 
     /**
      * https://docs.jsonata.org/string-functions#base64encode

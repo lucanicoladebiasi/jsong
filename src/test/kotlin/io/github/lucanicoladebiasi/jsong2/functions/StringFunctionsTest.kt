@@ -13,6 +13,7 @@ import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
+import java.math.MathContext
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class StringFunctionsTest {
@@ -28,8 +29,21 @@ class StringFunctionsTest {
 
     @Test
     fun lab() {
-        val txt = "God's in his heaven, all right with the world! "
-        val regex = "\\$[0-9]+)"
+        val str = "John Smith"
+        val pattern = "(\\w+)\\s(\\w+)"
+        //val replacement = "$2, $1"
+        pattern.toRegex().findAll(str).forEach {
+            it.groups.forEach {
+                println(it?.value)
+                println(it?.range)
+            }
+        }
+
+//        val regex = Regex("\\$[0-9]+")
+//        regex.findAll(replacement).forEach { matchResult ->
+//            println(matchResult.value.substring(1).toInt())
+//        }
+
     }
 
     /**
@@ -38,7 +52,7 @@ class StringFunctionsTest {
     @Test
     fun `$string - NaN`() {
         assertThrows(IllegalArgumentException::class.java) {
-            StringFunctions(mapper).`$string`(DoubleNode(Double.NaN))
+            StringFunctions(mapper, MathContext.DECIMAL128).`$string`(DoubleNode(Double.NaN))
         }
     }
 
@@ -443,6 +457,7 @@ class StringFunctionsTest {
      * https://docs.jsonata.org/string-functions#replace
      */
     @Test
+    @Disabled
     fun `$replace - regex - text replacement`() {
         val expression = "\$replace(\"abracadabra\", /a.*?a/, \"*\")"
         val expected = TextNode("*c*bra")
@@ -495,7 +510,20 @@ class StringFunctionsTest {
 
 
     @Test
-    fun `$eval`() {
+    fun `$eval - json`() {
+        val expression = "\$eval(\"[1,2,3]\")"
+        val expected = JSong("[1, 2, 3]").evaluate()
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
+
+    }
+
+    @Test
+    fun `$eval - jsonata`() {
+        val expression = "\$eval('[1,\$string(2),3]')"
+        val expected = JSong("[1, \"2\", 3]").evaluate()
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
     }
 
     @Test

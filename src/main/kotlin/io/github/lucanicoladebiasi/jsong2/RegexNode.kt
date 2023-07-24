@@ -1,24 +1,23 @@
 package io.github.lucanicoladebiasi.jsong2
 
 import com.fasterxml.jackson.databind.node.TextNode
-import java.util.regex.Pattern
 
 class RegexNode(
-    val pattern: Pattern,
-): TextNode(pattern.pattern()) {
+    val regex: Regex,
+): TextNode(regex.pattern) {
 
     companion object {
 
-        fun ci(regex: String): RegexNode {
-            return RegexNode(Pattern.compile(regex.substring(1, regex.length - 2), Pattern.CASE_INSENSITIVE))
+        fun ci(pattern: String): RegexNode {
+            return RegexNode(Regex(pattern.substring(1, pattern.length - 2), RegexOption.IGNORE_CASE))
         }
 
-        fun ml(regex: String): RegexNode {
-            return RegexNode(Pattern.compile(regex.substring(1, regex.length - 2), Pattern.MULTILINE))
+        fun ml(pattern: String): RegexNode {
+            return RegexNode(Regex(pattern.substring(1, pattern.length - 2), RegexOption.MULTILINE))
         }
 
-        fun of(regex: String): RegexNode {
-            return RegexNode(Pattern.compile(regex.substring(1, regex.length - 1)))
+        fun of(pattern: String): RegexNode {
+            return RegexNode(Regex(pattern.substring(1, pattern.length - 1)))
         }
 
     } //~ companion

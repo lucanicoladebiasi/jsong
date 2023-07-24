@@ -3,7 +3,6 @@ package io.github.lucanicoladebiasi.jsong2
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import java.util.regex.Pattern
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class TestRegexType {
@@ -14,9 +13,11 @@ class TestRegexType {
     @Test
     fun `Regex - case insensitive`() {
         val expression = "/[a-z]*an[a-z]*/i"
-        val expected = RegexNode(Pattern.compile(expression.substring(1, expression.length - 2), Pattern.CASE_INSENSITIVE))
+        val expected = Regex(expression.substring(1, expression.length - 2), RegexOption.IGNORE_CASE)
         val actual = JSong(expression).evaluate()
-        assertEquals(expected, actual)
+        actual as RegexNode
+        assertEquals(expected.pattern, actual.regex.pattern)
+        assertEquals(expected.options, actual.regex.options)
     }
 
     /**
@@ -25,9 +26,11 @@ class TestRegexType {
     @Test
     fun `Regex - multiline`() {
         val expression = "/[a-z]*an[a-z]*/m"
-        val expected = RegexNode(Pattern.compile(expression.substring(1, expression.length - 2), Pattern.MULTILINE))
+        val expected = Regex(expression.substring(1, expression.length - 2), RegexOption.MULTILINE)
         val actual = JSong(expression).evaluate()
-        assertEquals(expected, actual)
+        actual as RegexNode
+        assertEquals(expected.pattern, actual.regex.pattern)
+        assertEquals(expected.options, actual.regex.options)
     }
 
     /**
@@ -36,9 +39,11 @@ class TestRegexType {
     @Test
     fun `Regex - no flags`() {
         val expression = "/[a-z]*an[a-z]*/"
-        val expected = RegexNode(Pattern.compile(expression.substring(1, expression.length - 1)))
+        val expected = Regex(expression.substring(1, expression.length - 1))
         val actual = JSong(expression).evaluate()
-        assertEquals(expected, actual)
+        actual as RegexNode
+        assertEquals(expected.pattern, actual.regex.pattern)
+        assertEquals(expected.options, actual.regex.options)
     }
 
 }

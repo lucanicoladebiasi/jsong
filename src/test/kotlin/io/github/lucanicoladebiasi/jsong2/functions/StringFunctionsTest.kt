@@ -508,6 +508,14 @@ class StringFunctionsTest {
         assertEquals(expected, actual)
     }
 
+    @Test
+    fun `$eval - with context`() {
+        val text = "God's in his heaven— / All's right with the world!"
+        val expression = "\$eval(\"\$length(\$)\", \"$text\")"
+        val expected = IntNode(text.length)
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
+    }
 
     @Test
     fun `$eval - json`() {

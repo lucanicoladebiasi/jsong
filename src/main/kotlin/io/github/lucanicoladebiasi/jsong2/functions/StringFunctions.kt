@@ -259,15 +259,15 @@ class StringFunctions(private val mapper: ObjectMapper, private val mathContext:
      * https://docs.jsonata.org/string-functions#eval
      */
     fun `$eval`(expr: TextNode): JsonNode? {
-        return JSong(expr.textValue(), mapper, mathContext).evaluate()
+        return `$eval`(expr, null)
     }
 
     /**
      * https://docs.jsonata.org/string-functions#eval
      */
-//    fun `$eval`(expr: TextNode, context: JsonNode?): JsonNode? {
-//        return JSong(expr.textValue(), mapper, mathContext).evaluate(context)
-//    }
+    fun `$eval`(expr: TextNode, context: JsonNode?): JsonNode? {
+        return JSong(expr.textValue(), mapper, mathContext).evaluate(context)
+    }
 
     /**
      * https://docs.jsonata.org/string-functions#base64encode

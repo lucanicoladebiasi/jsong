@@ -14,7 +14,7 @@ open class Library {
             function_match_loop@ for (i in functions.indices) {
                 val func = functions[i]
                 val arguments = mutableListOf<JsonNode?>()
-                if (args.size + 1 == func.callable.parameters.size - 1) {
+                if (args.size + 1 == func.callable.parameters.size - 1 && context != null) {
                     arguments.add(context)
                 }
                 arguments.addAll(args)

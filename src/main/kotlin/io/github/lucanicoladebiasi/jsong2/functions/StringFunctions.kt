@@ -22,13 +22,38 @@ class StringFunctions(private val mapper: ObjectMapper, private val mathContext:
 
     companion object {
 
-
         fun replace(str: String, pattern: Regex, replacement: String, limit: Int): String {
-           return str
+            val matchGroups = mutableListOf<MatchGroup?>()
+            pattern.findAll(str).forEach { matchResult ->
+                matchResult.groups.forEach { matchGroup ->
+                    matchGroups.add(matchGroup)
+                }
+            }
+            val placeHolderRegex = Regex("\\$[0-9]+")
+            var safeReplacement = replacement.replace("$$", "$")
+            var placeHolder = placeHolderRegex.find(safeReplacement)
+            while (placeHolder != null) {
+                val groupIndex = placeHolder.value.substring(1).toInt()
+                safeReplacement = safeReplacement.replaceRange(
+                    placeHolder.range,
+                    matchGroups[groupIndex]?.value ?: ""
+                )
+                placeHolder = placeHolderRegex.find(safeReplacement)
+            }
+            var txt = str
+            txt = pattern.replace(txt, safeReplacement)
+//            var countdown = limit
+//            while (--countdown >= 0) {
+//                when (pattern.find(txt) != null) {
+//                    true -> txt = pattern.replaceFirst(txt, safeReplacement)
+//                    else -> return txt
+//                }
+//            }
+            return txt
         }
 
         fun replace(str: String, pattern: String, replacement: String, limit: Int): String {
-            when(pattern == replacement) {
+            when (pattern == replacement) {
                 true -> return str
                 else -> {
                     var txt = str
@@ -250,10 +275,12 @@ class StringFunctions(private val mapper: ObjectMapper, private val mathContext:
      * https://docs.jsonata.org/string-functions#replace
      */
     fun `$replace`(str: TextNode, pattern: TextNode, replacement: TextNode, limit: NumericNode): TextNode {
-        return TextNode(when (pattern) {
-            is RegexNode -> replace(str.textValue(), pattern.regex, replacement.textValue(), limit.asInt())
-            else -> replace(str.textValue(), pattern.textValue(), replacement.textValue(), limit.asInt())
-        })
+        return TextNode(
+            when (pattern) {
+                is RegexNode -> replace(str.textValue(), pattern.regex, replacement.textValue(), limit.asInt())
+                else -> replace(str.textValue(), pattern.textValue(), replacement.textValue(), limit.asInt())
+            }
+        )
     }
 
     /**

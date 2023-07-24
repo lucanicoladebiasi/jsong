@@ -27,24 +27,6 @@ class StringFunctionsTest {
         node = mapper.readTree(Thread.currentThread().contextClassLoader.getResource("address.json"))
     }
 
-    @Test
-    fun lab() {
-        val str = "John Smith"
-        val pattern = "(\\w+)\\s(\\w+)"
-        //val replacement = "$2, $1"
-        pattern.toRegex().findAll(str).forEach {
-            it.groups.forEach {
-                println(it?.value)
-                println(it?.range)
-            }
-        }
-
-//        val regex = Regex("\\$[0-9]+")
-//        regex.findAll(replacement).forEach { matchResult ->
-//            println(matchResult.value.substring(1).toInt())
-//        }
-
-    }
 
     /**
      * https://docs.jsonata.org/string-functions#string
@@ -469,7 +451,6 @@ class StringFunctionsTest {
      * https://docs.jsonata.org/string-functions#replace
      */
     @Test
-    @Disabled
     fun `$replace - regex - group reference replacement`() {
         val expression = "\$replace(\"John Smith\", /(\\w+)\\s(\\w+)/, \"\$2, \$1\")"
         val expected = TextNode("Smith, John")
@@ -565,19 +546,52 @@ class StringFunctionsTest {
         assertEquals(expected, actual)
     }
 
+    /**
+     * https://docs.jsonata.org/string-functions#encodeurlcomponent
+     */
     @Test
+    @Disabled
     fun `$encodeUrlComponent`() {
+        val expression = "\$encodeUrlComponent(\"?x=test\")"
+        val expected = TextNode("%3Fx%3Dtest")
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
     }
 
+    /**
+     * https://docs.jsonata.org/string-functions#encodeurl
+     */
     @Test
+    @Disabled
     fun `$encodeUrl`() {
+        val expression = "\$encodeUrl(\"https://mozilla.org/?x=шеллы\")"
+        val expected = TextNode("https://mozilla.org/?x=%D1%88%D0%B5%D0%BB%D0%BB%D1%8B")
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
     }
 
+    /**
+     * https://docs.jsonata.org/string-functions#decodeurlcomponent
+     */
     @Test
+    @Disabled
     fun `$decodeUrlComponent`() {
+        val expression = "\$decodeUrlComponent(\"%3Fx%3Dtest\")"
+        val expected = TextNode("?x=test")
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
     }
 
+    /**
+     * https://docs.jsonata.org/string-functions#decodeurl
+     */
     @Test
+    @Disabled
     fun `$decodeUrl`() {
+        val expression = "\$decodeUrl(\"https://mozilla.org/?x=%D1%88%D0%B5%D0%BB%D0%BB%D1%8B\")"
+        val expected = TextNode("https://mozilla.org/?x=шеллы")
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
     }
+
 }

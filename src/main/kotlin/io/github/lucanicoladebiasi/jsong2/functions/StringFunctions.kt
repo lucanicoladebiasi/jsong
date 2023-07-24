@@ -41,31 +41,23 @@ class StringFunctions(private val mapper: ObjectMapper, private val mathContext:
                 placeHolder = placeHolderRegex.find(safeReplacement)
             }
             var txt = str
-            txt = pattern.replace(txt, safeReplacement)
-//            var countdown = limit
-//            while (--countdown >= 0) {
-//                when (pattern.find(txt) != null) {
-//                    true -> txt = pattern.replaceFirst(txt, safeReplacement)
-//                    else -> return txt
-//                }
-//            }
+            var countdown = limit
+            while (--countdown >= 0 && pattern.find(txt) != null) {
+                txt = pattern.replaceFirst(txt, safeReplacement)
+            }
             return txt
         }
 
         fun replace(str: String, pattern: String, replacement: String, limit: Int): String {
-            when (pattern == replacement) {
-                true -> return str
+            return when (pattern == replacement) {
+                true -> str
                 else -> {
                     var txt = str
                     var countdown = limit
-                    while (--countdown >= 0) {
-                        when (txt.contains(pattern)) {
-                            true -> txt = txt.replaceFirst(pattern, replacement)
-                            else -> return txt
-                        }
-
+                    while (--countdown >= 0 && txt.contains(pattern)) {
+                        txt = txt.replaceFirst(pattern, replacement)
                     }
-                    return txt
+                    txt
                 }
             }
         }

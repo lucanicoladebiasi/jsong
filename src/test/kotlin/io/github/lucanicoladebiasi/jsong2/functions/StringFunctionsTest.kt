@@ -439,7 +439,6 @@ class StringFunctionsTest {
      * https://docs.jsonata.org/string-functions#replace
      */
     @Test
-    @Disabled
     fun `$replace - regex - text replacement`() {
         val expression = "\$replace(\"abracadabra\", /a.*?a/, \"*\")"
         val expected = TextNode("*c*bra")

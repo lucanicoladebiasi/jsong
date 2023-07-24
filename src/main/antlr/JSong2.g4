@@ -78,7 +78,9 @@ path    :   MOD ('.' MOD)*  # parent
         |   ID              # id
         ;
 
-pattern : (~'/' | '\\' '/')*;
+pattern : (~'/' | '\\' '/' '?')*;
+
+
 
 range   : min = exp '..' max = exp;
 

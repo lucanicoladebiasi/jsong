@@ -2,48 +2,76 @@ package io.github.lucanicoladebiasi.jsong2.functions
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.node.ArrayNode
-import com.fasterxml.jackson.databind.node.BooleanNode
-import com.fasterxml.jackson.databind.node.IntNode
-import com.fasterxml.jackson.databind.node.NullNode
-import com.fasterxml.jackson.databind.node.NumericNode
-import com.fasterxml.jackson.databind.node.TextNode
+import com.fasterxml.jackson.databind.node.*
 import io.github.lucanicoladebiasi.jsong2.JSong
 import io.github.lucanicoladebiasi.jsong2.RegexNode
-import java.lang.IllegalArgumentException
+import java.io.UnsupportedEncodingException
 import java.math.MathContext
+import java.net.URI
+import java.net.URISyntaxException
+import java.net.URLDecoder
+import java.net.URLEncoder
 import java.util.*
 
 /**
  * https://docs.jsonata.org/string-functions#string
  */
-@Suppress("FunctionName", "unused", "UNUSED_PARAMETER")
+@Suppress("FunctionName", "unused")
 class StringFunctions(private val mapper: ObjectMapper, private val mathContext: MathContext) {
 
     companion object {
 
+        fun encodeReplacement(replacement: String): String {
+            // In JSONata and in Java the $ in the replacement test usually starts the insertion of a capturing group
+            // In order to replace a simple $ in Java you have to escape the $ with "\$"
+            // in JSONata you do this with a '$$'
+            // "\$" followed any character besides '<' and and digit into $ + this character
+            return replacement
+                .replace("\\$\\$".toRegex(), "\\\\\\$")
+                .replace("([^\\\\]|^)\\$([^0-9^<])".toRegex(), "$1\\\\\\$$2")
+        }
+
+        @Throws(UnsupportedEncodingException::class)
+        fun encodeURI(uri: String): String {
+            // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURI
+            // Not encoded: A-Z a-z 0-9 ; , / ? : @ & = + $ - _ . ! ~ * ' ( ) #
+            return URLEncoder.encode(uri, Charsets.UTF_8).replace("\\+".toRegex(), "%20")
+                .replace("%20".toRegex(), " ").replace("%21".toRegex(), "!")
+                .replace("%23".toRegex(), "#").replace("%24".toRegex(), "$")
+                .replace("%26".toRegex(), "&").replace("%27".toRegex(), "'")
+                .replace("%28".toRegex(), "(").replace("%29".toRegex(), ")")
+                .replace("%2A".toRegex(), "*").replace("%2B".toRegex(), "+")
+                .replace("%2C".toRegex(), ",").replace("%2D".toRegex(), "-")
+                .replace("%2E".toRegex(), ".").replace("%2F".toRegex(), "/")
+                .replace("%3A".toRegex(), ":").replace("%3B".toRegex(), ";")
+                .replace("%3D".toRegex(), "=").replace("%3F".toRegex(), "?")
+                .replace("%40".toRegex(), "@").replace("%5F".toRegex(), "_")
+                .replace("%7E".toRegex(), "~")
+        }
+
+        @Throws(URISyntaxException::class)
+        fun encodeURIComponent(component: String): String {
+            var raw = URI(null, null, component, null).rawPath
+            if (raw == component) {
+                // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/encodeURI
+                // Not encoded: A-Z a-z 0-9 ; , / ? : @ & = + $ - _ . ! ~ * ' ( ) #
+                raw = URLEncoder.encode(component, "UTF-8").replace("\\+".toRegex(), "%20")
+                    .replace("%20".toRegex(), " ").replace("%21".toRegex(), "!")
+                    .replace("%27".toRegex(), "'").replace("%28".toRegex(), "(")
+                    .replace("%29".toRegex(), ")").replace("%2A".toRegex(), "*")
+                    .replace("%2D".toRegex(), "-").replace("%2E".toRegex(), ".")
+                    .replace("%5F".toRegex(), "_").replace("%7E".toRegex(), "~")
+            }
+            raw = raw.replace("=".toRegex(), "%3D") // overrides standard to match jsonata
+            return raw
+        }
+
         fun replace(str: String, pattern: Regex, replacement: String, limit: Int): String {
-            val matchGroups = mutableListOf<MatchGroup?>()
-            pattern.findAll(str).forEach { matchResult ->
-                matchResult.groups.forEach { matchGroup ->
-                    matchGroups.add(matchGroup)
-                }
-            }
-            val placeHolderRegex = Regex("\\$[0-9]+")
-            var safeReplacement = replacement.replace("$$", "$")
-            var placeHolder = placeHolderRegex.find(safeReplacement)
-            while (placeHolder != null) {
-                val groupIndex = placeHolder.value.substring(1).toInt()
-                safeReplacement = safeReplacement.replaceRange(
-                    placeHolder.range,
-                    matchGroups[groupIndex]?.value ?: ""
-                )
-                placeHolder = placeHolderRegex.find(safeReplacement)
-            }
+            val encoded = encodeReplacement(replacement)
             var txt = str
             var countdown = limit
-            while (--countdown >= 0 && pattern.find(txt) != null) {
-                txt = pattern.replaceFirst(txt, safeReplacement)
+            while (-- countdown >= 0 && pattern.find(txt) != null) {
+                txt = pattern.replaceFirst(txt, encoded)
             }
             return txt
         }
@@ -307,29 +335,28 @@ class StringFunctions(private val mapper: ObjectMapper, private val mathContext:
      * https://docs.jsonata.org/string-functions#encodeurlcomponent
      */
     fun `$encodeUrlComponent`(str: TextNode): TextNode {
-        TODO()
+        return TextNode(encodeURIComponent(str.textValue()))
     }
 
     /**
      * https://docs.jsonata.org/string-functions#encodeurl
      */
     fun `$encodeUrl`(str: TextNode): TextNode {
-        TODO()
+        return TextNode(encodeURI(str.textValue()))
     }
 
     /**
      * https://docs.jsonata.org/string-functions#decodeurlcomponent
      */
     fun `$decodeUrlComponent`(str: TextNode): TextNode {
-        TODO()
+        return TextNode(URLDecoder.decode(str.textValue(), Charsets.UTF_8))
     }
 
     /**
      * https://docs.jsonata.org/string-functions#decodeurl
      */
     fun `$decodeUrl`(str: TextNode): TextNode {
-        TODO()
+        return TextNode(URLDecoder.decode(str.textValue(), Charsets.UTF_8))
     }
-
 
 }

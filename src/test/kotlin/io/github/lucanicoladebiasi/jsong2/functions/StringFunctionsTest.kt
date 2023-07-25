@@ -461,7 +461,6 @@ class StringFunctionsTest {
      * https://docs.jsonata.org/string-functions#replace
      */
     @Test
-    @Disabled
     fun `$replace - regex - escaped $ replacement`() {
         val expression = "\$replace(\"265USD\", /([0-9]+)USD/, \"\$\$\$1\")"
         val expected = TextNode("$265")
@@ -549,7 +548,6 @@ class StringFunctionsTest {
      * https://docs.jsonata.org/string-functions#encodeurlcomponent
      */
     @Test
-    @Disabled
     fun `$encodeUrlComponent`() {
         val expression = "\$encodeUrlComponent(\"?x=test\")"
         val expected = TextNode("%3Fx%3Dtest")
@@ -561,7 +559,6 @@ class StringFunctionsTest {
      * https://docs.jsonata.org/string-functions#encodeurl
      */
     @Test
-    @Disabled
     fun `$encodeUrl`() {
         val expression = "\$encodeUrl(\"https://mozilla.org/?x=шеллы\")"
         val expected = TextNode("https://mozilla.org/?x=%D1%88%D0%B5%D0%BB%D0%BB%D1%8B")
@@ -573,7 +570,6 @@ class StringFunctionsTest {
      * https://docs.jsonata.org/string-functions#decodeurlcomponent
      */
     @Test
-    @Disabled
     fun `$decodeUrlComponent`() {
         val expression = "\$decodeUrlComponent(\"%3Fx%3Dtest\")"
         val expected = TextNode("?x=test")
@@ -585,7 +581,6 @@ class StringFunctionsTest {
      * https://docs.jsonata.org/string-functions#decodeurl
      */
     @Test
-    @Disabled
     fun `$decodeUrl`() {
         val expression = "\$decodeUrl(\"https://mozilla.org/?x=%D1%88%D0%B5%D0%BB%D0%BB%D1%8B\")"
         val expected = TextNode("https://mozilla.org/?x=шеллы")

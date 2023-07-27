@@ -359,4 +359,4 @@ class StringFunctions(private val mapper: ObjectMapper, private val mathContext:
         return TextNode(URLDecoder.decode(str.textValue(), Charsets.UTF_8))
     }
 
-}
+} //~ StringFunction

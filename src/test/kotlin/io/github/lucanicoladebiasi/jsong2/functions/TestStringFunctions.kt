@@ -16,7 +16,7 @@ import org.junit.jupiter.api.TestInstance
 import java.math.MathContext
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class StringFunctionsTest {
+class TestStringFunctions {
 
     private val mapper = ObjectMapper()
 

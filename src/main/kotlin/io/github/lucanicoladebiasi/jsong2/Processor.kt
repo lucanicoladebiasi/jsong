@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.node.*
 import io.github.lucanicoladebiasi.jsong.antlr.JSong2BaseVisitor
 import io.github.lucanicoladebiasi.jsong.antlr.JSong2Parser
 import io.github.lucanicoladebiasi.jsong2.functions.Library
+import io.github.lucanicoladebiasi.jsong2.functions.NumericFunctions
 import io.github.lucanicoladebiasi.jsong2.functions.StringFunctions
 import org.antlr.v4.runtime.tree.ParseTree
 import org.apache.commons.text.StringEscapeUtils
@@ -88,7 +89,9 @@ class Processor(
 
     private var isToReduce = true
 
-    private val lib = Library().register(StringFunctions(mapper, mathContext))
+    private val lib = Library()
+        .register(StringFunctions(mapper, mathContext))
+        .register(NumericFunctions())
 
     private val nf = mapper.nodeFactory
 
@@ -135,7 +138,6 @@ class Processor(
                         }
                     }
                 }
-
                 else -> {
                     this.context = context
                     when (val rhs = visit(rec)) {
@@ -438,7 +440,6 @@ class Processor(
     override fun visitRegexML(ctx: JSong2Parser.RegexMLContext): RegexNode {
         return RegexNode.ml(ctx.text)
     }
-
 
     override fun visitText(ctx: JSong2Parser.TextContext): TextNode {
         return TextNode(sanitise(ctx.STRING().text))

@@ -80,8 +80,6 @@ path    :   MOD ('.' MOD)*  # parent
 
 pattern : (~'/' | '\\' '/' '?')*;
 
-
-
 range   : min = exp '..' max = exp;
 
 // LEXER RULES

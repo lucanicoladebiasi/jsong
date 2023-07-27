@@ -10,6 +10,8 @@ import com.fasterxml.jackson.databind.node.TextNode
 import java.math.BigDecimal
 import java.math.RoundingMode
 import kotlin.jvm.Throws
+import kotlin.math.ceil
+import kotlin.math.floor
 
 /**
  * https://docs.jsonata.org/numeric-functions
@@ -24,7 +26,6 @@ class NumericFunctions {
         const val HEX_TAG = "0x"
 
         const val OCT_TAG = "0o"
-
 
         fun decimal(numeric: NumericNode): BigDecimal {
             return numeric.asText().toBigDecimal()
@@ -67,20 +68,21 @@ class NumericFunctions {
      * https://docs.jsonata.org/numeric-functions#floor
      */
     fun `$floor`(number: NumericNode): NumericNode {
-        TODO()
+        return DecimalNode(floor(decimal(number).toDouble()).toBigDecimal())
     }
 
     /**
      * https://docs.jsonata.org/numeric-functions#floor
      */
-    fun `$ceil`(number: NumericNode){
+    fun `$ceil`(number: NumericNode): DecimalNode{
+        return DecimalNode(ceil(decimal(number).toDouble()).toBigDecimal())
     }
 
     /**
      * https://docs.jsonata.org/numeric-functions#round
      */
     fun `$round`(number: NumericNode): NumericNode {
-        return `$round`(number, IntNode(0))
+        return DecimalNode(decimal(number).setScale(0, RoundingMode.HALF_EVEN))
     }
 
     /**

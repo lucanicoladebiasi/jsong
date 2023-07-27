@@ -94,9 +94,92 @@ class NumericFunctionsTest {
         assertEquals(expected, actual)
     }
 
+    /**
+     * https://docs.jsonata.org/numeric-functions#floor
+     */
     @Test
-    fun `$ceil`() {
+    fun `$floor - positive integer`() {
+        val expression = "\$floor(5)"
+        val expected = DecimalNode(5.toBigDecimal())
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
+    }
 
+    /**
+     * https://docs.jsonata.org/numeric-functions#floor
+     */
+    @Test
+    fun `$floor - positive lower half decimal`() {
+        val expression = "\$floor(5.3)"
+        val expected = DecimalNode(5.toBigDecimal())
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
+    }
+
+    /**
+     * https://docs.jsonata.org/numeric-functions#floor
+     */
+    @Test
+    fun `$floor - positive higher half decimal`() {
+        val expression = "\$floor(5.8)"
+        val expected = DecimalNode(5.toBigDecimal())
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
+    }
+
+    /**
+     * https://docs.jsonata.org/numeric-functions#floor
+     */
+    @Test
+    fun `$floor - negative lower half decimal`() {
+        val expression = "\$floor(-5.3)"
+        val expected = DecimalNode(-6.toBigDecimal())
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
+    }
+
+    /**
+     * https://docs.jsonata.org/numeric-functions#ceil
+     */
+    @Test
+    fun `$ceil - positive integer`() {
+        val expression = "\$ceil(5)"
+        val expected = DecimalNode(5.toBigDecimal())
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
+    }
+
+    /**
+     * https://docs.jsonata.org/numeric-functions#ceil
+     */
+    @Test
+    fun `$ceil - positive lower half decimal`() {
+        val expression = "\$ceil(5.3)"
+        val expected = DecimalNode(6.toBigDecimal())
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
+    }
+
+    /**
+     * https://docs.jsonata.org/numeric-functions#ceil
+     */
+    @Test
+    fun `$ceil - positive higher half decimal`() {
+        val expression = "\$ceil(5.8)"
+        val expected = DecimalNode(6.toBigDecimal())
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
+    }
+
+    /**
+     * https://docs.jsonata.org/numeric-functions#ceil
+     */
+    @Test
+    fun `$ceil - negative lower half decimal `() {
+        val expression = "\$ceil(-5.3)"
+        val expected = DecimalNode(-5.toBigDecimal())
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
     }
 
     /**

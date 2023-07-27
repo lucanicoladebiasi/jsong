@@ -79,7 +79,19 @@ class NumericFunctionsTest {
     }
 
     @Test
-    fun `$abs`() {
+    fun `$abs - negative`() {
+        val expression = "\$abs(-5)"
+        val expected = DecimalNode(5.toBigDecimal())
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun `$abs - positive`() {
+        val expression = "\$abs(5)"
+        val expected = DecimalNode(5.toBigDecimal())
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
     }
 
     @Test

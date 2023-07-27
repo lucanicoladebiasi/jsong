@@ -34,7 +34,7 @@ class NumericFunctions {
                 true -> DecimalNode(BigDecimal.ONE)
                 else -> DecimalNode(BigDecimal.ZERO)
             }
-            is NumericNode -> arg
+            is NumericNode -> DecimalNode(arg.asText().toBigDecimal())
             is TextNode -> {
                 val exp = arg.textValue()
                 return DecimalNode(when {
@@ -51,7 +51,9 @@ class NumericFunctions {
     /**
      * https://docs.jsonata.org/numeric-functions#abs
      */
-    fun `$abs`(number: NumericNode) {}
+    fun `$abs`(number: NumericNode): NumericNode {
+        return DecimalNode(number.asText().toBigDecimal().abs())
+    }
 
     /**
      * https://docs.jsonata.org/numeric-functions#floor

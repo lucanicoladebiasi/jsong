@@ -96,14 +96,84 @@ class NumericFunctionsTest {
 
     @Test
     fun `$ceil`() {
+
     }
 
+    /**
+     * https://docs.jsonata.org/numeric-functions#round
+     */
     @Test
-    fun `$round`() {
+    fun `$round - no precision`() {
+        val expression = "\$round(123.456)"
+        val expected = DecimalNode(123.toBigDecimal())
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
     }
 
+    /**
+     * https://docs.jsonata.org/numeric-functions#round
+     */
     @Test
-    fun `test$round`() {
+    fun `$round - positive two digit precision`() {
+        val expression = "\$round(123.456, 2)"
+        val expected = DecimalNode(123.46.toBigDecimal())
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
+    }
+
+    /**
+     * https://docs.jsonata.org/numeric-functions#round
+     */
+    @Test
+    fun `$round - negative one digit precision`() {
+        val expression = "\$round(123.456, -1)"
+        val expected = DecimalNode(120.toBigDecimal())
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
+    }
+
+    /**
+     * https://docs.jsonata.org/numeric-functions#round
+     */
+    @Test
+    fun `$round - negative two digit precision`() {
+        val expression = "\$round(123.456, -2)"
+        val expected = DecimalNode(100.toBigDecimal())
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
+    }
+
+    /**
+     * https://docs.jsonata.org/numeric-functions#round
+     */
+    @Test
+    fun `$round - odd half`() {
+        val expression = "\$round(11.5)"
+        val expected = DecimalNode(12.toBigDecimal())
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
+    }
+
+    /**
+     * https://docs.jsonata.org/numeric-functions#round
+     */
+    @Test
+    fun `$round - even half`() {
+        val expression = "\$round(12.5)"
+        val expected = DecimalNode(12.toBigDecimal())
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
+    }
+
+    /**
+     * https://docs.jsonata.org/numeric-functions#round
+     */
+    @Test
+    fun `$round - integer - negative one digit precision`() {
+        val expression = "\$round(125, -1)"
+        val expected = DecimalNode(120.toBigDecimal())
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
     }
 
     @Test

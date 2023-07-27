@@ -3,10 +3,12 @@ package io.github.lucanicoladebiasi.jsong2.functions
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.BooleanNode
 import com.fasterxml.jackson.databind.node.DecimalNode
+import com.fasterxml.jackson.databind.node.IntNode
 import com.fasterxml.jackson.databind.node.NumericNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.node.TextNode
 import java.math.BigDecimal
+import java.math.RoundingMode
 import kotlin.jvm.Throws
 
 /**
@@ -22,7 +24,13 @@ class NumericFunctions {
         const val HEX_TAG = "0x"
 
         const val OCT_TAG = "0o"
-    }
+
+
+        fun decimal(numeric: NumericNode): BigDecimal {
+            return numeric.asText().toBigDecimal()
+        }
+
+    } //~ companion
 
     /**
      * https://docs.jsonata.org/numeric-functions#number
@@ -34,7 +42,7 @@ class NumericFunctions {
                 true -> DecimalNode(BigDecimal.ONE)
                 else -> DecimalNode(BigDecimal.ZERO)
             }
-            is NumericNode -> DecimalNode(arg.asText().toBigDecimal())
+            is NumericNode -> DecimalNode(decimal(arg))
             is TextNode -> {
                 val exp = arg.textValue()
                 return DecimalNode(when {
@@ -52,23 +60,35 @@ class NumericFunctions {
      * https://docs.jsonata.org/numeric-functions#abs
      */
     fun `$abs`(number: NumericNode): NumericNode {
-        return DecimalNode(number.asText().toBigDecimal().abs())
+        return DecimalNode(decimal(number).abs())
     }
 
     /**
      * https://docs.jsonata.org/numeric-functions#floor
      */
-    fun `$ceil`(number: NumericNode){}
+    fun `$floor`(number: NumericNode): NumericNode {
+        TODO()
+    }
+
+    /**
+     * https://docs.jsonata.org/numeric-functions#floor
+     */
+    fun `$ceil`(number: NumericNode){
+    }
 
     /**
      * https://docs.jsonata.org/numeric-functions#round
      */
-    fun `$round`(number: NumericNode) {}
+    fun `$round`(number: NumericNode): NumericNode {
+        return `$round`(number, IntNode(0))
+    }
 
     /**
      * https://docs.jsonata.org/numeric-functions#round
      */
-    fun `$round`(number: NumericNode, precision:NumericNode) {}
+    fun `$round`(number: NumericNode, precision:NumericNode): NumericNode {
+        return DecimalNode(decimal(number).setScale(precision.asInt(), RoundingMode.HALF_EVEN))
+    }
 
     /**
      * https://docs.jsonata.org/numeric-functions#power

@@ -12,11 +12,13 @@ import org.antlr.v4.runtime.tree.ParseTree
 import org.apache.commons.text.StringEscapeUtils
 import java.math.BigDecimal
 import java.math.MathContext
+import kotlin.random.Random
 
 class Processor(
     root: JsonNode?,
     mapper: ObjectMapper,
-    private val mathContext: MathContext
+    private val mathContext: MathContext,
+    random: Random
 ) : JSong2BaseVisitor<JsonNode?>() {
 
     companion object {
@@ -91,7 +93,7 @@ class Processor(
 
     private val lib = Library()
         .register(StringFunctions(mapper, mathContext))
-        .register(NumericFunctions())
+        .register(NumericFunctions(mathContext, random))
 
     private val nf = mapper.nodeFactory
 

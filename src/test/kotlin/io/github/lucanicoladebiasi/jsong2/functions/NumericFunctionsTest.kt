@@ -259,16 +259,49 @@ class NumericFunctionsTest {
         assertEquals(expected, actual)
     }
 
+    /**
+     * https://docs.jsonata.org/numeric-functions#power
+     */
     @Test
-    fun `$power`() {
+    fun `$power - positive integer`() {
+        val expression = "\$power(2, 8)"
+        val expected = DecimalNode(256.toBigDecimal())
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
     }
 
+    /**
+     * https://docs.jsonata.org/numeric-functions#power
+     */
     @Test
-    fun `test$power`() {
+    fun `$power- positive decimal`() {
+        val expression = "\$power(2, 0.5)"
+        val expected = DecimalNode("1.4142135623730951".toBigDecimal())
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
     }
 
+    /**
+     * https://docs.jsonata.org/numeric-functions#power
+     */
+    @Test
+    fun `$power - negative integer`() {
+        val expression = "\$power(2, -2)"
+        val expected = DecimalNode(0.25.toBigDecimal())
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
+    }
+
+
+    /**
+     * https://docs.jsonata.org/numeric-functions#sqrt
+     */
     @Test
     fun `$random`() {
+        val expression = "\$random()"
+        val actual = JSong(expression).evaluate()
+        assertTrue(actual?.decimalValue()?.let {  it >= BigDecimal.ZERO } ?: false)
+        assertTrue(actual?.decimalValue()?.let { it < BigDecimal.ONE } ?: false)
     }
 
     @Test

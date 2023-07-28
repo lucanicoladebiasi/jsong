@@ -1,23 +1,19 @@
 package io.github.lucanicoladebiasi.jsong2.functions
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.BooleanNode
-import com.fasterxml.jackson.databind.node.DecimalNode
-import com.fasterxml.jackson.databind.node.IntNode
-import com.fasterxml.jackson.databind.node.NumericNode
-import com.fasterxml.jackson.databind.node.ObjectNode
-import com.fasterxml.jackson.databind.node.TextNode
+import com.fasterxml.jackson.databind.node.*
 import java.math.BigDecimal
+import java.math.MathContext
 import java.math.RoundingMode
-import kotlin.jvm.Throws
 import kotlin.math.ceil
 import kotlin.math.floor
+import kotlin.random.Random
 
 /**
  * https://docs.jsonata.org/numeric-functions
  */
 @Suppress("FunctionName", "unused")
-class NumericFunctions {
+class NumericFunctions(private val mathContext: MathContext, private val random: Random) {
 
     companion object {
 
@@ -38,21 +34,25 @@ class NumericFunctions {
      */
     @Throws(NumberFormatException::class)
     fun `$number`(arg: JsonNode): NumericNode {
-        return when(arg) {
-            is BooleanNode -> when(arg.booleanValue()) {
+        return when (arg) {
+            is BooleanNode -> when (arg.booleanValue()) {
                 true -> DecimalNode(BigDecimal.ONE)
                 else -> DecimalNode(BigDecimal.ZERO)
             }
+
             is NumericNode -> DecimalNode(decimal(arg))
             is TextNode -> {
                 val exp = arg.textValue()
-                return DecimalNode(when {
-                    exp.startsWith(BIN_TAG) -> exp.substring(BIN_TAG.length).toBigInteger(2).toBigDecimal()
-                    exp.startsWith(OCT_TAG) -> exp.substring(OCT_TAG.length).toBigInteger(8).toBigDecimal()
-                    exp.startsWith(HEX_TAG) -> exp.substring(HEX_TAG.length).toBigInteger(16).toBigDecimal()
-                    else -> exp.toBigDecimal()
-                })
+                return DecimalNode(
+                    when {
+                        exp.startsWith(BIN_TAG) -> exp.substring(BIN_TAG.length).toBigInteger(2).toBigDecimal()
+                        exp.startsWith(OCT_TAG) -> exp.substring(OCT_TAG.length).toBigInteger(8).toBigDecimal()
+                        exp.startsWith(HEX_TAG) -> exp.substring(HEX_TAG.length).toBigInteger(16).toBigDecimal()
+                        else -> exp.toBigDecimal()
+                    }
+                )
             }
+
             else -> throw IllegalArgumentException("$arg can't be cast to a number")
         }
     }
@@ -74,7 +74,7 @@ class NumericFunctions {
     /**
      * https://docs.jsonata.org/numeric-functions#floor
      */
-    fun `$ceil`(number: NumericNode): DecimalNode{
+    fun `$ceil`(number: NumericNode): DecimalNode {
         return DecimalNode(ceil(decimal(number).toDouble()).toBigDecimal())
     }
 
@@ -88,24 +88,23 @@ class NumericFunctions {
     /**
      * https://docs.jsonata.org/numeric-functions#round
      */
-    fun `$round`(number: NumericNode, precision:NumericNode): NumericNode {
+    fun `$round`(number: NumericNode, precision: NumericNode): NumericNode {
         return DecimalNode(decimal(number).setScale(precision.asInt(), RoundingMode.HALF_EVEN))
     }
 
     /**
      * https://docs.jsonata.org/numeric-functions#power
      */
-    fun `$power`(base: NumericNode) {}
-
-    /**
-     * https://docs.jsonata.org/numeric-functions#power
-     */
-    fun `$power`(base: NumericNode, exponent: NumericNode) {}
+    fun `$power`(base: NumericNode, exponent: NumericNode): NumericNode {
+        return DecimalNode(Math.pow(decimal(base).toDouble(), decimal(exponent).toDouble()).toBigDecimal())
+    }
 
     /**
      * https://docs.jsonata.org/numeric-functions#sqrt
      */
-    fun `$random`() {}
+    fun `$random`(): NumericNode {
+        return DecimalNode(random.nextDouble().toBigDecimal())
+    }
 
     /**
      * https://docs.jsonata.org/numeric-functions#formatnumber

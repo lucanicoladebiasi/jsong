@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.IntNode
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 
-class PositionNode(nf: JsonNodeFactory?) : ArrayNode(nf) {
+class PositionalNode(nf: JsonNodeFactory) : ArrayNode(nf) {
 
     fun position(node: JsonNode?): IntNode? {
         return if (node != null) {

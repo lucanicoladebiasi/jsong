@@ -348,9 +348,16 @@ class Processor(
             val id = sanitise(ctx.VAR_ID(index).text)
             when (op.type) {
                 JSong2Parser.HASH -> {
-                    variables[id] = PositionNode(nf).addAll(rs)
+                    variables[id] = PositionalNode(nf).addAll(rs)
                 }
-
+                JSong2Parser.AT -> {
+                    val cn = ContextualNode(nf).addAll(rs)
+                    @Suppress("NAME_SHADOWING") val rs = nf.arrayNode()
+                    cn.forEach {
+                        parents[it]?.let { rs.add(it) }
+                    }
+                    return rs
+                }
                 else -> throw UnsupportedOperationException("Unknown operator in ${ctx.text} expression!")
             }
         }
@@ -454,7 +461,7 @@ class Processor(
     override fun visitVar(ctx: JSong2Parser.VarContext): JsonNode? {
         val id = sanitise(ctx.VAR_ID().text)
         return when (val rs = variables[id]) {
-            is PositionNode -> {
+            is PositionalNode -> {
                 rs.position(context)
             }
 

@@ -2,14 +2,27 @@ package io.github.lucanicoladebiasi.jsong2.functions
 
 import com.fasterxml.jackson.databind.node.DecimalNode
 import com.fasterxml.jackson.databind.node.NumericNode
+import com.fasterxml.jackson.databind.node.TextNode
 import io.github.lucanicoladebiasi.jsong2.JSong
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
+import java.text.DecimalFormat
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class NumericFunctionsTest {
+class TestNumericFunctions {
+
+    @Test
+    fun x() {
+        val n = 34.555
+        val p = "#0.00;(#0.00)"
+        val df = DecimalFormat()
+        df.applyPattern(p)
+        val s = df.format(n)
+        println(s)
+    }
 
     /**
      * https://docs.jsonata.org/numeric-functions#number
@@ -304,12 +317,83 @@ class NumericFunctionsTest {
         assertTrue(actual?.decimalValue()?.let { it < BigDecimal.ONE } ?: false)
     }
 
+    /**
+     * https://docs.jsonata.org/numeric-functions#formatnumber
+     */
     @Test
-    fun `$formatNumber`() {
+    fun `$formatNumber - group notation`() {
+        val expression = "\$formatNumber(12345.6, '#,###.00')"
+        val expected = TextNode("12,345.60")
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
     }
 
+    /**
+     * https://docs.jsonata.org/numeric-functions#formatnumber
+     */
     @Test
-    fun `test$formatNumber`() {
+    fun `$formatNumber - e notation`() {
+        val expression = "\$formatNumber(1234.5678, \"00.000E0\")"
+        val expected = TextNode("12.346E2")
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
+    }
+
+    /**
+     * https://docs.jsonata.org/numeric-functions#formatnumber
+     */
+    @Test
+    fun `$formatNumber - positive cents`() {
+        val expression = "\$formatNumber(34.555, \"#0.00;(#0.00)\")"
+        val expected = TextNode("34.55")
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
+    }
+
+    /**
+     * https://docs.jsonata.org/numeric-functions#formatnumber
+     */
+    @Test
+    fun `$formatNumber - negative cents`() {
+        val expression = "\$formatNumber(-34.555, \"#0.00;(#0.00)\")"
+        val expected = TextNode("(34.55)")
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
+    }
+
+    /**
+     * https://docs.jsonata.org/numeric-functions#formatnumber
+     */
+    @Test
+    fun `$formatNumber - percent`() {
+        val expression = "\$formatNumber(0.14, \"00%\")"
+        val expected = TextNode("14%")
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
+    }
+
+    /**
+     * https://docs.jsonata.org/numeric-functions#formatnumber
+     */
+    @Test
+    @Disabled
+    fun `$formatNumber - per-mille option`() {
+        val expression = "\$formatNumber(0.14, \"###pm\", {\"per-mille\": \"pm\"})"
+        val expected = TextNode("140pm")
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
+    }
+
+    /**
+     * https://docs.jsonata.org/numeric-functions#formatnumber
+     */
+    @Test
+    @Disabled
+    fun `$formatNumber - zero-digit option`() {
+        val expression = "\$formatNumber(1234.5678, \"①①.①①①e①\", {\"zero-digit\": \"\\u245f\"})"
+        val expected = TextNode("\"①②.③④⑥e②\"")
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
     }
 
     @Test

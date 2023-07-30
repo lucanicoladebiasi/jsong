@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.node.*
 import java.math.BigDecimal
 import java.math.MathContext
 import java.math.RoundingMode
+import java.text.DecimalFormat
+import java.util.*
 import kotlin.math.ceil
 import kotlin.math.floor
 import kotlin.random.Random
@@ -13,7 +15,10 @@ import kotlin.random.Random
  * https://docs.jsonata.org/numeric-functions
  */
 @Suppress("FunctionName", "unused")
-class NumericFunctions(private val mathContext: MathContext, private val random: Random) {
+class NumericFunctions(
+    private val mathContext: MathContext,
+    private val random: Random
+) {
 
     companion object {
 
@@ -25,6 +30,16 @@ class NumericFunctions(private val mathContext: MathContext, private val random:
 
         fun decimal(numeric: NumericNode): BigDecimal {
             return numeric.asText().toBigDecimal()
+        }
+
+        fun format(mathContext: MathContext, number: Double, picture: String): String {
+            //val symbols = DecimalFormatSymbols(Locale.US)
+            val formatter = DecimalFormat()
+            formatter.roundingMode = mathContext.roundingMode
+            //formatter.decimalFormatSymbols = symbols
+            val fixedPicture = picture.replace("9", "0").replace("e", "E") // e is not
+            formatter.applyLocalizedPattern(fixedPicture)
+            return formatter.format(number)
         }
 
     } //~ companion
@@ -109,7 +124,9 @@ class NumericFunctions(private val mathContext: MathContext, private val random:
     /**
      * https://docs.jsonata.org/numeric-functions#formatnumber
      */
-    fun `$formatNumber`(number: NumericNode, picture: TextNode) {}
+    fun `$formatNumber`(number: NumericNode, picture: TextNode): TextNode {
+        return TextNode(format(mathContext, number.asDouble(), picture.textValue()))
+    }
 
     /**
      * https://docs.jsonata.org/numeric-functions#formatnumber

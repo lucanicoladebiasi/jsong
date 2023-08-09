@@ -25,6 +25,8 @@ package io.github.lucanicoladebiasi.jsong2
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.node.ArrayNode
+import com.fasterxml.jackson.databind.node.ObjectNode
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Disabled
@@ -41,17 +43,11 @@ class TestBindOperators {
     private val mapper = ObjectMapper()
 
     private lateinit var node: JsonNode
-    private lateinit var titles: JsonNode
 
     @BeforeAll
     fun setUp() {
         node = mapper.readTree(Thread.currentThread().contextClassLoader.getResource("library.json"))
-//        books = JSong("library.books").evaluate(node)!!
-//        library = JSong("library").evaluate(node)!!
-//        loans = JSong("library.loans").evaluate(node)!!
-//        titles = JSong("library.books.title").evaluate(node)!!
     }
-
 
     /**
      * https://docs.jsonata.org/path-operators#-positional-variable-binding
@@ -59,6 +55,7 @@ class TestBindOperators {
     @Test
     fun `Positional variable binding`() {
         val expression = "library.books#\$i[\"Kernighan\" in authors].{\"title\": title, \"index\": \$i }"
+
         @Language("JSON")
         val expected = mapper.readTree(
             """
@@ -81,29 +78,27 @@ class TestBindOperators {
 
     @Test
     fun `Context variable binding - carry on once`() {
-        val expression = "library.loans@\$L"
-        val expected = mapper.createArrayNode()
         val LIBRARY = "library"
         val LOANS = "loans"
-        repeat(node[LIBRARY][LOANS].size()) {
-            expected.add(node[LIBRARY])
+        val library = node[LIBRARY] as ObjectNode
+        val loans = node[LIBRARY][LOANS] as ArrayNode
+        val expression = "library.loans@\$L"
+        val expected = mapper.createArrayNode()
+        repeat(loans.size()) {
+            expected.add(library)
         }
         val actual = JSong(expression).evaluate(node)
         assertEquals(expected, actual)
     }
 
     @Test
-    @Disabled
     fun `Context variable binding - carry on once and recall`() {
-        val expression = "library.loans@\$L.{\"loan\": \$L}"
+        val LIBRARY = "library"
+        val LOANS = "loans"
+        val expected = node[LIBRARY][LOANS]
+        val expression = "library.loans@\$L.\$L"
         val actual = JSong(expression).evaluate(node)
-//        val expected = mapper.createArrayNode().let {
-//            for (i in 0 until loans.size()) {
-//                it.addObject().set<JsonNode>("loan", loans[i])
-//            }
-//            it
-//        }
-//        assertEquals(expected, actual)
+        assertEquals(expected, actual)
     }
 
     @Test
@@ -123,18 +118,18 @@ class TestBindOperators {
     @Test
     @Disabled
     fun `Context variable binding - carry on twice and recall`() {
-        val expression = "library.loans@\$L.books@\$B.{\"title\": \$B.title}"
-        val actual = JSong(expression).evaluate(node)
-        val loans = JSong("library.loans").evaluate(node)
-        val expected = mapper.createArrayNode().let {
-            for (i in 1..loans!!.size()) {
-                titles.forEach { title ->
-                    it.addObject().set<JsonNode>("title", title)
-                }
-            }
-            it
-        }
-        assertEquals(expected, actual)
+//        val expression = "library.loans@\$L.books@\$B.{\"title\": \$B.title}"
+//        val actual = JSong(expression).evaluate(node)
+//        val loans = JSong("library.loans").evaluate(node)
+//        val expected = mapper.createArrayNode().let {
+//            for (i in 1..loans!!.size()) {
+//                titles.forEach { title ->
+//                    it.addObject().set<JsonNode>("title", title)
+//                }
+//            }
+//            it
+//        }
+//        assertEquals(expected, actual)
     }
 
     /**

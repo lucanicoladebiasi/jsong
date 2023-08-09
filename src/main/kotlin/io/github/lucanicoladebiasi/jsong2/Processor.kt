@@ -121,14 +121,13 @@ class Processor(
         return array
     }
 
-    private fun map(lec: JSong2Parser.ExpContext, rec: JSong2Parser.ExpContext): ArrayNode {
+    private fun map(lhs: ArrayNode, ctx: JSong2Parser.ExpContext): ArrayNode {
         val rs = ArrayNode(nf)
-        val lhs = expand(visit(lec))
         lhs.forEach { context ->
             when (context) {
                 is RangeNode -> context.indexes.forEach { index ->
                     this.context = IntNode(index)
-                    when (val rhs = visit(rec)) {
+                    when (val rhs = visit(ctx)) {
                         is ArrayNode -> rhs.forEach {
                             rs.add(it)
                             parents[it] = context
@@ -140,9 +139,10 @@ class Processor(
                         }
                     }
                 }
+
                 else -> {
                     this.context = context
-                    when (val rhs = visit(rec)) {
+                    when (val rhs = visit(ctx)) {
                         is ArrayNode -> rhs.forEach {
                             rs.add(it)
                             parents[it] = context
@@ -339,29 +339,45 @@ class Processor(
     }
 
     override fun visitMap(ctx: JSong2Parser.MapContext): ArrayNode {
-        return map(ctx.lhs, ctx.rhs)
+        return map(expand(visit(ctx.lhs)), ctx.rhs)
     }
 
-    override fun visitMapandbind(ctx: JSong2Parser.MapandbindContext): ArrayNode {
-        val rs = map(ctx.lhs, ctx.rhs)
+    override fun visitMapAndBind(ctx: JSong2Parser.MapAndBindContext): ArrayNode {
+        val binds = mutableMapOf<String, ContextualNode>()
         ctx.op.forEachIndexed { index, op ->
-            val id = sanitise(ctx.VAR_ID(index).text)
-            when (op.type) {
-                JSong2Parser.HASH -> {
-                    variables[id] = PositionalNode(nf).addAll(rs)
-                }
-                JSong2Parser.AT -> {
-                    val cn = ContextualNode(nf).addAll(rs)
-                    @Suppress("NAME_SHADOWING") val rs = nf.arrayNode()
-                    cn.forEach {
-                        parents[it]?.let { rs.add(it) }
-                    }
-                    return rs
-                }
-                else -> throw UnsupportedOperationException("Unknown operator in ${ctx.text} expression!")
+            val id = sanitise( ctx.VAR_ID()[index].text)
+            when(op.type) {
+                JSong2Parser.AT -> binds[id] = ContextualNode(nf)
+                JSong2Parser.HASH -> binds[id] = PositionalNode(nf)
             }
         }
-        return rs
+        val rs = ArrayNode(nf)
+        val lhs = expand(visit(ctx.lhs))
+        lhs.forEach { context ->
+            this.context = context
+            val rhs = visit(ctx.rhs)
+            expand(rhs).forEachIndexed { index, node ->
+                parents[node] = context
+                rs.add(node)
+                binds.values.forEach { bind ->
+                    when(bind) {
+                        is PositionalNode -> bind.add(PositionalNode.Bind(nf, node, IntNode(index)))
+                        else -> bind.add(ContextualNode.Bind(nf, context, node))
+                    }
+                }
+            }
+        }
+        variables.putAll(binds)
+        return when(ctx.op.last().type) {
+            JSong2Parser.AT -> {
+                val carry = ArrayNode(nf)
+                repeat(rs.size()) {
+                    carry.addAll(lhs)
+                }
+                carry
+            }
+            else -> rs
+        }
     }
 
     override fun visitMathSUMorSUB(ctx: JSong2Parser.MathSUMorSUBContext): DecimalNode {
@@ -461,10 +477,9 @@ class Processor(
     override fun visitVar(ctx: JSong2Parser.VarContext): JsonNode? {
         val id = sanitise(ctx.VAR_ID().text)
         return when (val rs = variables[id]) {
-            is PositionalNode -> {
+            is PositionalNode ->
                 rs.position(context)
-            }
-
+            is ContextualNode -> TODO()
             else -> rs
         }
     }

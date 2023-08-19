@@ -25,8 +25,6 @@ package io.github.lucanicoladebiasi.jsong2
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.node.ArrayNode
-import com.fasterxml.jackson.databind.node.ObjectNode
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Disabled
@@ -78,14 +76,12 @@ class TestBindOperators {
 
     @Test
     fun `Context variable binding - carry on once`() {
+        val expression = "library.loans@\$L"
         val LIBRARY = "library"
         val LOANS = "loans"
-        val library = node[LIBRARY] as ObjectNode
-        val loans = node[LIBRARY][LOANS] as ArrayNode
-        val expression = "library.loans@\$L"
         val expected = mapper.createArrayNode()
-        repeat(loans.size()) {
-            expected.add(library)
+        repeat(node[LIBRARY][LOANS].size()) {
+            expected.add(node[LIBRARY])
         }
         val actual = JSong(expression).evaluate(node)
         assertEquals(expected, actual)
@@ -93,26 +89,26 @@ class TestBindOperators {
 
     @Test
     fun `Context variable binding - carry on once and recall`() {
+        val expression = "library.loans@\$L.\$L"
         val LIBRARY = "library"
         val LOANS = "loans"
         val expected = node[LIBRARY][LOANS]
-        val expression = "library.loans@\$L.\$L"
         val actual = JSong(expression).evaluate(node)
         assertEquals(expected, actual)
     }
 
     @Test
-    @Disabled
     fun `Context variable binding - carry on twice`() {
         val expression = "library.loans@\$L.books@\$B"
+        val LIBRARY = "library"
+        val LOANS = "loans"
+        val BOOKS = "books"
+        val expected = mapper.createArrayNode()
+        repeat(node[LIBRARY][LOANS].size() * node[LIBRARY][BOOKS].size()) {
+            expected.add(node[LIBRARY])
+        }
         val actual = JSong(expression).evaluate(node)
-//        val expected = mapper.createArrayNode().let {
-//            for (i in 1..loans.size() * books.size()) {
-//                it.add(library)
-//            }
-//            it
-//        }
-//        assertEquals(expected, actual)
+        assertEquals(expected, actual)
     }
 
     @Test

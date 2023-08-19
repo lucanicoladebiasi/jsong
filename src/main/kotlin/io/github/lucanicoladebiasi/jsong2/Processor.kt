@@ -348,6 +348,7 @@ class Processor(
         return map(expand(visit(ctx.lhs)), ctx.rhs)
     }
 
+    @Suppress("NAME_SHADOWING")
     override fun visitMapAndBind(ctx: JSong2Parser.MapAndBindContext): ArrayNode {
         val binds = mutableMapOf<String, ArrayNode>()
         ctx.op.forEachIndexed { index, op ->
@@ -379,7 +380,7 @@ class Processor(
         return when (ctx.op.last().type) {
             JSong2Parser.AT -> {
                 val carry = ArrayNode(nf)
-                repeat(rs.size()) {
+                repeat(rs.size() / lhs.size()) {
                     carry.addAll(lhs)
                 }
                 carry

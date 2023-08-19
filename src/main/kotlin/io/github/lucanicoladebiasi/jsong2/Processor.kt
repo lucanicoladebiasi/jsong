@@ -89,6 +89,8 @@ class Processor(
 
     private var context: JsonNode? = root
 
+    private var index: Int? = null
+
     private var isToReduce = true
 
     private val lib = Library()
@@ -121,12 +123,14 @@ class Processor(
         return array
     }
 
+    @Suppress("NAME_SHADOWING")
     private fun map(lhs: ArrayNode, ctx: JSong2Parser.ExpContext): ArrayNode {
         val rs = ArrayNode(nf)
-        lhs.forEach { context ->
+        lhs.forEachIndexed { index, context ->
             when (context) {
                 is RangeNode -> context.indexes.forEach { index ->
                     this.context = IntNode(index)
+                    this.index = index
                     when (val rhs = visit(ctx)) {
                         is ArrayNode -> rhs.forEach {
                             rs.add(it)
@@ -142,6 +146,7 @@ class Processor(
 
                 else -> {
                     this.context = context
+                    this.index = index
                     when (val rhs = visit(ctx)) {
                         is ArrayNode -> rhs.forEach {
                             rs.add(it)
@@ -156,6 +161,7 @@ class Processor(
                 }
             }
         }
+        index = null
         return rs
     }
 
@@ -343,32 +349,34 @@ class Processor(
     }
 
     override fun visitMapAndBind(ctx: JSong2Parser.MapAndBindContext): ArrayNode {
-        val binds = mutableMapOf<String, ContextualNode>()
+        val binds = mutableMapOf<String, ArrayNode>()
         ctx.op.forEachIndexed { index, op ->
-            val id = sanitise( ctx.VAR_ID()[index].text)
-            when(op.type) {
-                JSong2Parser.AT -> binds[id] = ContextualNode(nf)
-                JSong2Parser.HASH -> binds[id] = PositionalNode(nf)
+            val id = sanitise(ctx.VAR_ID()[index].text)
+            when (op.type) {
+                JSong2Parser.AT -> binds[id] = ContextNode(nf)
+                JSong2Parser.HASH -> binds[id] = PositionNode(nf)
             }
         }
         val rs = ArrayNode(nf)
         val lhs = expand(visit(ctx.lhs))
-        lhs.forEach { context ->
+        lhs.forEachIndexed { index, context ->
             this.context = context
+            this.index = index
             val rhs = visit(ctx.rhs)
             expand(rhs).forEachIndexed { index, node ->
                 parents[node] = context
                 rs.add(node)
                 binds.values.forEach { bind ->
-                    when(bind) {
-                        is PositionalNode -> bind.add(PositionalNode.Bind(nf, node, IntNode(index)))
-                        else -> bind.add(ContextualNode.Bind(nf, context, node))
+                    when (bind) {
+                        is PositionNode -> bind.add(BindNode(nf, IntNode(index), node))
+                        is ContextNode -> bind.add(BindNode(nf, IntNode(index), node))
                     }
                 }
             }
         }
+        index = null
         variables.putAll(binds)
-        return when(ctx.op.last().type) {
+        return when (ctx.op.last().type) {
             JSong2Parser.AT -> {
                 val carry = ArrayNode(nf)
                 repeat(rs.size()) {
@@ -376,6 +384,7 @@ class Processor(
                 }
                 carry
             }
+
             else -> rs
         }
     }
@@ -477,9 +486,8 @@ class Processor(
     override fun visitVar(ctx: JSong2Parser.VarContext): JsonNode? {
         val id = sanitise(ctx.VAR_ID().text)
         return when (val rs = variables[id]) {
-            is PositionalNode ->
-                rs.position(context)
-            is ContextualNode -> TODO()
+            is PositionNode -> rs.resolve(context)
+            is ContextNode -> rs.resolve(index)
             else -> rs
         }
     }

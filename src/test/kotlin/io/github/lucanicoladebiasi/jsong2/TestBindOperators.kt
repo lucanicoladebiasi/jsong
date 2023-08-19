@@ -54,7 +54,7 @@ class TestBindOperators {
      */
     @Test
     fun `Positional variable binding`() {
-        val expression = "library.books#\$i[\"Kernighan\" in authors].{\"title\": title, \"index\": \$i }"
+        val expression = "library.books#\$I[\"Kernighan\" in authors].{\"title\": title, \"index\": \$I }"
 
         @Language("JSON")
         val expected = mapper.readTree(

@@ -62,7 +62,6 @@ class Processor(
             }
         }
 
-
         private fun sanitise(txt: String): String {
             return StringEscapeUtils.unescapeJson(
                 when {
@@ -89,7 +88,7 @@ class Processor(
 
     private var context: JsonNode? = root
 
-    private var index: Int? = null
+    private var index: Index? = null
 
     private var isToReduce = true
 
@@ -128,25 +127,28 @@ class Processor(
         val rs = ArrayNode(nf)
         lhs.forEachIndexed { index, context ->
             when (context) {
-                is RangeNode -> context.indexes.forEach { index ->
-                    this.context = IntNode(index)
-                    this.index = index
-                    when (val rhs = visit(ctx)) {
-                        is ArrayNode -> rhs.forEach {
-                            rs.add(it)
-                            parents[it] = context
-                        }
+                is RangeNode -> {
+                    val indexes = context.indexes
+                    indexes.forEach { index ->
+                        this.context = IntNode(index)
+                        this.index = Index(max = indexes.size, value = index)
+                        when (val rhs = visit(ctx)) {
+                            is ArrayNode -> rhs.forEach {
+                                rs.add(it)
+                                parents[it] = context
+                            }
 
-                        else -> rhs?.let {
-                            rs.add(rhs)
-                            parents[rhs] = context
+                            else -> rhs?.let {
+                                rs.add(rhs)
+                                parents[rhs] = context
+                            }
                         }
                     }
                 }
 
                 else -> {
                     this.context = context
-                    this.index = index
+                    this.index = Index(max = lhs.size(), value = index)
                     when (val rhs = visit(ctx)) {
                         is ArrayNode -> rhs.forEach {
                             rs.add(it)
@@ -161,7 +163,7 @@ class Processor(
                 }
             }
         }
-        index = null
+        this.index = null
         return rs
     }
 
@@ -362,7 +364,7 @@ class Processor(
         val lhs = expand(visit(ctx.lhs))
         lhs.forEachIndexed { index, context ->
             this.context = context
-            this.index = index
+            this.index = Index(max = lhs.size(), value = index)
             val rhs = visit(ctx.rhs)
             expand(rhs).forEachIndexed { index, node ->
                 parents[node] = context
@@ -375,7 +377,7 @@ class Processor(
                 }
             }
         }
-        index = null
+        this.index = null
         variables.putAll(binds)
         return when (ctx.op.last().type) {
             JSong2Parser.AT -> {
@@ -486,11 +488,13 @@ class Processor(
 
     override fun visitVar(ctx: JSong2Parser.VarContext): JsonNode? {
         val id = sanitise(ctx.VAR_ID().text)
-        return when (val rs = variables[id]) {
+        val x = when (val rs = variables[id]) {
             is PositionNode -> rs.resolve(context)
-            is ContextNode -> rs.resolve(index)
+            is ContextNode ->
+                rs.resolve(index)
             else -> rs
         }
+        return x
     }
 
     override fun visitWildcard(ctx: JSong2Parser.WildcardContext): ArrayNode {

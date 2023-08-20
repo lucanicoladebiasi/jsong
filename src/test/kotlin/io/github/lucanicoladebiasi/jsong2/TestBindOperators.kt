@@ -104,28 +104,30 @@ class TestBindOperators {
         val LOANS = "loans"
         val BOOKS = "books"
         val expected = mapper.createArrayNode()
-        repeat(node[LIBRARY][LOANS].size() * node[LIBRARY][BOOKS].size()) {
-            expected.add(node[LIBRARY])
+        repeat(node[LIBRARY][LOANS].size()) {
+            repeat(node[LIBRARY][BOOKS].size()) {
+                expected.add(node[LIBRARY])
+            }
         }
         val actual = JSong(expression).evaluate(node)
         assertEquals(expected, actual)
     }
 
     @Test
-    @Disabled
     fun `Context variable binding - carry on twice and recall`() {
-//        val expression = "library.loans@\$L.books@\$B.{\"title\": \$B.title}"
-//        val actual = JSong(expression).evaluate(node)
-//        val loans = JSong("library.loans").evaluate(node)
-//        val expected = mapper.createArrayNode().let {
-//            for (i in 1..loans!!.size()) {
-//                titles.forEach { title ->
-//                    it.addObject().set<JsonNode>("title", title)
-//                }
-//            }
-//            it
-//        }
-//        assertEquals(expected, actual)
+        val expression = "library.loans@\$L.books@\$B.{\"title\": \$B.title}"
+        val LIBRARY = "library"
+        val LOANS = "loans"
+        val BOOKS = "books"
+        val TITLE = "title"
+        val expected = mapper.createArrayNode()
+        repeat(node[LIBRARY][LOANS].size()) {
+            node[LIBRARY][BOOKS].forEach { book ->
+                expected.addObject().set<JsonNode>("title", book[TITLE])
+            }
+        }
+        val actual = JSong(expression).evaluate(node)
+        assertEquals(expected, actual)
     }
 
     /**

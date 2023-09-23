@@ -8,7 +8,8 @@ class ContextNode(nf: JsonNodeFactory): ArrayNode(nf) {
 
     fun resolve(index: Index?): JsonNode? {
         if (index != null) {
-            return (this[index.value] as BindNode).value
+            val offset = index.value * size() / index.max
+            return (this[offset] as BindNode).value
         }
         return null
     }

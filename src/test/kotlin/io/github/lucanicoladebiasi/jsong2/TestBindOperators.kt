@@ -27,7 +27,6 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import kotlin.test.assertEquals
@@ -134,7 +133,6 @@ class TestBindOperators {
      * https://docs.jsonata.org/path-operators#-context-variable-binding
      */
     @Test
-    @Disabled
     fun `Context variable binding - join`() {
         val expression =
             "library.loans@\$L.books@\$B[\$L.isbn=\$B.isbn].{\"title\": \$B.title, \"customer\": \$L.customer}"

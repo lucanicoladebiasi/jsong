@@ -122,10 +122,10 @@ class Processor(
         return array
     }
 
-    @Suppress("NAME_SHADOWING")
     private fun map(lhs: ArrayNode, ctx: JSong2Parser.ExpContext): ArrayNode {
         val rs = ArrayNode(nf)
-        lhs.forEachIndexed { index, context ->
+        val index = this.index
+        lhs.forEachIndexed { i, context ->
             when (context) {
                 is RangeNode -> {
                     val indexes = context.indexes
@@ -148,7 +148,7 @@ class Processor(
 
                 else -> {
                     this.context = context
-                    this.index = Index(max = lhs.size(), value = index)
+                    this.index = Index(max = lhs.size(), value = i)
                     when (val rhs = visit(ctx)) {
                         is ArrayNode -> rhs.forEach {
                             rs.add(it)
@@ -163,7 +163,7 @@ class Processor(
                 }
             }
         }
-        this.index = null
+        this.index = index
         return rs
     }
 
@@ -277,23 +277,25 @@ class Processor(
 
     override fun visitFilter(ctx: JSong2Parser.FilterContext): ArrayNode {
         val rs = ArrayNode(nf)
+        val index = this.index
         val lhs = expand(visit(ctx.lhs))
-        lhs.forEachIndexed { index, context ->
+        lhs.forEachIndexed { i, context ->
             this.context = context
+            this.index = Index(max = lhs.size(), value = i)
             val rhs = expand(visit(ctx.rhs))
             rhs.forEach { argument ->
                 when (argument) {
                     is NumericNode -> {
                         val value = argument.asInt()
                         val offset = if (value < 0) lhs.size() + value else value
-                        if (index == offset) {
+                        if (i == offset) {
                             rs.add(context)
                         }
                     }
 
                     is RangeNode -> argument.indexes.forEach { value ->
                         val offset = if (value < 0) lhs.size() + value else value
-                        if (index == offset) {
+                        if (i == offset) {
                             rs.add(context)
                         }
                     }
@@ -304,6 +306,7 @@ class Processor(
                 }
             }
         }
+        this.index = index
         return rs
     }
 
@@ -362,6 +365,7 @@ class Processor(
         }
         val rs = ArrayNode(nf)
         val lhs = expand(visit(ctx.lhs))
+        val index = this.index
         lhs.forEachIndexed { index, context ->
             this.context = context
             this.index = Index(max = lhs.size(), value = index)
@@ -377,7 +381,7 @@ class Processor(
                 }
             }
         }
-        this.index = null
+        this.index = index
         variables.putAll(binds)
         return when (ctx.op.last().type) {
             JSong2Parser.AT -> {
@@ -488,13 +492,12 @@ class Processor(
 
     override fun visitVar(ctx: JSong2Parser.VarContext): JsonNode? {
         val id = sanitise(ctx.VAR_ID().text)
-        val x = when (val rs = variables[id]) {
+        return when(val rs = variables[id]) {
             is PositionNode -> rs.resolve(context)
             is ContextNode ->
                 rs.resolve(index)
             else -> rs
         }
-        return x
     }
 
     override fun visitWildcard(ctx: JSong2Parser.WildcardContext): ArrayNode {

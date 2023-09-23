@@ -6,9 +6,9 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory
 
 class ContextNode(nf: JsonNodeFactory): ArrayNode(nf) {
 
-    fun resolve(index: Index?): JsonNode? {
+    fun resolve(index: Int): JsonNode? {
         if (index != null) {
-            val offset = index.value * size() / index.max
+            val offset = index
             return (this[offset] as BindNode).value
         }
         return null

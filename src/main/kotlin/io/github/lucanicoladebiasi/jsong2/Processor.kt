@@ -88,7 +88,7 @@ class Processor(
 
     private var context: JsonNode? = root
 
-    private var index: Index? = null
+    private var index: Int? = null
 
     private var isToReduce = true
 
@@ -129,9 +129,9 @@ class Processor(
             when (context) {
                 is RangeNode -> {
                     val indexes = context.indexes
-                    indexes.forEach { index ->
-                        this.context = IntNode(index)
-                        this.index = Index(max = indexes.size, value = index)
+                    indexes.forEach { i ->
+                        this.context = IntNode(i)
+                        this.index = i
                         when (val rhs = visit(ctx)) {
                             is ArrayNode -> rhs.forEach {
                                 rs.add(it)
@@ -148,7 +148,7 @@ class Processor(
 
                 else -> {
                     this.context = context
-                    this.index = Index(max = lhs.size(), value = i)
+                    this.index = i
                     when (val rhs = visit(ctx)) {
                         is ArrayNode -> rhs.forEach {
                             rs.add(it)
@@ -281,7 +281,7 @@ class Processor(
         val lhs = expand(visit(ctx.lhs))
         lhs.forEachIndexed { i, context ->
             this.context = context
-            this.index = Index(max = lhs.size(), value = i)
+            this.index = i
             val rhs = expand(visit(ctx.rhs))
             rhs.forEach { argument ->
                 when (argument) {
@@ -353,7 +353,6 @@ class Processor(
         return map(expand(visit(ctx.lhs)), ctx.rhs)
     }
 
-    @Suppress("NAME_SHADOWING")
     override fun visitMapAndBind(ctx: JSong2Parser.MapAndBindContext): ArrayNode {
         val binds = mutableMapOf<String, ArrayNode>()
         ctx.op.forEachIndexed { index, op ->
@@ -366,9 +365,9 @@ class Processor(
         val rs = ArrayNode(nf)
         val lhs = expand(visit(ctx.lhs))
         val index = this.index
-        lhs.forEachIndexed { index, context ->
+        lhs.forEachIndexed { i, context ->
             this.context = context
-            this.index = Index(max = lhs.size(), value = index)
+            this.index = i
             val rhs = visit(ctx.rhs)
             expand(rhs).forEachIndexed { index, node ->
                 parents[node] = context
@@ -495,7 +494,7 @@ class Processor(
         return when(val rs = variables[id]) {
             is PositionNode -> rs.resolve(context)
             is ContextNode ->
-                rs.resolve(index)
+                rs.resolve(index!!)
             else -> rs
         }
     }

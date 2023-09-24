@@ -99,6 +99,10 @@ class Visitor(
         return result
     }
 
+    override fun visitContext(ctx: JSong2Parser.ContextContext): JsonNode? {
+        return context
+    }
+
     override fun visitFilter(ctx: JSong2Parser.FilterContext): ArrayNode {
         val result = mapper.createArrayNode()
         val lhs = expand(Visitor(context, mapper).visit(ctx.lhs), mapper)

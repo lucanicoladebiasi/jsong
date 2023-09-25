@@ -38,15 +38,15 @@ element :   exp | range;
 
 exp     :   '(' exp (';' exp?)* ')'                                 # block
         |   lhs = exp '~>' rhs = exp                                # chain
-        |   lhs = exp op = (AND | OR) rhs = exp                     # logic
         |   lhs = exp '[' rhs = exp ']'                             # filter
         |   lhs = exp '.' rhs = exp                                 # map
         |   lhs = exp '.' rhs = exp (op +=(AT | HASH) VAR_ID)*      # mapAndBind
-        |   lhs = exp op = (LT | LE | GE | GT | NE | EQ) rhs = exp  # compare
-        |   lhs = exp 'in' rhs = exp                                # include
         |   lhs = exp op = (MUL | DIV | MOD) rhs = exp              # mathMULorDIVorMOD
         |   lhs = exp op = (SUM | SUB) rhs = exp                    # mathSUMorSUB
         |   lhs = exp '&' rhs = exp                                 # concatenate
+        |   lhs = exp op = (LT | LE | GE | GT | NE | EQ) rhs = exp  # compare
+        |   lhs = exp 'in' rhs = exp                                # include
+        |   lhs = exp op = (AND | OR) rhs = exp                     # logic
         |   '{' field (',' field)* '}'                              # object
         |   '[' element (',' element)* ']'                          # array
         |   exp '[]'                                                # expand

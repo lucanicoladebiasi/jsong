@@ -12,12 +12,13 @@ class JSong(
     val expression: String,
     val mapper: ObjectMapper = ObjectMapper(),
     val mathContext: MathContext = MathContext.DECIMAL128,
+    val variables: MutableMap<String, JsonNode> = mutableMapOf()
 ) {
 
     private val parser = JSong2Parser(CommonTokenStream(JSong2Lexer(CharStreams.fromString(expression))))
 
     fun evaluate(node: JsonNode? = null): JsonNode? {
-        return Visitor(node, mapper, mathContext).visit(parser.jsong())
+        return Visitor(node, null, mapper, mathContext, variables).visit(parser.jsong())
     }
 
 } //~ JSong

@@ -19,8 +19,10 @@ import java.math.MathContext
 
 class Visitor(
     private val context: JsonNode?,
+    private val loop: Int?,
     private val mapper: ObjectMapper,
-    private val mathContext: MathContext
+    private val mathContext: MathContext,
+    private val variables: MutableMap<String, JsonNode>
 ) : JSong2BaseVisitor<JsonNode?>() {
 
     companion object {
@@ -32,7 +34,7 @@ class Visitor(
             }
         }
 
-        private fun expand(node: JsonNode?, mapper: ObjectMapper): ArrayNode {
+        private fun expand(mapper: ObjectMapper, node: JsonNode?): ArrayNode {
             val result = mapper.createArrayNode()
             if (node != null) when (node) {
                 is ArrayNode -> result.addAll(node)
@@ -40,6 +42,16 @@ class Visitor(
             }
             return result
         }
+
+//        private fun expose(index: Int, mapper: ObjectMapper, variables: Map<String, JsonNode>): MutableMap<String, JsonNode> {
+//            val map = mutableMapOf<String, JsonNode>()
+//            variables.forEach { (name, variable) ->
+//                when (variable) {
+//                    else -> map[name] =  expand(mapper, variable)[index]
+//                }
+//            }
+//            return map
+//        }
 
         private fun index(node: JsonNode?, max: Int, mapper: ObjectMapper): Set<Int> {
             val result = mutableSetOf<Int>()
@@ -61,7 +73,7 @@ class Visitor(
         }
 
         private fun predicate(node: JsonNode?): Boolean {
-            when(node) {
+            when (node) {
                 null -> return false
                 is ArrayNode -> {
                     node.forEach { element ->
@@ -70,6 +82,7 @@ class Visitor(
                     }
                     return false
                 }
+
                 is BooleanNode -> return node.booleanValue()
                 is NumericNode -> return node.decimalValue() != DecimalNode.ZERO
                 is ObjectNode -> return node.size() > 0
@@ -114,7 +127,7 @@ class Visitor(
     override fun visitArray(ctx: JSong2Parser.ArrayContext): ArrayNode {
         val result = mapper.createArrayNode()
         ctx.element().forEach { element ->
-            Visitor(context, mapper, mathContext).visit(element)?.let { result.add(it) }
+            Visitor(context, loop, mapper, mathContext, variables).visit(element)?.let { result.add(it) }
         }
         return result
     }
@@ -122,14 +135,14 @@ class Visitor(
     override fun visitBlock(ctx: JSong2Parser.BlockContext): JsonNode? {
         var result: JsonNode? = null
         ctx.exp().forEach { exp ->
-            result = Visitor(context, mapper, mathContext).visit(exp)
+            result = Visitor(context, loop, mapper, mathContext, variables).visit(exp)
         }
         return result
     }
 
     override fun visitCompare(ctx: JSong2Parser.CompareContext): BooleanNode {
-        val lhs = Visitor(context, mapper, mathContext).visit(ctx.lhs)
-        val rhs = Visitor(context, mapper, mathContext).visit(ctx.rhs)
+        val lhs = Visitor(context, loop, mapper, mathContext, variables).visit(ctx.lhs)
+        val rhs = Visitor(context, loop, mapper, mathContext, variables).visit(ctx.rhs)
         return if (lhs != null && rhs != null) {
             val comparison = compare(lhs, rhs)
             BooleanNode.valueOf(
@@ -152,9 +165,9 @@ class Visitor(
 
     override fun visitFilter(ctx: JSong2Parser.FilterContext): ArrayNode {
         val result = mapper.createArrayNode()
-        val lhs = expand(Visitor(context, mapper, mathContext).visit(ctx.lhs), mapper)
+        val lhs = expand(mapper, Visitor(context, loop, mapper, mathContext, variables).visit(ctx.lhs))
         lhs.forEachIndexed { index, context ->
-            val rhs = Visitor(context, mapper, mathContext).visit(ctx.rhs)
+            val rhs = Visitor(context, index, mapper, mathContext, variables).visit(ctx.rhs)
             val indexes = index(rhs, lhs.size(), mapper)
             if (indexes.isNotEmpty()) {
                 if (indexes.contains(index)) {
@@ -180,8 +193,8 @@ class Visitor(
     }
 
     override fun visitInclude(ctx: JSong2Parser.IncludeContext): BooleanNode {
-        val lhs = reduce(Visitor(context, mapper, mathContext).visit(ctx.lhs))
-        val rhs = expand( Visitor(context, mapper, mathContext).visit(ctx.rhs), mapper)
+        val lhs = reduce(Visitor(context, loop, mapper, mathContext, variables).visit(ctx.lhs))
+        val rhs = expand(mapper, Visitor(context, loop, mapper, mathContext, variables).visit(ctx.rhs))
         return BooleanNode.valueOf(rhs.contains(lhs))
     }
 
@@ -193,18 +206,19 @@ class Visitor(
 
     override fun visitMap(ctx: JSong2Parser.MapContext): ArrayNode {
         val result = mapper.createArrayNode()
-        val lhs = expand(Visitor(context, mapper, mathContext).visit(ctx.lhs), mapper)
-        lhs.forEach { context ->
-            when(context) {
-                is RangeNode -> context.indexes.forEach { index ->
-                    val rhs = Visitor(IntNode(index), mapper, mathContext).visit(ctx.rhs)
+        val lhs = expand(mapper, Visitor(context, loop, mapper, mathContext, variables).visit(ctx.lhs))
+        lhs.forEachIndexed { index, context ->
+            when (context) {
+                is RangeNode -> context.indexes.forEach { i ->
+                    val rhs = Visitor(IntNode(i), index, mapper, mathContext, variables).visit(ctx.rhs)
                     if (rhs != null) when (rhs) {
                         is ArrayNode -> result.addAll(rhs)
                         else -> result.add(rhs)
                     }
                 }
+
                 else -> {
-                    val rhs = Visitor(context, mapper, mathContext).visit(ctx.rhs)
+                    val rhs = Visitor(context, index, mapper, mathContext, variables).visit(ctx.rhs)
                     if (rhs != null) when (rhs) {
                         is ArrayNode -> result.addAll(rhs)
                         else -> result.add(rhs)
@@ -212,15 +226,31 @@ class Visitor(
                 }
             }
         }
+        if (ctx.op.isNotEmpty()) {
+            ctx.op.forEachIndexed { i, op ->
+                val id = sanitise(ctx.VAR_ID()[i].text)
+                when (op.type) {
+                    JSong2Parser.AT -> variables[id] = BindContextNode(mapper).addAll(result)
+                    JSong2Parser.HASH -> TODO()
+                }
+            }
+            if (ctx.op.last().type == JSong2Parser.AT) {
+                val carry = mapper.createArrayNode()
+                repeat(result.size() / lhs.size()) {
+                    carry.addAll(lhs)
+                }
+                return carry
+            }
+        }
         return result
     }
 
     override fun visitMathMULorDIVorMOD(ctx: JSong2Parser.MathMULorDIVorMODContext): DecimalNode {
-        val lhs = Visitor(context, mapper, mathContext).visit(ctx.lhs)
+        val lhs = Visitor(context, loop, mapper, mathContext, variables).visit(ctx.lhs)
         if (lhs != null && lhs.isNumber) {
-            val rhs = Visitor(context, mapper, mathContext).visit(ctx.rhs)
+            val rhs = Visitor(context, loop, mapper, mathContext, variables).visit(ctx.rhs)
             if (rhs != null && rhs.isNumber) {
-                val value = when(ctx.op.type) {
+                val value = when (ctx.op.type) {
                     JSong2Parser.MUL -> lhs.decimalValue().multiply(rhs.decimalValue())
                     JSong2Parser.DIV -> lhs.decimalValue().divide(rhs.decimalValue(), mathContext)
                     JSong2Parser.MOD -> lhs.decimalValue().remainder(rhs.decimalValue())
@@ -232,11 +262,11 @@ class Visitor(
     }
 
     override fun visitMathSUMorSUB(ctx: JSong2Parser.MathSUMorSUBContext): DecimalNode {
-        val lhs = Visitor(context, mapper, mathContext).visit(ctx.lhs)
+        val lhs = Visitor(context, loop, mapper, mathContext, variables).visit(ctx.lhs)
         if (lhs != null && lhs.isNumber) {
-            val rhs = Visitor(context, mapper, mathContext).visit(ctx.rhs)
+            val rhs = Visitor(context, loop, mapper, mathContext, variables).visit(ctx.rhs)
             if (rhs != null && rhs.isNumber) {
-                val value = when(ctx.op.type) {
+                val value = when (ctx.op.type) {
                     JSong2Parser.SUM -> lhs.decimalValue().add(rhs.decimalValue())
                     JSong2Parser.SUB -> lhs.decimalValue().subtract(rhs.decimalValue())
                     else -> throw UnsupportedOperationException("unknown operator in ${ctx.text} expression")
@@ -263,8 +293,10 @@ class Visitor(
     override fun visitObject(ctx: JSong2Parser.ObjectContext): ObjectNode {
         val result = mapper.createObjectNode()
         ctx.field().forEachIndexed { index, field ->
-            val key = Visitor(context, mapper, mathContext).visit(field.key)?.asText() ?: index.toString()
-            val value = Visitor(context, mapper, mathContext).visit(field.`val`) ?: NullNode.instance
+            val key = Visitor(context, loop, mapper, mathContext, variables).visit(field.key)?.asText()
+                ?: index.toString()
+            val value = Visitor(context, loop, mapper, mathContext, variables).visit(field.`val`)
+                ?: NullNode.instance
             result.set<JsonNode>(key, value)
         }
         return result
@@ -272,8 +304,10 @@ class Visitor(
 
     override fun visitRange(ctx: JSong2Parser.RangeContext): RangeNode {
         return RangeNode.between(
-            Visitor(context, mapper, mathContext).visit(ctx.min)?.decimalValue() ?: BigDecimal.ZERO,
-            Visitor(context, mapper, mathContext).visit(ctx.max)?.decimalValue() ?: BigDecimal.ZERO,
+            Visitor(context, loop, mapper, mathContext, variables).visit(ctx.min)?.decimalValue()
+                ?: BigDecimal.ZERO,
+            Visitor(context, loop, mapper, mathContext, variables).visit(ctx.max)?.decimalValue()
+                ?: BigDecimal.ZERO,
             mapper
         )
     }
@@ -284,6 +318,15 @@ class Visitor(
 
     override fun visitTrue(ctx: JSong2Parser.TrueContext?): BooleanNode {
         return BooleanNode.TRUE
+    }
+
+    override fun visitVar(ctx: JSong2Parser.VarContext): JsonNode? {
+        val id = sanitise(ctx.VAR_ID().text)
+        val result = variables[id]
+        if (loop != null) {
+            return expand(mapper, result)[loop]
+        }
+        return result
     }
 
 }//~ Visitor

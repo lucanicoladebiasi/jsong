@@ -160,7 +160,7 @@ class Visitor(
                 if (indexes.contains(index)) {
                     result.add(context)
                 }
-            } else if (predicate(context)) {
+            } else if (predicate(rhs)) {
                 result.add(context)
             }
         }

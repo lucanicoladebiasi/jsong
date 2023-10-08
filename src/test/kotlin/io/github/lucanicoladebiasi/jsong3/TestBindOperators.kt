@@ -164,6 +164,15 @@ class TestBindOperators {
         assertEquals(expected, actual)
     }
 
+    @Test
+    fun x() {
+        val expression =
+            "library.loans@\$L.books@\$B[\$L.isbn=\$B.isbn].{\"title\": \$B.title}"
+
+        val actual = JSong(expression).evaluate(node)
+        println(actual)
+    }
+
 }
 
 

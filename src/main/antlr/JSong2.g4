@@ -39,8 +39,8 @@ element :   exp | range;
 exp     :   '(' exp (';' exp?)* ')'                                 # block
         |   lhs = exp '~>' rhs = exp                                # chain
         |   lhs = exp '[' rhs = exp ']'                             # filter
-//        |   lhs = exp '.' rhs = exp                                 # map
-        |   lhs = exp '.' rhs = exp (op +=(AT | HASH) VAR_ID)*      # map //# mapAndBind
+        |   lhs = exp '.' rhs = exp                                 # map
+        |   lhs = exp '.' rhs = exp (op +=(AT | HASH) VAR_ID)*      # mapAndBind
         |   lhs = exp op = (MUL | DIV | MOD) rhs = exp              # mathMULorDIVorMOD
         |   lhs = exp op = (SUM | SUB) rhs = exp                    # mathSUMorSUB
         |   lhs = exp '&' rhs = exp                                 # concatenate

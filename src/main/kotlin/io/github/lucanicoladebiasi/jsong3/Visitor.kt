@@ -43,16 +43,6 @@ class Visitor(
             return result
         }
 
-//        private fun expose(index: Int, mapper: ObjectMapper, variables: Map<String, JsonNode>): MutableMap<String, JsonNode> {
-//            val map = mutableMapOf<String, JsonNode>()
-//            variables.forEach { (name, variable) ->
-//                when (variable) {
-//                    else -> map[name] =  expand(mapper, variable)[index]
-//                }
-//            }
-//            return map
-//        }
-
         private fun index(node: JsonNode?, max: Int, mapper: ObjectMapper): Set<Int> {
             val result = mutableSetOf<Int>()
             when (node) {
@@ -117,6 +107,26 @@ class Visitor(
             )
         }
 
+        private fun stretch(mapper: ObjectMapper, size: Int, variables: Map<String, JsonNode>): MutableMap<String, JsonNode> {
+            val map = mutableMapOf<String, JsonNode>()
+            variables.forEach { (name, variable) ->
+                when (variable) {
+                    is BindContextNode -> {
+                        val carry = BindContextNode(mapper)
+                        val ratio = size / variable.size()
+                        variable.forEach { element ->
+                            repeat(ratio) {
+                                carry.add(element)
+                            }
+                        }
+                        map[name] = carry
+                    }
+                    else -> map[name] = variable
+                }
+            }
+            return map
+        }
+
     } //~ companion
 
 
@@ -167,7 +177,8 @@ class Visitor(
         val result = mapper.createArrayNode()
         val lhs = expand(mapper, Visitor(context, loop, mapper, mathContext, variables).visit(ctx.lhs))
         lhs.forEachIndexed { index, context ->
-            val rhs = Visitor(context, index, mapper, mathContext, variables).visit(ctx.rhs)
+            val stretch = stretch(mapper, lhs.size(), variables)
+            val rhs = Visitor(context, index, mapper, mathContext, stretch).visit(ctx.rhs)
             val indexes = index(rhs, lhs.size(), mapper)
             if (indexes.isNotEmpty()) {
                 if (indexes.contains(index)) {
@@ -208,9 +219,10 @@ class Visitor(
         val result = mapper.createArrayNode()
         val lhs = expand(mapper, Visitor(context, loop, mapper, mathContext, variables).visit(ctx.lhs))
         lhs.forEachIndexed { index, context ->
+            val stretch = stretch(mapper, lhs.size(), variables)
             when (context) {
                 is RangeNode -> context.indexes.forEach { i ->
-                    val rhs = Visitor(IntNode(i), index, mapper, mathContext, variables).visit(ctx.rhs)
+                    val rhs = Visitor(IntNode(i), index, mapper, mathContext, stretch).visit(ctx.rhs)
                     if (rhs != null) when (rhs) {
                         is ArrayNode -> result.addAll(rhs)
                         else -> result.add(rhs)
@@ -218,7 +230,32 @@ class Visitor(
                 }
 
                 else -> {
-                    val rhs = Visitor(context, index, mapper, mathContext, variables).visit(ctx.rhs)
+                    val rhs = Visitor(context, index, mapper, mathContext, stretch).visit(ctx.rhs)
+                    if (rhs != null) when (rhs) {
+                        is ArrayNode -> result.addAll(rhs)
+                        else -> result.add(rhs)
+                    }
+                }
+            }
+        }
+        return result
+    }
+
+    override fun visitMapAndBind(ctx: JSong2Parser.MapAndBindContext): ArrayNode {
+        val result = mapper.createArrayNode()
+        val lhs = expand(mapper, Visitor(context, loop, mapper, mathContext, variables).visit(ctx.lhs))
+        lhs.forEachIndexed { index, context ->
+            when (context) {
+                is RangeNode -> context.indexes.forEach { i ->
+                    val rhs = Visitor(IntNode(i), index, mapper, mathContext, stretch(mapper, lhs.size(), variables)).visit(ctx.rhs)
+                    if (rhs != null) when (rhs) {
+                        is ArrayNode -> result.addAll(rhs)
+                        else -> result.add(rhs)
+                    }
+                }
+
+                else -> {
+                    val rhs = Visitor(context, index, mapper, mathContext, stretch(mapper, lhs.size(), variables)).visit(ctx.rhs)
                     if (rhs != null) when (rhs) {
                         is ArrayNode -> result.addAll(rhs)
                         else -> result.add(rhs)

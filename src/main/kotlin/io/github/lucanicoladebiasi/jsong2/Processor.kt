@@ -353,47 +353,47 @@ class Processor(
         return map(expand(visit(ctx.lhs)), ctx.rhs)
     }
 
-//    override fun visitMapAndBind(ctx: JSong2Parser.MapAndBindContext): ArrayNode {
-//        val binds = mutableMapOf<String, ArrayNode>()
-//        ctx.op.forEachIndexed { index, op ->
-//            val id = sanitise(ctx.VAR_ID()[index].text)
-//            when (op.type) {
-//                JSong2Parser.AT -> binds[id] = ContextNode(nf)
-//                JSong2Parser.HASH -> binds[id] = PositionNode(nf)
-//            }
-//        }
-//        val rs = ArrayNode(nf)
-//        val lhs = expand(visit(ctx.lhs))
-//        val index = this.index
-//        lhs.forEachIndexed { i, context ->
-//            this.context = context
-//            this.index = i
-//            val rhs = visit(ctx.rhs)
-//            expand(rhs).forEachIndexed { index, node ->
-//                parents[node] = context
-//                rs.add(node)
-//                binds.values.forEach { bind ->
-//                    when (bind) {
-//                        is PositionNode -> bind.add(BindNode(nf, IntNode(index), node))
-//                        is ContextNode -> bind.add(BindNode(nf, IntNode(index), node))
-//                    }
-//                }
-//            }
-//        }
-//        this.index = index
-//        variables.putAll(binds)
-//        return when (ctx.op.last().type) {
-//            JSong2Parser.AT -> {
-//                val carry = ArrayNode(nf)
-//                repeat(rs.size() / lhs.size()) {
-//                    carry.addAll(lhs)
-//                }
-//                carry
-//            }
-//
-//            else -> rs
-//        }
-//    }
+    override fun visitMapAndBind(ctx: JSong2Parser.MapAndBindContext): ArrayNode {
+        val binds = mutableMapOf<String, ArrayNode>()
+        ctx.op.forEachIndexed { index, op ->
+            val id = sanitise(ctx.VAR_ID()[index].text)
+            when (op.type) {
+                JSong2Parser.AT -> binds[id] = ContextNode(nf)
+                JSong2Parser.HASH -> binds[id] = PositionNode(nf)
+            }
+        }
+        val rs = ArrayNode(nf)
+        val lhs = expand(visit(ctx.lhs))
+        val index = this.index
+        lhs.forEachIndexed { i, context ->
+            this.context = context
+            this.index = i
+            val rhs = visit(ctx.rhs)
+            expand(rhs).forEachIndexed { index, node ->
+                parents[node] = context
+                rs.add(node)
+                binds.values.forEach { bind ->
+                    when (bind) {
+                        is PositionNode -> bind.add(BindNode(nf, IntNode(index), node))
+                        is ContextNode -> bind.add(BindNode(nf, IntNode(index), node))
+                    }
+                }
+            }
+        }
+        this.index = index
+        variables.putAll(binds)
+        return when (ctx.op.last().type) {
+            JSong2Parser.AT -> {
+                val carry = ArrayNode(nf)
+                repeat(rs.size() / lhs.size()) {
+                    carry.addAll(lhs)
+                }
+                carry
+            }
+
+            else -> rs
+        }
+    }
 
     override fun visitMathSUMorSUB(ctx: JSong2Parser.MathSUMorSUBContext): DecimalNode {
         val context = this.context

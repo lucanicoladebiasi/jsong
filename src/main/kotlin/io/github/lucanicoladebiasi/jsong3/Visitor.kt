@@ -55,25 +55,6 @@ class Visitor(
             return result
         }
 
-        private fun index(node: JsonNode?, max: Int, mapper: ObjectMapper): Set<Int> {
-            val result = mutableSetOf<Int>()
-            when (node) {
-                is ArrayNode -> node.forEach { element ->
-                    result.addAll(index(element, max, mapper))
-                }
-
-                is NumericNode -> {
-                    val value = node.asInt()
-                    result.add(if (value < 0) max + value else value)
-                }
-
-                is RangeNode -> node.indexes.forEach { value ->
-                    result.add(if (value < 0) max + value else value)
-                }
-            }
-            return result.sorted().toSet()
-        }
-
         private fun predicate(node: JsonNode?): Boolean {
             when (node) {
                 null -> return false
@@ -91,6 +72,15 @@ class Visitor(
                 is TextNode -> return node.textValue().isNotEmpty()
                 else -> return false
             }
+        }
+
+        private fun predicate(node: NumericNode, index: Int, size: Int): Boolean {
+            val v = node.asInt()
+            return index == if (v < 0) size + v else v
+        }
+
+        private fun predicate(node: RangeNode, index: Int, size: Int): Boolean {
+            return node.indexes.map { v -> if (v < 0) size + v else v }.contains(index)
         }
 
         private fun reduce(node: JsonNode?): JsonNode? {
@@ -204,8 +194,11 @@ class Visitor(
         val stretch = stretch(mapper, lhs.size(), variables)
         val predicates = Array(lhs.size()) { false }
         lhs.forEachIndexed { index, context ->
-            val rhs = Visitor(context, index, mapper, mathContext, stretch).visit(ctx.rhs)
-            predicates[index] = predicate(rhs)
+            when(val rhs = Visitor(context, index, mapper, mathContext, stretch).visit(ctx.rhs)) {
+                is NumericNode -> predicates[index] = predicate(rhs, index, lhs.size())
+                is RangeNode -> predicates[index] = predicate(rhs, index, lhs.size())
+                else -> predicates[index] = predicate(rhs)
+            }
         }
         stretch.forEach { (name, variable) ->
             when(variable) {

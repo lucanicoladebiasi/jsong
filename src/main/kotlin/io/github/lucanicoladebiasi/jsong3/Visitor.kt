@@ -43,6 +43,18 @@ class Visitor(
             return result
         }
 
+        private fun filter(mapper: ObjectMapper, predicates: Array<Boolean>, arrayNode: ArrayNode): ArrayNode {
+            val result = mapper.createArrayNode()
+            if (predicates.size == arrayNode.size()) {
+                predicates.forEachIndexed { index, predicate ->
+                    if (predicate) {
+                        result.add(arrayNode[index])
+                    }
+                }
+            } else TODO("exception not same size!")
+            return result
+        }
+
         private fun index(node: JsonNode?, max: Int, mapper: ObjectMapper): Set<Int> {
             val result = mutableSetOf<Int>()
             when (node) {
@@ -107,19 +119,23 @@ class Visitor(
             )
         }
 
+
         private fun stretch(mapper: ObjectMapper, size: Int, variables: Map<String, JsonNode>): MutableMap<String, JsonNode> {
             val map = mutableMapOf<String, JsonNode>()
             variables.forEach { (name, variable) ->
                 when (variable) {
                     is BindContextNode -> {
-                        val carry = BindContextNode(mapper)
-                        val ratio = size / variable.size()
-                        variable.forEach { element ->
-                            repeat(ratio) {
-                                carry.add(element)
+                        // todo check what if size < variable.size or not multiples
+                        if (size > variable.size()) {
+                            val carry = BindContextNode(mapper)
+                            val ratio = size / variable.size()
+                            variable.forEach { element ->
+                                repeat(ratio) {
+                                    carry.add(element)
+                                }
                             }
-                        }
-                        map[name] = carry
+                            map[name] = carry
+                        } else map[name] = variable
                     }
                     else -> map[name] = variable
                 }
@@ -173,22 +189,31 @@ class Visitor(
         return context
     }
 
+//            val indexes = index(rhs, lhs.size(), mapper) // todo check if filters and indexes are the same thing
+//            if (indexes.isNotEmpty()) {
+//                if (indexes.contains(index)) {
+//                    result.add(context)
+//                }
+//            } else if (predicate(rhs)) {
+//                filters.add(index)
+//                result.add(context)
+//            }
+
     override fun visitFilter(ctx: JSong2Parser.FilterContext): ArrayNode {
-        val result = mapper.createArrayNode()
         val lhs = expand(mapper, Visitor(context, loop, mapper, mathContext, variables).visit(ctx.lhs))
+        val stretch = stretch(mapper, lhs.size(), variables)
+        val predicates = Array(lhs.size()) { false }
         lhs.forEachIndexed { index, context ->
-            val stretch = stretch(mapper, lhs.size(), variables)
             val rhs = Visitor(context, index, mapper, mathContext, stretch).visit(ctx.rhs)
-            val indexes = index(rhs, lhs.size(), mapper)
-            if (indexes.isNotEmpty()) {
-                if (indexes.contains(index)) {
-                    result.add(context)
-                }
-            } else if (predicate(rhs)) {
-                result.add(context)
+            predicates[index] = predicate(rhs)
+        }
+        stretch.forEach { (name, variable) ->
+            when(variable) {
+                is BindContextNode -> variables[name] = BindContextNode(mapper).addAll(filter(mapper, predicates, variable))
+                else -> variables[name] = variable
             }
         }
-        return result
+        return filter(mapper, predicates, lhs)
     }
 
     override fun visitFalse(ctx: JSong2Parser.FalseContext): BooleanNode {

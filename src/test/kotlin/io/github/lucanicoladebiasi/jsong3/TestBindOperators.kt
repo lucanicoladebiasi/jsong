@@ -51,7 +51,6 @@ class TestBindOperators {
      * https://docs.jsonata.org/path-operators#-positional-variable-binding
      */
     @Test
-    @Disabled
     fun `Positional variable binding`() {
         val expression = "library.books#\$I[\"Kernighan\" in authors].{\"title\": title, \"index\": \$I }"
 
@@ -135,7 +134,6 @@ class TestBindOperators {
      * https://docs.jsonata.org/path-operators#-context-variable-binding
      */
     @Test
-    @Disabled
     fun `Context variable binding - join`() {
         val expression =
             "library.loans@\$L.books@\$B[\$L.isbn=\$B.isbn].{\"title\": \$B.title, \"customer\": \$L.customer}"
@@ -164,14 +162,6 @@ class TestBindOperators {
         assertEquals(expected, actual)
     }
 
-    @Test
-    fun x() {
-        val expression =
-            "library.loans@\$L.books@\$B[\$L.isbn=\$B.isbn].{\"title\": \$B.title}"
-
-        val actual = JSong(expression).evaluate(node)
-        println(actual)
-    }
 
 }
 

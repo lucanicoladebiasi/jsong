@@ -127,6 +127,18 @@ class Visitor(
                             map[name] = carry
                         } else map[name] = variable
                     }
+                    is BindPositionNode -> {
+                        // todo check what if size < variable.size or not multiples
+                        if (size > variable.size()) {
+                            val carry = BindPositionNode(mapper)
+                            val ratio = size / variable.size()
+                            variable.forEach { element ->
+                                repeat(ratio) {
+                                    carry.add(element)
+                                }
+                            }
+                        } else map[name] = variable
+                    }
                     else -> map[name] = variable
                 }
             }
@@ -179,16 +191,6 @@ class Visitor(
         return context
     }
 
-//            val indexes = index(rhs, lhs.size(), mapper) // todo check if filters and indexes are the same thing
-//            if (indexes.isNotEmpty()) {
-//                if (indexes.contains(index)) {
-//                    result.add(context)
-//                }
-//            } else if (predicate(rhs)) {
-//                filters.add(index)
-//                result.add(context)
-//            }
-
     override fun visitFilter(ctx: JSong2Parser.FilterContext): ArrayNode {
         val lhs = expand(mapper, Visitor(context, loop, mapper, mathContext, variables).visit(ctx.lhs))
         val stretch = stretch(mapper, lhs.size(), variables)
@@ -203,6 +205,7 @@ class Visitor(
         stretch.forEach { (name, variable) ->
             when(variable) {
                 is BindContextNode -> variables[name] = BindContextNode(mapper).addAll(filter(mapper, predicates, variable))
+                is BindPositionNode -> variables[name] = BindPositionNode(mapper).addAll(filter(mapper, predicates, variable))
                 else -> variables[name] = variable
             }
         }
@@ -286,7 +289,7 @@ class Visitor(
                 val id = sanitise(ctx.VAR_ID()[i].text)
                 when (op.type) {
                     JSong2Parser.AT -> variables[id] = BindContextNode(mapper).addAll(result)
-                    JSong2Parser.HASH -> TODO()
+                    JSong2Parser.HASH -> variables[id] = BindPositionNode(mapper).addAll(result)
                 }
             }
             if (ctx.op.last().type == JSong2Parser.AT) {
@@ -377,11 +380,13 @@ class Visitor(
 
     override fun visitVar(ctx: JSong2Parser.VarContext): JsonNode? {
         val id = sanitise(ctx.VAR_ID().text)
-        val result = variables[id]
-        if (loop != null) {
-            return expand(mapper, result)[loop]
+        val variable = if (loop != null) {
+            expand(mapper, variables[id])[loop]
+        } else variables[id]
+        return when(variable) {
+            is BindPositionNode.PositionNode -> variable.position
+            else -> variable
         }
-        return result
     }
 
 }//~ Visitor

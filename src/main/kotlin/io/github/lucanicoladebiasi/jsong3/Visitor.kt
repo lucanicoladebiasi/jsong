@@ -370,6 +370,18 @@ class Visitor(
         )
     }
 
+    override fun visitRegex(ctx: JSong2Parser.RegexContext): RegexNode {
+        return RegexNode.of(ctx.text)
+    }
+
+    override fun visitRegexCI(ctx: JSong2Parser.RegexCIContext): RegexNode {
+        return RegexNode.ci(ctx.text)
+    }
+
+    override fun visitRegexML(ctx: JSong2Parser.RegexMLContext): RegexNode {
+        return RegexNode.ml(ctx.text)
+    }
+
     override fun visitText(ctx: JSong2Parser.TextContext): TextNode {
         return TextNode(sanitise(ctx.STRING().text))
     }

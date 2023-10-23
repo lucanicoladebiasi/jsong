@@ -236,6 +236,17 @@ class Visitor(
         }
     }
 
+    override fun visitLogic(ctx: JSong2Parser.LogicContext): BooleanNode {
+        val lhs = predicate(reduce(Visitor(context, loop, mapper, mathContext, variables).visit(ctx.lhs)))
+        val rhs = predicate(reduce(Visitor(context, loop, mapper, mathContext, variables).visit(ctx.rhs)))
+        val boolean = when(ctx.op.type) {
+            JSong2Parser.AND -> lhs && rhs
+            JSong2Parser.OR -> lhs || rhs
+            else -> throw UnsupportedOperationException("unknown operator in ${ctx.text} expression")
+        }
+        return BooleanNode.valueOf(boolean)
+    }
+
     override fun visitMap(ctx: JSong2Parser.MapContext): ArrayNode {
         val result = mapper.createArrayNode()
         val lhs = expand(mapper, Visitor(context, loop, mapper, mathContext, variables).visit(ctx.lhs))

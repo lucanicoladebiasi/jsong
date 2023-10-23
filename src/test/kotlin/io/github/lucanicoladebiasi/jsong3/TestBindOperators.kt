@@ -27,7 +27,6 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import kotlin.test.assertEquals
@@ -160,6 +159,39 @@ class TestBindOperators {
 
         val actual = JSong(expression).evaluate(node)
         assertEquals(expected, actual)
+    }
+
+    @Test
+    fun `Context variable binding - join composition `() {
+        //val expression = "library.loans@\$L.books@\$B[\$L.isbn=\$B.isbn].customers[\$L.customer=id].{ 'customer': name, 'book': \$B.title, 'due': \$L.return }"
+        val expression = "library.loans@\$L.books@\$B[\$L.isbn=\$B.isbn].customers"
+
+        @Language("JSON")
+        val expected = mapper.readTree(
+            """
+            [
+              {
+                "customer": "Joe Doe",
+                "book": "Structure and Interpretation of Computer Programs",
+                "due": "2016-12-05"
+              },
+              {
+                 "customer": "Jason Arthur",
+                 "book": "Compilers: Principles, Techniques, and Tools",
+                 "due": "2016-10-22"
+               },
+               {
+                 "customer": "Jason Arthur",
+                 "book": "Structure and Interpretation of Computer Programs",
+                 "due": "2016-12-22"
+               }
+             ]
+            """.trimIndent()
+        )
+
+        val actual = JSong(expression).evaluate(node)
+        println(actual)
+       //assertEquals(expected, actual)
     }
 
 

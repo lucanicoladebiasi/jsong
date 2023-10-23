@@ -6,9 +6,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import java.math.BigDecimal
 
 class RangeNode(
+    mapper: ObjectMapper,
     min: DecimalNode,
-    max: DecimalNode,
-    mapper: ObjectMapper
+    max: DecimalNode
 ): ObjectNode(mapper.nodeFactory, mapOf<String, DecimalNode>(Pair(MAX_TAG, max), Pair(MIN_TAG, min))) {
 
     companion object {
@@ -22,7 +22,7 @@ class RangeNode(
             y: BigDecimal,
             mapper: ObjectMapper
         ): RangeNode {
-            return RangeNode(DecimalNode(x.min(y)), DecimalNode(x.max(y)), mapper)
+            return RangeNode(mapper, DecimalNode(x.min(y)), DecimalNode(x.max(y)))
         }
 
     } //~ companion

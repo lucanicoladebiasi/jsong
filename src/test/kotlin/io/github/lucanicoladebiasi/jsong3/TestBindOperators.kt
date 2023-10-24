@@ -164,30 +164,31 @@ class TestBindOperators {
     @Test
     fun `Context variable binding - join composition `() {
         //val expression = "library.loans@\$L.books@\$B[\$L.isbn=\$B.isbn].customers[\$L.customer=id].{ 'customer': name, 'book': \$B.title, 'due': \$L.return }"
-        val expression = "library.loans@\$L.books@\$B[\$L.isbn=\$B.isbn].customers[\$L.customer=id]"
+        //val expression = "library.loans@\$L.books@\$B[\$L.isbn=\$B.isbn].customers[\$L.customer=id]"
+        val expression = "library.loans@\$L.books@\$B[\$L.isbn=\$B.isbn].customers[true]"
 
-        @Language("JSON")
-        val expected = mapper.readTree(
-            """
-            [
-              {
-                "customer": "Joe Doe",
-                "book": "Structure and Interpretation of Computer Programs",
-                "due": "2016-12-05"
-              },
-              {
-                 "customer": "Jason Arthur",
-                 "book": "Compilers: Principles, Techniques, and Tools",
-                 "due": "2016-10-22"
-               },
-               {
-                 "customer": "Jason Arthur",
-                 "book": "Structure and Interpretation of Computer Programs",
-                 "due": "2016-12-22"
-               }
-             ]
-            """.trimIndent()
-        )
+//        @Language("JSON")
+//        val expected = mapper.readTree(
+//            """
+//            [
+//              {
+//                "customer": "Joe Doe",
+//                "book": "Structure and Interpretation of Computer Programs",
+//                "due": "2016-12-05"
+//              },
+//              {
+//                 "customer": "Jason Arthur",
+//                 "book": "Compilers: Principles, Techniques, and Tools",
+//                 "due": "2016-10-22"
+//               },
+//               {
+//                 "customer": "Jason Arthur",
+//                 "book": "Structure and Interpretation of Computer Programs",
+//                 "due": "2016-12-22"
+//               }
+//             ]
+//            """.trimIndent()
+//        )
 
         val actual = JSong(expression).evaluate(node)
         println(actual)

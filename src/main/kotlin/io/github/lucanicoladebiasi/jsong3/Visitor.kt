@@ -192,6 +192,7 @@ class Visitor(
     }
 
     override fun visitFilter(ctx: JSong2Parser.FilterContext): ArrayNode {
+        println("FILTER LHS = ${ctx.lhs.text} RHS = ${ctx.rhs.text}")
         val lhs = expand(mapper, Visitor(context, loop, mapper, mathContext, variables).visit(ctx.lhs))
         val stretch = stretch(mapper, lhs.size(), variables)
         val predicates = Array(lhs.size()) { false }
@@ -248,6 +249,7 @@ class Visitor(
     }
 
     override fun visitMap(ctx: JSong2Parser.MapContext): ArrayNode {
+        println("MAP LHS = ${ctx.lhs.text} RHS = ${ctx.rhs.text}")
         val result = mapper.createArrayNode()
         val lhs = expand(mapper, Visitor(context, loop, mapper, mathContext, variables).visit(ctx.lhs))
         lhs.forEachIndexed { index, context ->
@@ -274,6 +276,7 @@ class Visitor(
     }
 
     override fun visitMapAndBind(ctx: JSong2Parser.MapAndBindContext): ArrayNode {
+        println("BIND LHS = ${ctx.lhs.text} RHS = ${ctx.rhs.text}")
         val result = mapper.createArrayNode()
         val lhs = expand(mapper, Visitor(context, loop, mapper, mathContext, variables).visit(ctx.lhs))
         lhs.forEachIndexed { index, context ->

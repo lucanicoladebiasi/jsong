@@ -2,8 +2,8 @@ package io.github.lucanicoladebiasi.jsong3
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
-import io.github.lucanicoladebiasi.jsong.antlr.JSong2Lexer
-import io.github.lucanicoladebiasi.jsong.antlr.JSong2Parser
+import io.github.lucanicoladebiasi.jsong.antlr.JSong3Lexer
+import io.github.lucanicoladebiasi.jsong.antlr.JSong3Parser
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import java.math.MathContext
@@ -15,7 +15,7 @@ class JSong(
     val variables: MutableMap<String, JsonNode> = mutableMapOf()
 ) {
 
-    private val parser = JSong2Parser(CommonTokenStream(JSong2Lexer(CharStreams.fromString(expression))))
+    private val parser = JSong3Parser(CommonTokenStream(JSong3Lexer(CharStreams.fromString(expression))))
 
     fun evaluate(node: JsonNode? = null): JsonNode? {
         return Visitor(node, null, mapper, mathContext, variables).visit(parser.jsong())

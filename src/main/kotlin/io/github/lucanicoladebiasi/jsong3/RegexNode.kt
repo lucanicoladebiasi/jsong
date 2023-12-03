@@ -9,15 +9,15 @@ class RegexNode(
     companion object {
 
         fun ci(pattern: String): RegexNode {
-            return RegexNode(Regex(pattern.substring(1, pattern.length - 2), RegexOption.IGNORE_CASE))
+            return RegexNode(Regex(pattern, RegexOption.IGNORE_CASE))
         }
 
         fun ml(pattern: String): RegexNode {
-            return RegexNode(Regex(pattern.substring(1, pattern.length - 2), RegexOption.MULTILINE))
+            return RegexNode(Regex(pattern, RegexOption.MULTILINE))
         }
 
         fun of(pattern: String): RegexNode {
-            return RegexNode(Regex(pattern.substring(1, pattern.length - 1)))
+            return RegexNode(Regex(pattern))
         }
 
     } //~ companion

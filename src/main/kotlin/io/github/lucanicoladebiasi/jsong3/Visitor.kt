@@ -158,8 +158,8 @@ class Visitor(
 
     override fun visitArray(ctx: JSong3Parser.ArrayContext): JsonNode {
         val result = mapper.createArrayNode()
-        ctx.element().forEach { elementContext ->
-            Visitor(context, loop, mapper, mathContext, variables).visit(elementContext)?.let { element ->
+        ctx.element().forEach { elementCtx ->
+            Visitor(context, loop, mapper, mathContext, variables).visit(elementCtx)?.let { element ->
                 result.add(element)
             }
         }
@@ -191,8 +191,8 @@ class Visitor(
 
     override fun visitJsong(ctx: JSong3Parser.JsongContext): JsonNode? {
         var context = this.context
-        ctx.exp()?.forEach {  expContext ->
-            context = Visitor(context, loop, mapper, mathContext, variables).visit(expContext)
+        ctx.exp()?.forEach {  expCtx ->
+            context = Visitor(context, loop, mapper, mathContext, variables).visit(expCtx)
         }
         return reduce(context)
     }
@@ -207,10 +207,10 @@ class Visitor(
 
     override fun visitObject(ctx: JSong3Parser.ObjectContext): ObjectNode {
         val result = mapper.createObjectNode()
-        ctx.field().forEachIndexed { index, fieldContext ->
-            val key = reduce(Visitor(context, loop, mapper, mathContext, variables).visit(fieldContext.key))?.asText()
+        ctx.field().forEachIndexed { index, fieldCtx ->
+            val key = reduce(Visitor(context, loop, mapper, mathContext, variables).visit(fieldCtx.key))?.asText()
                 ?: index.toString()
-            val value = Visitor(context, loop, mapper, mathContext, variables).visit(fieldContext.`val`)
+            val value = Visitor(context, loop, mapper, mathContext, variables).visit(fieldCtx.`val`)
             result.set<JsonNode>(key, value)
         }
         return result
@@ -222,6 +222,15 @@ class Visitor(
         val rhs =
             NumericFunctions.decimalOf(reduce(Visitor(context, loop, mapper, mathContext, variables).visit(ctx.rhs)))
         return RangeNode.between(lhs, rhs, mapper)
+    }
+
+    override fun visitRegex(ctx: JSong3Parser.RegexContext): RegexNode {
+        val pattern = ctx.pattern().text
+        return when {
+            ctx.REG_CI() != null -> RegexNode.ci(pattern)
+            ctx.REG_ML() != null -> RegexNode.ml(pattern)
+            else -> RegexNode.of(pattern)
+        }
     }
 
     override fun visitText(ctx: JSong3Parser.TextContext): TextNode {

@@ -56,13 +56,14 @@ exp
 
 field   :   key = exp ':' val = exp;
 
-type    :   '[' element? (',' element)* ']' # array
-        |   '{' field? (',' field)* '}'     # object
-        |   STRING                          # text
-        |   NUMBER                          # number
-        |   FALSE                           # false
-        |   TRUE                            # true
-        |   NULL                            # null
+type    :   '[' element? (',' element)* ']'         # array
+        |   '{' field? (',' field)* '}'             # object
+        |   SLASH pattern (SLASH | REG_CI | REG_ML) # regex
+        |   STRING                                  # text
+        |   NUMBER                                  # number
+        |   FALSE                                   # false
+        |   TRUE                                    # true
+        |   NULL                                    # null
         ;
 
 path    :   PERCENT (DOT PERCENT)*  # parent
@@ -75,7 +76,7 @@ path    :   PERCENT (DOT PERCENT)*  # parent
 
 range  :   lhs = exp '..' rhs = exp;
 
-pattern : (~'/' | '\\' '/' '?')*;
+pattern :  (~'/' | '\\' '/' '?')*;
 
 // LEXER RULES
 
@@ -91,14 +92,18 @@ NE      : '!=';
 EQ      : '=';
 IN      : 'in';
 
-DOT     : '.';
-DOLLAR  : '$';
-SLASH   : '/';
-DASH    : '-';
-PERCENT : '%';
-STAR    : '*';
-PLUS    : '+';
 AMP     : '&';
+DASH    : '-';
+DOLLAR  : '$';
+DOT     : '.';
+PERCENT : '%';
+PLUS    : '+';
+SLASH   : '/';
+STAR    : '*';
+
+REG     : SLASH;
+REG_CI  : SLASH 'i';
+REG_ML  : SLASH 'm';
 
 FUNC    : ('function' | 'fun' | 'λ') ;
 

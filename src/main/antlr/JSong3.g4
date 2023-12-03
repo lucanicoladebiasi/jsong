@@ -30,58 +30,55 @@ grammar JSong3;
 
 // PARSER RULES
 
-jsong   :   exp? EOF;
+jsong   :   exp* EOF;
 
-args    : '(' (VAR_ID (',' VAR_ID)*)* ')';
+//args    : '(' (VAR_ID (',' VAR_ID)*)* ')';
 
 element :   exp | range;
 
-exp     :   '(' exp (';' exp?)* ')'                                                     # block
-        |   lhs = exp '~>' rhs = exp                                                    # chain
-        |   lhs = exp '[' prd = exp ']'                                                 # filter
-        |   lhs = exp '.' rhs = exp (op +=(AT | HASH) VAR_ID)* ('[' prd = exp ']')?     # map
-        |   lhs = exp op = (MUL | DIV | MOD) rhs = exp                                  # mathMULorDIVorMOD
-        |   lhs = exp op = (SUM | SUB) rhs = exp                                        # mathSUMorSUB
-        |   lhs = exp '&' rhs = exp                                                     # concatenate
-        |   lhs = exp op = (LT | LE | GE | GT | NE | EQ) rhs = exp                      # compare
-        |   lhs = exp 'in' rhs = exp                                                    # include
-        |   lhs = exp op = (AND | OR) rhs = exp                                         # logic
-        |   '{' field (',' field)* '}'                                                  # object
-        |   '[' element (',' element)* ']'                                              # array
-        |   exp '[]'                                                                    # expand
-        |   VAR_ID ':=' exp                                                             # assign
-        |   FUNC args '{' exp (',' exp)* '}'                                            # define
-        |   VAR_ID '(' (exp (',' exp)*)* ')'                                            # call
-        |   VAR_ID                                                                      # var
-        |   '/' pattern '/' 'i'                                                         # regexCI
-        |   '/' pattern '/' 'm'                                                         # regexML
-        |   '/' pattern '/'                                                             # regex
-        |   path                                                                        # select
-        |   type                                                                        # literal
+exp
+        :   '.' exp                                                         # map
+        |   '[' exp ']'                                                     # filter
+        |   lhs = exp op = (STAR | SLASH | PERCENT) rhs = exp               # evaluateMulDivMod
+        |   lhs = exp op = (PLUS | DASH) rhs = exp                          # evalSumSub
+        |   lhs = exp AMP rhs = exp                                         # concatuenatee
+        |   lhs = exp op = (LT | LE | GE | GT | NE | EQ | IN ) rhs = exp    # compare
+        |   lhs = exp (AND | OR) rhs = exp                                  # evalualeAndOr
+        |   DASH exp                                                        # evaluateNegate
+        |   AT VAR_ID                                                       # bindContext
+        |   HASH VAR_ID                                                     # bindPosition
+        |   VAR_ID                                                          # callVariable
+        |   path                                                            # select
+        |   type                                                            # literal
         ;
+
+//
 
 field   :   key = exp ':' val = exp;
 
-type    :   STRING          # text
-        |   SUB? NUMBER     # number
-        |   FALSE           # false
-        |   TRUE            # true
-        |   NULL            # null
+type    :   '[' element? (',' element)* ']' # array
+        |   '{' field? (',' field)* '}'     # object
+        |   STRING                          # text
+        |   NUMBER                          # number
+        |   FALSE                           # false
+        |   TRUE                            # true
+        |   NULL                            # null
         ;
 
-path    :   MOD ('.' MOD)*  # parent
-        |   '$$'            # root
-        |   '$'             # context
-        |   '*'             # wildcard
-        |   '**'            # descendants
-        |   ID              # id
+path    :   PERCENT (DOT PERCENT)*  # parent
+        |   DOLLAR DOLLAR           # root
+        |   DOLLAR                  # context
+        |   STAR                    # wildcard
+        |   STAR STAR               # descendants
+        |   ID                      # id
         ;
+
+range  :   lhs = exp '..' rhs = exp;
 
 pattern : (~'/' | '\\' '/' '?')*;
 
-range   : min = exp '..' max = exp;
-
 // LEXER RULES
+
 
 AT      : '@';
 HASH    : '#';
@@ -92,12 +89,16 @@ GT      : '>';
 GE      : '>=';
 NE      : '!=';
 EQ      : '=';
+IN      : 'in';
 
-DIV     : '/';
-SUB     : '-';
-MOD     : '%';
-MUL     : '*';
-SUM     : '+';
+DOT     : '.';
+DOLLAR  : '$';
+SLASH   : '/';
+DASH    : '-';
+PERCENT : '%';
+STAR    : '*';
+PLUS    : '+';
+AMP     : '&';
 
 FUNC    : ('function' | 'fun' | 'λ') ;
 

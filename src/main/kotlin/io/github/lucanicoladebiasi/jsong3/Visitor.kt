@@ -3,8 +3,10 @@ package io.github.lucanicoladebiasi.jsong3
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.*
+import io.github.lucanicoladebiasi.jsong.antlr.JSong2Parser
 import io.github.lucanicoladebiasi.jsong.antlr.JSong3BaseVisitor
 import io.github.lucanicoladebiasi.jsong.antlr.JSong3Parser
+import io.github.lucanicoladebiasi.jsong2.Processor
 import io.github.lucanicoladebiasi.jsong3.functions.NumericFunctions.Companion.decimalOf
 import io.github.lucanicoladebiasi.jsong3.functions.StringFunctions.Companion.stringOf
 import org.apache.commons.text.StringEscapeUtils
@@ -159,6 +161,25 @@ class Visitor(
             }
         }
         return result
+    }
+
+    override fun visitCompare(ctx: JSong3Parser.CompareContext): BooleanNode {
+        val lhs = reduce(Visitor(context).visit(ctx.lhs))
+        val rhs = reduce(Visitor(context).visit(ctx.rhs))
+        return if (lhs != null && rhs != null) {
+            val value = compare(lhs, rhs)
+            BooleanNode.valueOf(
+                when (ctx.op.type) {
+                    JSong2Parser.LT -> value < 0
+                    JSong2Parser.LE -> value <= 0
+                    JSong2Parser.GE -> value >= 0
+                    JSong2Parser.GT -> value > 0
+                    JSong2Parser.NE -> value != 0
+                    JSong2Parser.EQ -> value == 0
+                    else -> throw UnsupportedOperationException("unknown operator in ${ctx.text} expression")
+                }
+            )
+        } else BooleanNode.FALSE
     }
 
     override fun visitConcatenate(ctx: JSong3Parser.ConcatenateContext): TextNode {

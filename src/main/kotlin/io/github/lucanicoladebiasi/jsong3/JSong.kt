@@ -18,7 +18,7 @@ class JSong(
     private val parser = JSong3Parser(CommonTokenStream(JSong3Lexer(CharStreams.fromString(expression))))
 
     fun evaluate(node: JsonNode? = null): JsonNode? {
-        return Visitor(node, null, mapper, mathContext, variables).visit(parser.jsong())
+        return Visitor(Context(node, null, mapper, mathContext, variables)).visit(parser.jsong())
     }
 
 } //~ JSong

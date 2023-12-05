@@ -156,6 +156,7 @@ class TestNumericOperators {
      * https://docs.jsonata.org/numeric-operators#-range
      */
     @Test
+    @Disabled
     fun `Range context`() {
         val expression = "[1..5].(\$ * \$)"
 

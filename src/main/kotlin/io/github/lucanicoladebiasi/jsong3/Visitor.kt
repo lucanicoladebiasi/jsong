@@ -5,17 +5,12 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.*
 import io.github.lucanicoladebiasi.jsong.antlr.JSong3BaseVisitor
 import io.github.lucanicoladebiasi.jsong.antlr.JSong3Parser
-import io.github.lucanicoladebiasi.jsong3.functions.NumericFunctions
+import io.github.lucanicoladebiasi.jsong3.functions.NumericFunctions.Companion.decimalOf
+import io.github.lucanicoladebiasi.jsong3.functions.StringFunctions.Companion.stringOf
 import org.apache.commons.text.StringEscapeUtils
-import java.lang.IllegalArgumentException
-import java.math.MathContext
 
 class Visitor(
-    private val context: JsonNode?,
-    private val loop: Int?,
-    private val mapper: ObjectMapper,
-    private val mathContext: MathContext,
-    private val variables: MutableMap<String, JsonNode>
+    private val context: Context
 ) : JSong3BaseVisitor<JsonNode?>() {
 
     companion object {
@@ -157,23 +152,55 @@ class Visitor(
     } //~ companion
 
     override fun visitArray(ctx: JSong3Parser.ArrayContext): JsonNode {
-        val result = mapper.createArrayNode()
+        val result = context.mapper.createArrayNode()
         ctx.element().forEach { elementCtx ->
-            Visitor(context, loop, mapper, mathContext, variables).visit(elementCtx)?.let { element ->
+            Visitor(context).visit(elementCtx)?.let { element ->
                 result.add(element)
             }
         }
         return result
     }
 
-    @Throws(IllegalArgumentException::class)
-    override fun visitEvaluateNegate(ctx: JSong3Parser.EvaluateNegateContext): DecimalNode {
+    override fun visitConcatenate(ctx: JSong3Parser.ConcatenateContext): TextNode {
+        val writer = context.mapper.writer()
+        val lhs = stringOf(reduce(Visitor(context).visit(ctx.lhs)), writer)
+        val rhs = stringOf(reduce(Visitor(context).visit(ctx.rhs)), writer)
+        return TextNode(lhs.plus(rhs))
+    }
+
+    override fun visitContext(ctx: JSong3Parser.ContextContext): ArrayNode {
+        return expand(context.mapper, context.node)
+    }
+
+    @Throws(UnsupportedOperationException::class)
+    override fun visitEvalMulDivMod(ctx: JSong3Parser.EvalMulDivModContext): DecimalNode {
+        val lhs = decimalOf(reduce(Visitor(context).visit(ctx.lhs)))
+        val rhs = decimalOf(reduce(Visitor(context).visit(ctx.rhs)))
         return DecimalNode(
-            NumericFunctions.decimalOf(
-                reduce(
-                    Visitor(context, loop, mapper, mathContext, variables).visit(ctx.exp())
-                )
-            ).negate()
+            when (ctx.op.type) {
+                JSong3Parser.PERCENT -> lhs.remainder(rhs)
+                JSong3Parser.SLASH -> lhs.divide(rhs, context.mathContext)
+                JSong3Parser.STAR -> lhs.multiply(rhs)
+                else -> throw UnsupportedOperationException("unknown operator in ${ctx.text} expression")
+            }
+        )
+    }
+
+    @Throws(IllegalArgumentException::class)
+    override fun visitEvalNegate(ctx: JSong3Parser.EvalNegateContext): DecimalNode {
+        return DecimalNode(decimalOf(reduce(Visitor(context).visit(ctx.exp()))).negate())
+    }
+
+    @Throws(UnsupportedOperationException::class)
+    override fun visitEvalSumSub(ctx: JSong3Parser.EvalSumSubContext): DecimalNode {
+        val lhs = decimalOf(reduce(Visitor(context).visit(ctx.lhs)))
+        val rhs = decimalOf(reduce(Visitor(context).visit(ctx.rhs)))
+        return DecimalNode(
+            when (ctx.op.type) {
+                JSong3Parser.DASH -> lhs.subtract(rhs)
+                JSong3Parser.PLUS -> lhs.add(rhs)
+                else -> throw UnsupportedOperationException("unknown operator in ${ctx.text} expression")
+            }
         )
     }
 
@@ -183,18 +210,18 @@ class Visitor(
 
     override fun visitId(ctx: JSong3Parser.IdContext): JsonNode? {
         val fieldName = sanitise(ctx.ID().text)
-        return if (context is ObjectNode && context.has(fieldName)) {
-            context[fieldName]
+        return if (context.node is ObjectNode && context.node.has(fieldName)) {
+            context.node[fieldName]
         } else
             null
     }
 
     override fun visitJsong(ctx: JSong3Parser.JsongContext): JsonNode? {
-        var context = this.context
-        ctx.exp()?.forEach {  expCtx ->
-            context = Visitor(context, loop, mapper, mathContext, variables).visit(expCtx)
+        var result = context.node
+        ctx.exp()?.forEach { expCtx ->
+            result = Visitor(context).visit(expCtx)
         }
-        return reduce(context)
+        return reduce(result)
     }
 
     override fun visitNull(ctx: JSong3Parser.NullContext?): NullNode {
@@ -206,22 +233,20 @@ class Visitor(
     }
 
     override fun visitObject(ctx: JSong3Parser.ObjectContext): ObjectNode {
-        val result = mapper.createObjectNode()
+        val result = context.mapper.createObjectNode()
         ctx.field().forEachIndexed { index, fieldCtx ->
-            val key = reduce(Visitor(context, loop, mapper, mathContext, variables).visit(fieldCtx.key))?.asText()
+            val key = reduce(Visitor(context).visit(fieldCtx.key))?.asText()
                 ?: index.toString()
-            val value = Visitor(context, loop, mapper, mathContext, variables).visit(fieldCtx.`val`)
+            val value = Visitor(context).visit(fieldCtx.`val`)
             result.set<JsonNode>(key, value)
         }
         return result
     }
 
     override fun visitRange(ctx: JSong3Parser.RangeContext): RangeNode {
-        val lhs =
-            NumericFunctions.decimalOf(reduce(Visitor(context, loop, mapper, mathContext, variables).visit(ctx.lhs)))
-        val rhs =
-            NumericFunctions.decimalOf(reduce(Visitor(context, loop, mapper, mathContext, variables).visit(ctx.rhs)))
-        return RangeNode.between(lhs, rhs, mapper)
+        val lhs = decimalOf(reduce(Visitor(context).visit(ctx.lhs)))
+        val rhs = decimalOf(reduce(Visitor(context).visit(ctx.rhs)))
+        return RangeNode.between(lhs, rhs, context.mapper)
     }
 
     override fun visitRegex(ctx: JSong3Parser.RegexContext): RegexNode {

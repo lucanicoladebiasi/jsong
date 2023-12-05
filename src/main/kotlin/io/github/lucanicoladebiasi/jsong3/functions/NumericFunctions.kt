@@ -35,7 +35,7 @@ class NumericFunctions {
                         else -> txt.toBigDecimal()
                     }
                 }
-                else -> throw IllegalArgumentException("not a number ")
+                else -> throw IllegalArgumentException("arg $node is not a number")
 
                 // --5
             }
@@ -43,4 +43,4 @@ class NumericFunctions {
 
     } //~ companion
 
-}
+} //~ NumericFunctions

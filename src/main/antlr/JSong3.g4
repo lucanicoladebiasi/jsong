@@ -43,7 +43,7 @@ exp
         |   lhs = exp op = (PLUS | DASH) rhs = exp                          # evalSumSub
         |   lhs = exp AMP rhs = exp                                         # concatenate
         |   lhs = exp op = (LT | LE | GE | GT | NE | EQ | IN ) rhs = exp    # compare
-        |   lhs = exp (AND | OR) rhs = exp                                  # evalAndOr
+        |   lhs = exp op = (AND | OR) rhs = exp                             # evalAndOr
         |   DASH exp                                                        # evalNegate
         |   AT VAR_ID                                                       # bindContext
         |   HASH VAR_ID                                                     # bindPosition

@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.node.*
 import io.github.lucanicoladebiasi.jsong.antlr.JSong2Parser
 import io.github.lucanicoladebiasi.jsong.antlr.JSong3BaseVisitor
 import io.github.lucanicoladebiasi.jsong.antlr.JSong3Parser
-import io.github.lucanicoladebiasi.jsong2.Processor
+import io.github.lucanicoladebiasi.jsong3.functions.BooleanFunctions.Companion.booleanOf
 import io.github.lucanicoladebiasi.jsong3.functions.NumericFunctions.Companion.decimalOf
 import io.github.lucanicoladebiasi.jsong3.functions.StringFunctions.Companion.stringOf
 import org.apache.commons.text.StringEscapeUtils
@@ -16,13 +16,6 @@ class Visitor(
 ) : JSong3BaseVisitor<JsonNode?>() {
 
     companion object {
-
-        private fun compare(lhs: JsonNode, rhs: JsonNode): Int {
-            return when {
-                lhs.isNumber && rhs.isNumber -> lhs.decimalValue().compareTo(rhs.decimalValue())
-                else -> lhs.textValue().compareTo(rhs.textValue())
-            }
-        }
 
         private fun expand(mapper: ObjectMapper, node: JsonNode?): ArrayNode {
             val result = mapper.createArrayNode()
@@ -153,6 +146,14 @@ class Visitor(
 
     } //~ companion
 
+    private fun compare(lhs: JsonNode, rhs: JsonNode): Int {
+        val writer = context.mapper.writer()
+        return when {
+            lhs.isNumber && rhs.isNumber -> lhs.decimalValue().compareTo(rhs.decimalValue())
+            else -> stringOf(lhs, writer).compareTo(stringOf(rhs, writer))
+        }
+    }
+
     override fun visitArray(ctx: JSong3Parser.ArrayContext): JsonNode {
         val result = context.mapper.createArrayNode()
         ctx.element().forEach { elementCtx ->
@@ -191,6 +192,18 @@ class Visitor(
 
     override fun visitContext(ctx: JSong3Parser.ContextContext): ArrayNode {
         return expand(context.mapper, context.node)
+    }
+
+    override fun visitEvalAndOr(ctx: JSong3Parser.EvalAndOrContext): BooleanNode {
+        val lhs = booleanOf(reduce(Visitor(context).visit(ctx.lhs)))
+        val rhs = booleanOf(reduce(Visitor(context).visit(ctx.rhs)))
+        return BooleanNode.valueOf(
+            when (ctx.op.type) {
+                JSong3Parser.AND -> lhs && rhs
+                JSong3Parser.OR -> lhs || rhs
+                else -> throw UnsupportedOperationException("unknown operator in ${ctx.text} expression")
+            }
+        )
     }
 
     @Throws(UnsupportedOperationException::class)

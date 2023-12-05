@@ -67,4 +67,5 @@ class TestBooleanOperators {
         val actual = JSong(expression).evaluate(node)
         assertNull(actual)
     }
+
 }

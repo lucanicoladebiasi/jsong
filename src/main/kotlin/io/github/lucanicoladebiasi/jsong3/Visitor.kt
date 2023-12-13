@@ -105,8 +105,8 @@ class Visitor(
         return TextNode(lhs.plus(rhs))
     }
 
-    override fun visitContext(ctx: JSong3Parser.ContextContext): ArrayNode {
-        return expand(context.node)
+    override fun visitContext(ctx: JSong3Parser.ContextContext): JsonNode? {
+        return context.node
     }
 
     override fun visitEvalAndOr(ctx: JSong3Parser.EvalAndOrContext): BooleanNode {
@@ -178,9 +178,9 @@ class Visitor(
         expand(context.node).forEachIndexed { index, node ->
             Visitor(Context(node, index, context)).visit(ctx.exp())?.let { exp ->
                 when (val ctxPredicate = ctx.predicate()) {
-                    null -> result.add(exp)
+                    null -> if (exp is ArrayNode) result.addAll(exp) else result.add(exp)
                     else -> reduce(Visitor(Context(exp, index, context)).visit(ctxPredicate))?.let { element ->
-                        result.add(element)
+                        if (element is ArrayNode) result.addAll(element) else result.add(element)
                     }
                 }
             }
@@ -215,16 +215,18 @@ class Visitor(
                 when (predicate) {
                     is ArrayNode -> {
                         val indexes = RangeNode.indexes(predicate)
-                        when(indexes.isNotEmpty()) {
+                        when (indexes.isNotEmpty()) {
                             true -> if (indexes.contains(index)) result.add(node)
                             else -> TODO()
                         }
                     }
+
                     is NumericNode -> {
                         val position = predicate.asInt()
                         val offset = if (position < 0) size + position else position
                         if (index == offset) result.add(node)
                     }
+
                     else -> TODO()
                 }
             }

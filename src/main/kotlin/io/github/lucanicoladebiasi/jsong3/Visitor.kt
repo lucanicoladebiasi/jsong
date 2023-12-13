@@ -222,7 +222,7 @@ class Visitor(
                         val indexes = RangeNode.indexes(predicate)
                         when (indexes.isNotEmpty()) {
                             true -> if (indexes.contains(index)) result.add(node)
-                            else -> TODO()
+                            else -> if (booleanOf(predicate)) result.add(node)
                         }
                     }
 
@@ -232,7 +232,7 @@ class Visitor(
                         if (index == offset) result.add(node)
                     }
 
-                    else -> TODO()
+                    else -> if (booleanOf(predicate)) result.add(node)
                 }
             }
         }

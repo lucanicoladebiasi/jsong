@@ -39,7 +39,8 @@ element:
         exp | range;
 
 exp:
-        '.' exp predicate?                                              # map
+        '(' exp (';' exp?)* ')'                                         # block
+    |   '.' exp predicate?                                              # map
     |   lhs = exp op = (STAR | SLASH | PERCENT) rhs = exp               # evalMulDivMod
     |   lhs = exp op = (PLUS | DASH) rhs = exp                          # evalSumSub
     |   lhs = exp AMP rhs = exp                                         # concatenate

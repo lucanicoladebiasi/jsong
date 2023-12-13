@@ -71,6 +71,14 @@ class Visitor(
         return result
     }
 
+    override fun visitBlock(ctx: JSong3Parser.BlockContext): JsonNode? {
+        var exp = context.node
+        ctx.exp()?.forEach { ctxExp ->
+            exp = Visitor(Context(exp, null, context)).visit(ctxExp)
+        }
+        return reduce(exp)
+    }
+
     override fun visitCompare(ctx: JSong3Parser.CompareContext): BooleanNode {
         val lhs = reduce(Visitor(context).visit(ctx.lhs))
         val rhs = reduce(Visitor(context).visit(ctx.rhs))

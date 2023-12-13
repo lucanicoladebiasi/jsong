@@ -1,7 +1,6 @@
 package io.github.lucanicoladebiasi.jsong3
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.*
 import io.github.lucanicoladebiasi.jsong.antlr.JSong2Parser
 import io.github.lucanicoladebiasi.jsong.antlr.JSong3BaseVisitor
@@ -16,55 +15,6 @@ class Visitor(
 ) : JSong3BaseVisitor<JsonNode?>() {
 
     companion object {
-
-        private fun expand(mapper: ObjectMapper, node: JsonNode?): ArrayNode {
-            val result = mapper.createArrayNode()
-            if (node != null) when (node) {
-                is ArrayNode -> result.addAll(node)
-                else -> result.add(node)
-            }
-            return result
-        }
-
-        private fun filter(mapper: ObjectMapper, predicates: Array<Boolean>, arrayNode: ArrayNode): ArrayNode {
-            val result = mapper.createArrayNode()
-            if (predicates.size == arrayNode.size()) {
-                predicates.forEachIndexed { index, predicate ->
-                    if (predicate) {
-                        result.add(arrayNode[index])
-                    }
-                }
-            } else TODO("exception not same size!")
-            return result
-        }
-
-        private fun predicate(node: JsonNode?): Boolean {
-            when (node) {
-                null -> return false
-                is ArrayNode -> {
-                    node.forEach { element ->
-                        if (predicate(element))
-                            return true
-                    }
-                    return false
-                }
-
-                is BooleanNode -> return node.booleanValue()
-                is NumericNode -> return node.decimalValue() != DecimalNode.ZERO
-                is ObjectNode -> return node.size() > 0
-                is TextNode -> return node.textValue().isNotEmpty()
-                else -> return false
-            }
-        }
-
-        private fun predicate(node: NumericNode, index: Int, size: Int): Boolean {
-            val v = node.asInt()
-            return index == if (v < 0) size + v else v
-        }
-
-        private fun predicate(node: RangeNode, index: Int, size: Int): Boolean {
-            return node.indexes.map { v -> if (v < 0) size + v else v }.contains(index)
-        }
 
         private fun reduce(node: JsonNode?): JsonNode? {
             return when (node) {
@@ -92,58 +42,6 @@ class Visitor(
             )
         }
 
-
-        private fun stretch(mapper: ObjectMapper, size: Int, node: JsonNode): ArrayNode {
-            val result = mapper.createArrayNode()
-            val array = expand(mapper, node)
-            repeat(size / array.size()) {
-                result.addAll(array)
-            }
-            return result
-        }
-
-
-        private fun stretch(
-            mapper: ObjectMapper,
-            size: Int,
-            variables: Map<String, JsonNode>
-        ): MutableMap<String, JsonNode> {
-            val map = mutableMapOf<String, JsonNode>()
-            variables.forEach { (name, variable) ->
-                when (variable) {
-                    is BindContextNode -> {
-                        // todo check what if size < variable.size or not multiples
-                        if (size > variable.size()) {
-                            val carry = BindContextNode(mapper)
-                            val ratio = size / variable.size()
-                            variable.forEach { element ->
-                                repeat(ratio) {
-                                    carry.add(element)
-                                }
-                            }
-                            map[name] = carry
-                        } else map[name] = variable
-                    }
-
-                    is BindPositionNode -> {
-                        // todo check what if size < variable.size or not multiples
-                        if (size > variable.size()) {
-                            val carry = BindPositionNode(mapper)
-                            val ratio = size / variable.size()
-                            variable.forEach { element ->
-                                repeat(ratio) {
-                                    carry.add(element)
-                                }
-                            }
-                        } else map[name] = variable
-                    }
-
-                    else -> map[name] = variable
-                }
-            }
-            return map
-        }
-
     } //~ companion
 
     private fun compare(lhs: JsonNode, rhs: JsonNode): Int {
@@ -154,10 +52,19 @@ class Visitor(
         }
     }
 
-    override fun visitArray(ctx: JSong3Parser.ArrayContext): JsonNode {
-        val result = context.mapper.createArrayNode()
-        ctx.element().forEach { elementCtx ->
-            Visitor(context).visit(elementCtx)?.let { element ->
+    private fun expand(node: JsonNode?): ArrayNode {
+        val result = context.createArrayNode()
+        if (node != null) when (node) {
+            is ArrayNode -> result.addAll(node)
+            else -> result.add(node)
+        }
+        return result
+    }
+
+    override fun visitArray(ctx: JSong3Parser.ArrayContext): ArrayNode {
+        val result = context.createArrayNode()
+        ctx.element().forEach { ctxElement ->
+            Visitor(context).visit(ctxElement)?.let { element ->
                 result.add(element)
             }
         }
@@ -191,7 +98,7 @@ class Visitor(
     }
 
     override fun visitContext(ctx: JSong3Parser.ContextContext): ArrayNode {
-        return expand(context.mapper, context.node)
+        return expand(context.node)
     }
 
     override fun visitEvalAndOr(ctx: JSong3Parser.EvalAndOrContext): BooleanNode {
@@ -251,11 +158,26 @@ class Visitor(
     }
 
     override fun visitJsong(ctx: JSong3Parser.JsongContext): JsonNode? {
-        var result = context.node
-        ctx.exp()?.forEach { expCtx ->
-            result = Visitor(context).visit(expCtx)
+        var exp = context.node
+        ctx.exp()?.forEach { ctxExp ->
+            exp = Visitor(Context(exp, null, context)).visit(ctxExp)
         }
-        return reduce(result)
+        return reduce(exp)
+    }
+
+    override fun visitMap(ctx: JSong3Parser.MapContext): ArrayNode {
+        val result = context.createArrayNode()
+        expand(context.node).forEachIndexed { index, node ->
+            Visitor(Context(node, index, context)).visit(ctx.exp())?.let { exp ->
+                when (val ctxPredicate = ctx.predicate()) {
+                    null -> result.add(exp)
+                    else -> reduce(Visitor(Context(exp, index, context)).visit(ctxPredicate))?.let { element ->
+                        result.add(element)
+                    }
+                }
+            }
+        }
+        return result
     }
 
     override fun visitNull(ctx: JSong3Parser.NullContext?): NullNode {
@@ -267,12 +189,31 @@ class Visitor(
     }
 
     override fun visitObject(ctx: JSong3Parser.ObjectContext): ObjectNode {
-        val result = context.mapper.createObjectNode()
+        val result = context.createObjectNode()
         ctx.field().forEachIndexed { index, fieldCtx ->
-            val key = reduce(Visitor(context).visit(fieldCtx.key))?.asText()
-                ?: index.toString()
+            val key = reduce(Visitor(context).visit(fieldCtx.key))?.asText() ?: index.toString()
             val value = Visitor(context).visit(fieldCtx.`val`)
             result.set<JsonNode>(key, value)
+        }
+        return result
+    }
+
+    override fun visitPredicate(ctx: JSong3Parser.PredicateContext): ArrayNode {
+        val result = context.createArrayNode()
+        val sequence = expand(context.node)
+        val size = sequence.size()
+        sequence.forEachIndexed { index, node ->
+            Visitor(Context(node, index, context)).visit(ctx.exp())?.let { predicate ->
+                when {
+                    predicate.isNumber -> {
+                        val position = predicate.asInt()
+                        val offset = if (position < 0) size + position else position
+                        if (index == offset) result.add(node)
+                    }
+
+                    else -> TODO()
+                }
+            }
         }
         return result
     }
@@ -300,5 +241,4 @@ class Visitor(
         return BooleanNode.TRUE
     }
 
-
-}//~ Visitor
+} //~ Visitor

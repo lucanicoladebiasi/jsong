@@ -30,56 +30,65 @@ grammar JSong3;
 
 // PARSER RULES
 
-jsong   :   exp* EOF;
+jsong:
+        exp* EOF;
 
 //args    : '(' (VAR_ID (',' VAR_ID)*)* ')';
 
-element :   exp | range;
+element:
+        exp | range;
 
-exp
-        :   '.' exp                                                         # map
-        |   '[' exp ']'                                                     # filter
-        |   lhs = exp op = (STAR | SLASH | PERCENT) rhs = exp               # evalMulDivMod
-        |   lhs = exp op = (PLUS | DASH) rhs = exp                          # evalSumSub
-        |   lhs = exp AMP rhs = exp                                         # concatenate
-        |   lhs = exp op = (LT | LE | GE | GT | NE | EQ | IN ) rhs = exp    # compare
-        |   lhs = exp op = (AND | OR) rhs = exp                             # evalAndOr
-        |   DASH exp                                                        # evalNegate
-        |   AT VAR_ID                                                       # bindContext
-        |   HASH VAR_ID                                                     # bindPosition
-        |   VAR_ID                                                          # callVariable
-        |   path                                                            # select
-        |   type                                                            # literal
-        ;
+exp:
+        '.' exp predicate?                                              # map
+    |   lhs = exp op = (STAR | SLASH | PERCENT) rhs = exp               # evalMulDivMod
+    |   lhs = exp op = (PLUS | DASH) rhs = exp                          # evalSumSub
+    |   lhs = exp AMP rhs = exp                                         # concatenate
+    |   lhs = exp op = (LT | LE | GE | GT | NE | EQ | IN ) rhs = exp    # compare
+    |   lhs = exp op = (AND | OR) rhs = exp                             # evalAndOr
+    |   DASH exp                                                        # evalNegate
+    |   AT VAR_ID                                                       # bindContext
+    |   HASH VAR_ID                                                     # bindPosition
+    |   VAR_ID                                                          # callVariable
+    |   predicate                                                       # filter
+    |   path                                                            # select
+    |   type                                                            # literal
+    ;
 
-//
 
-field   :   key = exp ':' val = exp;
+field:
+        key = exp ':' val = exp;
 
-type    :   '[' element? (',' element)* ']'         # array
-        |   '{' field? (',' field)* '}'             # object
-        |   SLASH pattern (SLASH | REG_CI | REG_ML) # regex
-        |   STRING                                  # text
-        |   NUMBER                                  # number
-        |   FALSE                                   # false
-        |   TRUE                                    # true
-        |   NULL                                    # null
-        ;
+predicate:
+        '[' exp ']';
 
-path    :   PERCENT (DOT PERCENT)*  # parent
-        |   DOLLAR DOLLAR           # root
-        |   DOLLAR                  # context
-        |   STAR                    # wildcard
-        |   STAR STAR               # descendants
-        |   ID                      # id
-        ;
+type :
+        '[' element? (',' element)* ']'         # array
+    |   '{' field? (',' field)* '}'             # object
+    |   SLASH pattern (SLASH | REG_CI | REG_ML) # regex
+    |   STRING                                  # text
+    |   NUMBER                                  # number
+    |   FALSE                                   # false
+    |   TRUE                                    # true
+    |   NULL                                    # null
+    ;
 
-range  :   lhs = exp '..' rhs = exp;
+path
+    :   PERCENT (DOT PERCENT)*  # parent
+    |   DOLLAR DOLLAR           # root
+    |   DOLLAR                  # context
+    |   STAR                    # wildcard
+    |   STAR STAR               # descendants
+    |   ID                      # id
+    ;
 
-pattern :  (~'/' | '\\' '/' '?')*;
+range
+    :   lhs = exp '..' rhs = exp;
+
+pattern
+    :  (~'/' | '\\' '/' '?')*;
+
 
 // LEXER RULES
-
 
 AT      : '@';
 HASH    : '#';

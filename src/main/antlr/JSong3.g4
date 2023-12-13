@@ -39,20 +39,21 @@ element:
         exp | range;
 
 exp:
-        '(' exp (';' exp?)* ')'                                         # block
-    |   '.' exp predicate?                                              # map
-    |   lhs = exp op = (STAR | SLASH | PERCENT) rhs = exp               # evalMulDivMod
-    |   lhs = exp op = (PLUS | DASH) rhs = exp                          # evalSumSub
-    |   lhs = exp AMP rhs = exp                                         # concatenate
-    |   lhs = exp op = (LT | LE | GE | GT | NE | EQ | IN ) rhs = exp    # compare
-    |   lhs = exp op = (AND | OR) rhs = exp                             # evalAndOr
-    |   DASH exp                                                        # evalNegate
-    |   AT VAR_ID                                                       # bindContext
-    |   HASH VAR_ID                                                     # bindPosition
-    |   VAR_ID                                                          # callVariable
-    |   predicate                                                       # filter
-    |   path                                                            # select
-    |   type                                                            # literal
+        '(' exp (';' exp?)* ')'                                 # block
+    |   '.' exp predicate?                                      # map
+    |   lhs = exp op = (STAR | SLASH | PERCENT) rhs = exp       # evalMulDivMod
+    |   lhs = exp op = (PLUS | DASH) rhs = exp                  # evalSumSub
+    |   lhs = exp AMP rhs = exp                                 # concatenate
+    |   lhs = exp op = (LT | LE | GE | GT | NE | EQ) rhs = exp  # compare
+    |   lhs = exp IN rhs = exp                                  # include
+    |   lhs = exp op = (AND | OR) rhs = exp                     # evalAndOr
+    |   DASH exp                                                # evalNegate
+    |   AT VAR_ID                                               # bindContext
+    |   HASH VAR_ID                                             # bindPosition
+    |   VAR_ID                                                  # callVariable
+    |   predicate                                               # filter
+    |   path                                                    # select
+    |   type                                                    # literal
     ;
 
 

@@ -2,7 +2,6 @@ package io.github.lucanicoladebiasi.jsong3
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.*
-import io.github.lucanicoladebiasi.jsong.antlr.JSong2Parser
 import io.github.lucanicoladebiasi.jsong.antlr.JSong3BaseVisitor
 import io.github.lucanicoladebiasi.jsong.antlr.JSong3Parser
 import io.github.lucanicoladebiasi.jsong3.functions.BooleanFunctions.Companion.booleanOf
@@ -86,12 +85,12 @@ class Visitor(
             val value = compare(lhs, rhs)
             BooleanNode.valueOf(
                 when (ctx.op.type) {
-                    JSong2Parser.LT -> value < 0
-                    JSong2Parser.LE -> value <= 0
-                    JSong2Parser.GE -> value >= 0
-                    JSong2Parser.GT -> value > 0
-                    JSong2Parser.NE -> value != 0
-                    JSong2Parser.EQ -> value == 0
+                    JSong3Parser.LT -> value < 0
+                    JSong3Parser.LE -> value <= 0
+                    JSong3Parser.GE -> value >= 0
+                    JSong3Parser.GT -> value > 0
+                    JSong3Parser.NE -> value != 0
+                    JSong3Parser.EQ -> value == 0
                     else -> throw UnsupportedOperationException("unknown operator in ${ctx.text} expression")
                 }
             )
@@ -163,6 +162,12 @@ class Visitor(
             context.node[fieldName]
         } else
             null
+    }
+
+    override fun visitInclude(ctx: JSong3Parser.IncludeContext): BooleanNode {
+        val lhs = reduce(Visitor(context).visit(ctx.lhs))
+        val rhs = expand(Visitor(context).visit(ctx.rhs))
+        return BooleanNode.valueOf(rhs.contains(lhs))
     }
 
     override fun visitJsong(ctx: JSong3Parser.JsongContext): JsonNode? {

@@ -212,13 +212,19 @@ class Visitor(
         val size = sequence.size()
         sequence.forEachIndexed { index, node ->
             Visitor(Context(node, index, context)).visit(ctx.exp())?.let { predicate ->
-                when {
-                    predicate.isNumber -> {
+                when (predicate) {
+                    is ArrayNode -> {
+                        val indexes = RangeNode.indexes(predicate)
+                        when(indexes.isNotEmpty()) {
+                            true -> if (indexes.contains(index)) result.add(node)
+                            else -> TODO()
+                        }
+                    }
+                    is NumericNode -> {
                         val position = predicate.asInt()
                         val offset = if (position < 0) size + position else position
                         if (index == offset) result.add(node)
                     }
-
                     else -> TODO()
                 }
             }

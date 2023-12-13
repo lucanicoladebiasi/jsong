@@ -1,7 +1,10 @@
 package io.github.lucanicoladebiasi.jsong3
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.DecimalNode
+import com.fasterxml.jackson.databind.node.NumericNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import java.math.BigDecimal
 
@@ -9,7 +12,7 @@ class RangeNode(
     mapper: ObjectMapper,
     min: DecimalNode,
     max: DecimalNode
-): ObjectNode(mapper.nodeFactory, mapOf<String, DecimalNode>(Pair(MAX_TAG, max), Pair(MIN_TAG, min))) {
+) : ObjectNode(mapper.nodeFactory, mapOf<String, DecimalNode>(Pair(MAX_TAG, max), Pair(MIN_TAG, min))) {
 
     companion object {
 
@@ -25,9 +28,21 @@ class RangeNode(
             return RangeNode(mapper, DecimalNode(x.min(y)), DecimalNode(x.max(y)))
         }
 
+        fun indexes(node: JsonNode?): Set<Int> {
+            val indexes = mutableSetOf<Int>()
+            when (node) {
+                is ArrayNode -> node.forEach { element ->
+                    indexes.addAll(indexes(element))
+                }
+                is NumericNode -> indexes.add(node.intValue())
+                is RangeNode -> indexes.addAll(node.indexes)
+            }
+            return indexes.sorted().toSet()
+        }
+
     } //~ companion
 
-    val indexes: Set<Int> get() = (min.asInt() .. max.asInt()).toSet()
+    val indexes: Set<Int> get() = (min.asInt()..max.asInt()).toSet()
 
     val max get() = (this[MAX_TAG] as DecimalNode)
 

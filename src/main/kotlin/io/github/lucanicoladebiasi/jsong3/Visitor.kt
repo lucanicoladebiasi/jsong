@@ -78,7 +78,34 @@ class Visitor(
         return reduce(exp)
     }
 
-    override fun visitCompare(ctx: JSong3Parser.CompareContext): BooleanNode {
+    override fun visitCallVariable(ctx: JSong3Parser.CallVariableContext): JsonNode? {
+        val id = sanitise(ctx.ID().text)
+        return when(val result = context.variables[id]) {
+            is BindPositionNode -> when(context.loop != null) {
+                true -> result.get(context.loop.index)
+                else -> result
+            }
+            else -> result
+        }
+    }
+
+    override fun visitContext(ctx: JSong3Parser.ContextContext): JsonNode? {
+        return context.node
+    }
+
+    override fun visitEvalAndOr(ctx: JSong3Parser.EvalAndOrContext): BooleanNode {
+        val lhs = booleanOf(reduce(Visitor(context).visit(ctx.lhs)))
+        val rhs = booleanOf(reduce(Visitor(context).visit(ctx.rhs)))
+        return BooleanNode.valueOf(
+            when (ctx.op.type) {
+                JSong3Parser.AND -> lhs && rhs
+                JSong3Parser.OR -> lhs || rhs
+                else -> throw UnsupportedOperationException("unknown operator in ${ctx.text} expression")
+            }
+        )
+    }
+
+    override fun visitEvalCompare(ctx: JSong3Parser.EvalCompareContext): BooleanNode {
         val lhs = reduce(Visitor(context).visit(ctx.lhs))
         val rhs = reduce(Visitor(context).visit(ctx.rhs))
         return if (lhs != null && rhs != null) {
@@ -97,27 +124,11 @@ class Visitor(
         } else BooleanNode.FALSE
     }
 
-    override fun visitConcatenate(ctx: JSong3Parser.ConcatenateContext): TextNode {
+    override fun visitEvalConcat(ctx: JSong3Parser.EvalConcatContext): TextNode {
         val writer = context.mapper.writer()
         val lhs = stringOf(reduce(Visitor(context).visit(ctx.lhs)), writer)
         val rhs = stringOf(reduce(Visitor(context).visit(ctx.rhs)), writer)
         return TextNode(lhs.plus(rhs))
-    }
-
-    override fun visitContext(ctx: JSong3Parser.ContextContext): JsonNode? {
-        return context.node
-    }
-
-    override fun visitEvalAndOr(ctx: JSong3Parser.EvalAndOrContext): BooleanNode {
-        val lhs = booleanOf(reduce(Visitor(context).visit(ctx.lhs)))
-        val rhs = booleanOf(reduce(Visitor(context).visit(ctx.rhs)))
-        return BooleanNode.valueOf(
-            when (ctx.op.type) {
-                JSong3Parser.AND -> lhs && rhs
-                JSong3Parser.OR -> lhs || rhs
-                else -> throw UnsupportedOperationException("unknown operator in ${ctx.text} expression")
-            }
-        )
     }
 
     @Throws(UnsupportedOperationException::class)
@@ -152,6 +163,12 @@ class Visitor(
         )
     }
 
+    override fun visitEvalIncusion(ctx: JSong3Parser.EvalIncusionContext): BooleanNode {
+        val lhs = reduce(Visitor(context).visit(ctx.lhs))
+        val rhs = expand(Visitor(context).visit(ctx.rhs))
+        return BooleanNode.valueOf(rhs.contains(lhs))
+    }
+
     override fun visitFalse(ctx: JSong3Parser.FalseContext): BooleanNode {
         return BooleanNode.FALSE
     }
@@ -164,12 +181,6 @@ class Visitor(
             null
     }
 
-    override fun visitInclude(ctx: JSong3Parser.IncludeContext): BooleanNode {
-        val lhs = reduce(Visitor(context).visit(ctx.lhs))
-        val rhs = expand(Visitor(context).visit(ctx.rhs))
-        return BooleanNode.valueOf(rhs.contains(lhs))
-    }
-
     override fun visitJsong(ctx: JSong3Parser.JsongContext): JsonNode? {
         var exp = context.node
         ctx.exp()?.forEach { ctxExp ->
@@ -180,11 +191,23 @@ class Visitor(
 
     override fun visitMap(ctx: JSong3Parser.MapContext): ArrayNode {
         val result = context.createArrayNode()
+        val sequence = expand(context.node)
+        val loop = Context.Loop(sequence.size())
         expand(context.node).forEachIndexed { index, node ->
-            Visitor(Context(node, index, context)).visit(ctx.exp())?.let { exp ->
+            Visitor(Context(node, loop.at(index), context)).visit(ctx.exp())?.let { exp ->
+                ctx.bind().forEach { ctxBind ->
+                    val id = sanitise(ctxBind.ID().text)
+                    when (ctxBind.op.type) {
+                        JSong3Parser.AT -> TODO()
+                        JSong3Parser.HASH -> (context.variables.getOrDefault(
+                            id,
+                            BindPositionNode(context.mapper)
+                        ) as BindPositionNode).set(loop.index, exp)
+                    }
+                }
                 when (val ctxPredicate = ctx.predicate()) {
                     null -> if (exp is ArrayNode) result.addAll(exp) else result.add(exp)
-                    else -> reduce(Visitor(Context(exp, index, context)).visit(ctxPredicate))?.let { element ->
+                    else -> reduce(Visitor(Context(exp, loop, context)).visit(ctxPredicate))?.let { element ->
                         if (element is ArrayNode) result.addAll(element) else result.add(element)
                     }
                 }
@@ -214,9 +237,9 @@ class Visitor(
     override fun visitPredicate(ctx: JSong3Parser.PredicateContext): ArrayNode {
         val result = context.createArrayNode()
         val sequence = expand(context.node)
-        val size = sequence.size()
+        val loop = Context.Loop(sequence.size())
         sequence.forEachIndexed { index, node ->
-            Visitor(Context(node, index, context)).visit(ctx.exp())?.let { predicate ->
+            Visitor(Context(node, loop.at(index), context)).visit(ctx.exp())?.let { predicate ->
                 when (predicate) {
                     is ArrayNode -> {
                         val indexes = RangeNode.indexes(predicate)
@@ -228,7 +251,7 @@ class Visitor(
 
                     is NumericNode -> {
                         val position = predicate.asInt()
-                        val offset = if (position < 0) size + position else position
+                        val offset = if (position < 0) loop.size + position else position
                         if (index == offset) result.add(node)
                     }
 

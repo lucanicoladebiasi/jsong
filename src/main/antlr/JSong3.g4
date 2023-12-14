@@ -35,22 +35,25 @@ jsong:
 
 //args    : '(' (VAR_ID (',' VAR_ID)*)* ')';
 
+bind:
+        op = (AT | HASH) DOLLAR ID;
+
 element:
         exp | range;
 
 exp:
         '(' exp (';' exp?)* ')'                                 # block
-    |   '.' exp predicate?                                      # map
+    |   '.' exp (bind)* predicate?                              # map
     |   lhs = exp op = (STAR | SLASH | PERCENT) rhs = exp       # evalMulDivMod
     |   lhs = exp op = (PLUS | DASH) rhs = exp                  # evalSumSub
-    |   lhs = exp AMP rhs = exp                                 # concatenate
-    |   lhs = exp op = (LT | LE | GE | GT | NE | EQ) rhs = exp  # compare
-    |   lhs = exp IN rhs = exp                                  # include
+    |   lhs = exp AMP rhs = exp                                 # evalConcat
+    |   lhs = exp op = (LT | LE | GE | GT | NE | EQ) rhs = exp  # evalCompare
+    |   lhs = exp IN rhs = exp                                  # evalIncusion
     |   lhs = exp op = (AND | OR) rhs = exp                     # evalAndOr
     |   DASH exp                                                # evalNegate
-    |   AT VAR_ID                                               # bindContext
-    |   HASH VAR_ID                                             # bindPosition
-    |   VAR_ID                                                  # callVariable
+    |   AT DOLLAR ID                                            # bindContext
+    |   HASH DOLLAR ID                                          # bindPosition
+    |   DOLLAR ID                                               # callVariable
     |   predicate                                               # filter
     |   path                                                    # select
     |   type                                                    # literal
@@ -125,8 +128,6 @@ OR      : 'or';
 
 FALSE   : 'false';
 TRUE    : 'true';
-
-VAR_ID  : '$' ID;
 
 ID      : [\p{L}_] [\p{L}0-9_]*
 	    | BACK_QUOTE ~[`]* BACK_QUOTE;

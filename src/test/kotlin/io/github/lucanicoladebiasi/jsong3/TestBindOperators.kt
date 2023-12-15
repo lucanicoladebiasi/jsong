@@ -51,7 +51,6 @@ class TestBindOperators {
      * https://docs.jsonata.org/path-operators#-positional-variable-binding
      */
     @Test
-    @Disabled
     fun `Positional variable binding`() {
         val expression = "library.books#\$I[\"Kernighan\" in authors].{\"title\": title, \"index\": \$I }"
 

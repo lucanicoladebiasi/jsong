@@ -35,15 +35,18 @@ jsong:
 
 //args    : '(' (VAR_ID (',' VAR_ID)*)* ')';
 
-bind:
-        op = (AT | HASH) DOLLAR ID;
+bind_context:
+        op = AT DOLLAR ID;
+
+bind_position:
+        op = HASH DOLLAR ID;
 
 element:
         exp | range;
 
 exp:
         '(' exp (';' exp?)* ')'                                 # block
-    |   '.' exp (bind)* predicate?                              # map
+    |   '.' exp bind_position? bind_context? predicate?         # map
     |   lhs = exp op = (STAR | SLASH | PERCENT) rhs = exp       # evalMulDivMod
     |   lhs = exp op = (PLUS | DASH) rhs = exp                  # evalSumSub
     |   lhs = exp AMP rhs = exp                                 # evalConcat
@@ -54,7 +57,7 @@ exp:
     |   AT DOLLAR ID                                            # bindContext
     |   HASH DOLLAR ID                                          # bindPosition
     |   DOLLAR ID                                               # callVariable
-    |   predicate                                               # filter
+    |   predicate bind_position?                                # filter
     |   path                                                    # select
     |   type                                                    # literal
     ;

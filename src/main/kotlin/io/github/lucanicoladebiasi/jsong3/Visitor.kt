@@ -196,14 +196,19 @@ class Visitor(
         val loop = Context.Loop(sequence.size())
         expand(context.node).forEachIndexed { index, node ->
             Visitor(Context(node, loop.at(index), context)).visit(ctx.exp())?.let { exp ->
-                when {
-                    ctx.bind_position() != null -> {
-                        val id = sanitise(ctx.bind_position().ID().text)
-                        context.variables[id] = (context.variables.getOrDefault(
-                            id,
-                            BindPositionNode(context.mapper)
-                        ) as BindPositionNode).add(exp)
-                    }
+                if (ctx.bind_position() != null) {
+                    val id = sanitise(ctx.bind_position().ID().text)
+                    context.variables[id] = (context.variables.getOrDefault(
+                        id,
+                        BindPositionNode(context.mapper)
+                    ) as BindPositionNode).add(exp)
+                }
+                if (ctx.bind_context() != null) {
+                    val id = sanitise(ctx.bind_context().ID().text)
+                    context.variables[id] = (context.variables.getOrDefault(
+                        id,
+                        BindContextNode(context.mapper)
+                    ) as BindContextNode).add(exp)
                 }
                 when (val ctxPredicate = ctx.predicate()) {
                     null -> if (exp is ArrayNode) result.addAll(exp) else result.add(exp)
@@ -213,7 +218,13 @@ class Visitor(
                 }
             }
         }
-        return result
+        return if (ctx.bind_context() != null) {
+            val carryover = context.createArrayNode()
+            if (context.node != null) repeat(result.size()) {
+                carryover.add(context.node)
+            }
+            carryover
+        } else result
     }
 
     override fun visitNull(ctx: JSong3Parser.NullContext?): NullNode {

@@ -75,7 +75,6 @@ class TestBindOperators {
 
 
     @Test
-    @Disabled
     fun `Context variable binding - carry on once`() {
         val expression = "library.loans@\$L"
         val LIBRARY = "library"

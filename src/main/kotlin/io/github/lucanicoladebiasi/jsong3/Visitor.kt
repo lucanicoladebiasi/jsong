@@ -80,11 +80,12 @@ class Visitor(
 
     override fun visitCallVariable(ctx: JSong3Parser.CallVariableContext): JsonNode? {
         val id = sanitise(ctx.ID().text)
-        return when(val result = context.variables[id]) {
-            is BindPositionNode -> when(context.loop != null) {
-                true -> result.get(context.loop.index)
+        return when (val result = context.variables[id]) {
+            is BindPositionNode -> when (context.loop != null) {
+                true -> result.get(context.node)
                 else -> result
             }
+
             else -> result
         }
     }
@@ -199,10 +200,10 @@ class Visitor(
                     val id = sanitise(ctxBind.ID().text)
                     when (ctxBind.op.type) {
                         JSong3Parser.AT -> TODO()
-                        JSong3Parser.HASH -> (context.variables.getOrDefault(
+                        JSong3Parser.HASH -> context.variables[id] = (context.variables.getOrDefault(
                             id,
                             BindPositionNode(context.mapper)
-                        ) as BindPositionNode).set(loop.index, exp)
+                        ) as BindPositionNode).add(exp)
                     }
                 }
                 when (val ctxPredicate = ctx.predicate()) {

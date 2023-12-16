@@ -88,7 +88,6 @@ class TestBindOperators {
     }
 
     @Test
-    @Disabled
     fun `Context variable binding - carry on once and recall`() {
         val expression = "library.loans@\$L.\$L"
         val LIBRARY = "library"
@@ -99,7 +98,6 @@ class TestBindOperators {
     }
 
     @Test
-    @Disabled
     fun `Context variable binding - carry on twice`() {
         val expression = "library.loans@\$L.books@\$B"
         val LIBRARY = "library"

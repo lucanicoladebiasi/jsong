@@ -246,7 +246,7 @@ class Visitor(
         val result = context.createObjectNode()
         ctx.field().forEachIndexed { index, fieldCtx ->
             val key = reduce(Visitor(context).visit(fieldCtx.key))?.asText() ?: index.toString()
-            val value = Visitor(context).visit(fieldCtx.`val`)
+            val value = reduce(Visitor(context).visit(fieldCtx.`val`))
             result.set<JsonNode>(key, value)
         }
         return result

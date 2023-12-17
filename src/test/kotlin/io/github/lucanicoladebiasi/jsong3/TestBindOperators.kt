@@ -114,7 +114,6 @@ class TestBindOperators {
     }
 
     @Test
-    @Disabled
     fun `Context variable binding - carry on twice and recall`() {
         val expression = "library.loans@\$L.books@\$B.{\"title\": \$B.title}"
         val LIBRARY = "library"

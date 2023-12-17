@@ -45,21 +45,19 @@ element:
         exp | range;
 
 exp:
-        '(' exp (';' exp?)* ')'                                 # block
-    |   '.' exp bind_position? bind_context? predicate?         # map
-    |   lhs = exp op = (STAR | SLASH | PERCENT) rhs = exp       # evalMulDivMod
-    |   lhs = exp op = (PLUS | DASH) rhs = exp                  # evalSumSub
-    |   lhs = exp AMP rhs = exp                                 # evalConcat
-    |   lhs = exp op = (LT | LE | GE | GT | NE | EQ) rhs = exp  # evalCompare
-    |   lhs = exp IN rhs = exp                                  # evalIncusion
-    |   lhs = exp op = (AND | OR) rhs = exp                     # evalAndOr
-    |   DASH exp                                                # evalNegate
-    |   AT DOLLAR ID                                            # bindContext
-    |   HASH DOLLAR ID                                          # bindPosition
-    |   DOLLAR ID                                               # callVariable
-    |   predicate bind_position?                                # filter
-    |   path                                                    # select
-    |   type                                                    # literal
+        '(' exp (';' exp?)* ')'                                         # block
+    |   lhs = exp op = (STAR | SLASH | PERCENT) rhs = exp               # evalMulDivMod
+    |   lhs = exp op = (PLUS | DASH) rhs = exp                          # evalSumSub
+    |   lhs = exp AMP rhs = exp                                         # evalConcat
+    |   lhs = exp op = (LT | LE | GE | GT | NE | EQ) rhs = exp          # evalCompare
+    |   lhs = exp IN rhs = exp                                          # evalIncusion
+    |   lhs = exp op = (AND | OR) rhs = exp                             # evalAndOr
+    |   lhs = exp '.' rhs = exp bind_position? bind_context? predicate? # map
+    |   predicate bind_position?                                        # filter
+    |   DASH exp                                                        # evalNegate
+    |   DOLLAR ID                                                       # callVariable
+    |   path                                                            # select
+    |   type                                                            # literal
     ;
 
 

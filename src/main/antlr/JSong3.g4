@@ -36,12 +36,11 @@ args    :   '(' (var (',' var)*)* ')';
 
 cvb     :   '@' var;
 
-
 element :   exp | range;
 
 exp     :   '(' exp (';' exp?)* ')'                                     # block
-        |   lhs = exp bf = pvb? cvb? '[' rhs = exp ']' af = pvb?        # filter // preceeds map
-        |   lhs = exp '.' rhs = exp                                     # map
+        |   lhs = exp '[' rhs = exp ']'                                 # filter
+        |   lhs = exp '.' rhs = exp pvb? cvb?                           # map
         |   lhs = exp op = (DIV | MOD | MUL) rhs = exp                  # evalDivModMul
         |   lhs = exp op = (SUM | SUB) rhs = exp                        # evalSumSub
         |   lhs = exp '&' rhs = exp                                     # evalConcatenate
@@ -53,9 +52,7 @@ exp     :   '(' exp (';' exp?)* ')'                                     # block
         |   type                                                        # literal
         ;
 
-
 field   :   key = exp ':' val = exp;
-
 
 type    :   '[' element? (',' element)* ']'     # array
         |   '{' field? (',' field)* '}'         # object

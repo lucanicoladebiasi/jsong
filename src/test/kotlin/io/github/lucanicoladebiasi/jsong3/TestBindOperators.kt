@@ -76,7 +76,7 @@ class TestBindOperators {
 
     @Test
     fun `Context variable binding - carry on once`() {
-        val expression = "library.loans@\$L"
+        val expression = "library.loans@\$L[true]"
         val LIBRARY = "library"
         val LOANS = "loans"
         val expected = mapper.createArrayNode()
@@ -89,7 +89,7 @@ class TestBindOperators {
 
     @Test
     fun `Context variable binding - carry on once and recall`() {
-        val expression = "library.loans@\$L.\$L"
+        val expression = "library.loans@\$L[true].\$L"
         val LIBRARY = "library"
         val LOANS = "loans"
         val expected = node[LIBRARY][LOANS]
@@ -99,7 +99,7 @@ class TestBindOperators {
 
     @Test
     fun `Context variable binding - carry on twice`() {
-        val expression = "library.loans@\$L.books@\$B"
+        val expression = "library.loans@\$L[true].books@\$B[true]"
         val LIBRARY = "library"
         val LOANS = "loans"
         val BOOKS = "books"

@@ -32,14 +32,13 @@ data class Context(
 
     data class Loop(
         val size: Int,
-        var index: Int = 0
+        val index: Int = 0
     ) {
 
         fun at(index: Int): Loop {
-            this.index = index
-            return this
+            return Loop(size, index)
         }
 
-    } //~ data
+    }
 
 } //~ Context

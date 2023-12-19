@@ -30,95 +30,78 @@ grammar JSong3;
 
 // PARSER RULES
 
-jsong:
-        exp* EOF;
+jsong   :   exp* EOF;
 
-//args    : '(' (VAR_ID (',' VAR_ID)*)* ')';
+args    :   '(' (var (',' var)*)* ')';
 
-bind_context:
-        op = AT DOLLAR ID;
-
-bind_position:
-        op = HASH DOLLAR ID;
-
-element:
-        exp | range;
-
-exp:
-        '(' exp (';' exp?)* ')'                                         # block
-    |   lhs = exp op = (STAR | SLASH | PERCENT) rhs = exp               # evalMulDivMod
-    |   lhs = exp op = (PLUS | DASH) rhs = exp                          # evalSumSub
-    |   lhs = exp AMP rhs = exp                                         # evalConcat
-    |   lhs = exp op = (LT | LE | GE | GT | NE | EQ) rhs = exp          # evalCompare
-    |   lhs = exp IN rhs = exp                                          # evalIncusion
-    |   lhs = exp op = (AND | OR) rhs = exp                             # evalAndOr
-    |   lhs = exp '.' rhs = exp bind_position? bind_context? predicate? # map
-    |   predicate bind_position?                                        # filter
-    |   DASH exp                                                        # evalNegate
-    |   DOLLAR ID                                                       # callVariable
-    |   path                                                            # select
-    |   type                                                            # literal
-    ;
+cvb     :   '@' var;
 
 
-field:
-        key = exp ':' val = exp;
+element :   exp | range;
 
-predicate:
-        '[' exp ']';
+exp     :   '(' exp (';' exp?)* ')'                                     # block
+        |   lhs = exp bf = pvb? cvb? '[' rhs = exp ']' af = pvb?        # filter // preceeds map
+        |   lhs = exp '.' rhs = exp                                     # map
+        |   lhs = exp op = (DIV | MOD | MUL) rhs = exp                  # evalDivModMul
+        |   lhs = exp op = (SUM | SUB) rhs = exp                        # evalSumSub
+        |   lhs = exp '&' rhs = exp                                     # evalConcatenate
+        |   lhs = exp op = (LT | LE | GE | GT | NE | EQ | IN) rhs = exp # evalCompare
+        |   lhs = exp op = (AND | OR) rhs = exp                         # evalAndOr
+        |   '-' exp                                                     # evalNegative
+        |   var                                                         # callVariable
+        |   path                                                        # select
+        |   type                                                        # literal
+        ;
 
-type :
-        '[' element? (',' element)* ']'         # array
-    |   '{' field? (',' field)* '}'             # object
-    |   SLASH pattern (SLASH | REG_CI | REG_ML) # regex
-    |   STRING                                  # text
-    |   NUMBER                                  # number
-    |   FALSE                                   # false
-    |   TRUE                                    # true
-    |   NULL                                    # null
-    ;
 
-path
-    :   PERCENT (DOT PERCENT)*  # parent
-    |   DOLLAR DOLLAR           # root
-    |   DOLLAR                  # context
-    |   STAR                    # wildcard
-    |   STAR STAR               # descendants
-    |   ID                      # id
-    ;
+field   :   key = exp ':' val = exp;
 
-range
-    :   lhs = exp '..' rhs = exp;
 
-pattern
-    :  (~'/' | '\\' '/' '?')*;
+type    :   '[' element? (',' element)* ']'     # array
+        |   '{' field? (',' field)* '}'         # object
+        |   '/' pattern ('/' | REG_CI | REG_ML) # regex
+        |   STRING                              # text
+        |   NUMBER                              # number
+        |   FALSE                               # false
+        |   TRUE                                # true
+        |   NULL                                # null
+        ;
+
+path    :   step = '%' ('.' step = '%')*        # callParent
+        |   '$$'                                # callRoot
+        |   '$'                                 # callContext
+        |   '*'                                 # callWildcard
+        |   '**'                                # callDescendants
+        |   ID                                  # id
+        ;
+
+pvb     :   '#' var;
+
+range   :   lhs = exp '..' rhs = exp;
+
+pattern :   (~'/' | '\\' '/' '?')*;
+
+var     :   '$' ID;
 
 
 // LEXER RULES
 
-AT      : '@';
-HASH    : '#';
-
-LT      : '<';
-LE      : '<=';
-GT      : '>';
-GE      : '>=';
-NE      : '!=';
 EQ      : '=';
+GE      : '>=';
+GT      : '>';
+LE      : '<=';
+LT      : '<';
 IN      : 'in';
+NE      : '!=';
 
-AMP     : '&';
-DASH    : '-';
-DOLLAR  : '$';
-DOT     : '.';
-PERCENT : '%';
-PLUS    : '+';
-SLASH   : '/';
-STAR    : '*';
+DIV     : '/';
+MUL     : '*';
+MOD     : '%';
+SUB     : '-';
+SUM     : '+';
 
-REG     : SLASH;
-REG_CI  : SLASH 'i';
-REG_ML  : SLASH 'm';
+REG_CI  : '/i';
+REG_ML  : '/m';
 
 FUNC    : ('function' | 'fun' | 'λ') ;
 

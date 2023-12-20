@@ -236,47 +236,25 @@ class Visitor(
                 if (rhs is ArrayNode) result.addAll(rhs) else result.add(rhs)
             }
         }
-        return result
+        return when {
+            ctx.pvb() != null -> {
+                val id = sanitise(ctx.pvb().`var`().ID().text)
+                context.variables[id] = BindPositionNode(context.mapper).addAll(result)
+                result
+            }
+
+            ctx.cvb() != null -> {
+                val id = sanitise(ctx.cvb().`var`().ID().text)
+                context.variables[id] = BindContextNode(context.mapper).addAll(result)
+                val carryForward = context.createArrayNode()
+                repeat(result.size() / lhs.size()) {
+                    carryForward.addAll(lhs)
+                }
+                carryForward
+            }
+            else -> result
+        }
     }
-
-//    override fun visitMap(ctx: JSong3Parser.MapContext): ArrayNode {
-//        val result = context.createArrayNode()
-//        val lhs = expand(Visitor(context).visit(ctx.lhs))
-//        val loop = Context.Loop(lhs.size())
-//        lhs.forEachIndexed { index, node ->
-//            Visitor(Context(node, loop.at(index), context)).visit(ctx.rhs)?.let { rhs ->
-//                if (ctx.bind_position() != null) {
-//                    val id = sanitise(ctx.bind_position().ID().text)
-//                    context.variables[id] = (context.variables.getOrDefault(
-//                        id,
-//                        BindPositionNode(context.mapper)
-//                    ) as BindPositionNode).add(rhs)
-//                }
-//                if (ctx.bind_context() != null) {
-//                    val id = sanitise(ctx.bind_context().ID().text)
-//                    context.variables[id] = (context.variables.getOrDefault(
-//                        id,
-//                        BindContextNode(context.mapper)
-//                    ) as BindContextNode).add(rhs)
-//                }
-//                when (val ctxPredicate = ctx.predicate()) {
-//                    null -> if (rhs is ArrayNode) result.addAll(rhs) else result.add(rhs)
-//                    else -> reduce(Visitor(Context(rhs, loop, context)).visit(ctxPredicate))?.let { element ->
-//                        if (element is ArrayNode) result.addAll(element) else result.add(element)
-//                    }
-//                }
-//            }
-//        }
-//        return if (ctx.bind_context() != null) {
-//            val carryover = context.createArrayNode()
-//            if (context.node != null) repeat(result.size() / lhs.size()) {
-//                carryover.addAll(lhs)
-//            }
-//            carryover
-//        } else
-//            result
-//    }
-
 
     override fun visitNull(ctx: JSong3Parser.NullContext?): NullNode {
         return NullNode.instance

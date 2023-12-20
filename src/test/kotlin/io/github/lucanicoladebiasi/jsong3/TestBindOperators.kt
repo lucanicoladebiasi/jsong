@@ -76,7 +76,7 @@ class TestBindOperators {
 
     @Test
     fun `Context variable binding - carry on once`() {
-        val expression = "library.loans@\$L[true]"
+        val expression = "library.loans@\$L"
         val LIBRARY = "library"
         val LOANS = "loans"
         val expected = mapper.createArrayNode()
@@ -89,17 +89,17 @@ class TestBindOperators {
 
     @Test
     fun `Context variable binding - carry on once and recall`() {
-        val expression = "library.loans@\$L[true].\$L"
+        val expression = "library.loans@\$L.\$L"
         val LIBRARY = "library"
         val LOANS = "loans"
         val expected = node[LIBRARY][LOANS]
-        val actual= JSong(expression).evaluate(node)
+        val actual = JSong(expression).evaluate(node)
         assertEquals(expected, actual)
     }
 
     @Test
     fun `Context variable binding - carry on twice`() {
-        val expression = "library.loans@\$L[true].books@\$B[true]"
+        val expression = "library.loans@\$L.books@\$B"
         val LIBRARY = "library"
         val LOANS = "loans"
         val BOOKS = "books"
@@ -135,31 +135,28 @@ class TestBindOperators {
      */
     @Test
     fun `Context variable binding - join`() {
-//        val expression =
-//            "library.loans@\$L.books@\$B[\$L.isbn=\$B.isbn].{\"title\": \$B.title, \"customer\": \$L.customer}"
         val expression =
-            "library.loans@\$L.books@\$B[\$L.isbn=\$B.isbn].{}"
+            "library.loans@\$L.books@\$B[\$L.isbn=\$B.isbn].{\"title\": \$B.title, \"customer\": \$L.customer}"
 
-
-//        @Language("JSON")
-//        val expected = mapper.readTree(
-//            """
-//            [
-//              {
-//                "title": "Structure and Interpretation of Computer Programs",
-//                "customer": "10001"
-//              },
-//              {
-//                "title": "Compilers: Principles, Techniques, and Tools",
-//                "customer": "10003"
-//              },
-//              {
-//                "title": "Structure and Interpretation of Computer Programs",
-//                "customer": "10003"
-//              }
-//            ]
-//            """.trimIndent()
-//        )
+        @Language("JSON")
+        val expected = mapper.readTree(
+            """
+            [
+              {
+                "title": "Structure and Interpretation of Computer Programs",
+                "customer": "10001"
+              },
+              {
+                "title": "Compilers: Principles, Techniques, and Tools",
+                "customer": "10003"
+              },
+              {
+                "title": "Structure and Interpretation of Computer Programs",
+                "customer": "10003"
+              }
+            ]
+            """.trimIndent()
+        )
 
         val actual = JSong(expression).evaluate(node)
         println(actual)
@@ -198,7 +195,7 @@ class TestBindOperators {
 
         val actual = JSong(expression).evaluate(node)
         println(actual)
-       //assertEquals(expected, actual)
+        //assertEquals(expected, actual)
     }
 
 

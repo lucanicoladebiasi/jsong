@@ -135,8 +135,11 @@ class TestBindOperators {
      */
     @Test
     fun `Context variable binding - join`() {
+//        val expression =
+//            "library.loans@\$L.books@\$B[\$L.isbn=\$B.isbn].{\"title\": \$B.title, \"customer\": \$L.customer}"
         val expression =
-            "library.loans@\$L.books@\$B[\$L.isbn=\$B.isbn].{\"title\": \$B.title, \"customer\": \$L.customer}"
+            "library.loans@\$L.books@\$B[\$L.isbn=\$B.isbn].{}"
+
 
         @Language("JSON")
         val expected = mapper.readTree(

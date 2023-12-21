@@ -51,6 +51,13 @@ class Visitor(
         }
     }
 
+    private fun bindPositionalVariable(ctx: JSong3Parser.PvbContext?, value: ArrayNode) {
+        if (ctx != null) {
+            val id = sanitise(ctx.`var`().ID().text)
+            context.variables[id] = BindPositionNode(context.mapper).addAll(value)
+        }
+    }
+
     private fun expand(node: JsonNode?): ArrayNode {
         val result = context.createArrayNode()
         if (node != null) when (node) {
@@ -186,6 +193,7 @@ class Visitor(
     override fun visitFilter(ctx: JSong3Parser.FilterContext): ArrayNode {
         val result = context.createArrayNode()
         val lhs = expand(Visitor(context).visit(ctx.lhs))
+        bindPositionalVariable(ctx.pvb(), lhs)
         val loop = Context.Loop(lhs.size())
         lhs.forEachIndexed { index, node ->
             Visitor(Context(node, loop.at(index), context)).visit(ctx.rhs)?.let { rhs ->
@@ -236,24 +244,8 @@ class Visitor(
                 if (rhs is ArrayNode) result.addAll(rhs) else result.add(rhs)
             }
         }
-        return when {
-            ctx.pvb() != null -> {
-                val id = sanitise(ctx.pvb().`var`().ID().text)
-                context.variables[id] = BindPositionNode(context.mapper).addAll(result)
-                result
-            }
-
-            ctx.cvb() != null -> {
-                val id = sanitise(ctx.cvb().`var`().ID().text)
-                context.variables[id] = BindContextNode(context.mapper).addAll(result)
-                val carryForward = context.createArrayNode()
-                repeat(result.size() / lhs.size()) {
-                    carryForward.addAll(lhs)
-                }
-                carryForward
-            }
-            else -> result
-        }
+        bindPositionalVariable(ctx.pvb(), result)
+        return result
     }
 
     override fun visitNull(ctx: JSong3Parser.NullContext?): NullNode {

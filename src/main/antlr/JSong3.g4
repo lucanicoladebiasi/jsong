@@ -39,8 +39,11 @@ cvb     :   '@' var;
 element :   exp | range;
 
 exp     :   '(' exp (';' exp?)* ')'                                     # block
-        |   lhs = exp pvb? cvb? '[' rhs = exp ']'                       # filter
-        |   lhs = exp '.' rhs = exp pvb? cvb?                           # map
+        |   lhs = exp '[' rhs = exp ']'                                 # filter
+        |   lhs = exp '.' rhs = exp pvb cvb                             # mapPvbCvb
+        |   lhs = exp '.' rhs = exp pvb                                 # mapPvb
+        |   lhs = exp '.' rhs = exp cvb                                 # mapCvb
+        |   lhs = exp '.' rhs = exp                                     # map
         |   lhs = exp op = (DIV | MOD | MUL) rhs = exp                  # evalDivModMul
         |   lhs = exp op = (SUM | SUB) rhs = exp                        # evalSumSub
         |   lhs = exp '&' rhs = exp                                     # evalConcatenate

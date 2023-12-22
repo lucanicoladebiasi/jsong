@@ -7,6 +7,7 @@ import io.github.lucanicoladebiasi.jsong.antlr.JSong3Parser
 import io.github.lucanicoladebiasi.jsong3.functions.BooleanFunctions.Companion.booleanOf
 import io.github.lucanicoladebiasi.jsong3.functions.NumericFunctions.Companion.decimalOf
 import io.github.lucanicoladebiasi.jsong3.functions.StringFunctions.Companion.stringOf
+import org.antlr.v4.runtime.tree.ParseTree
 import org.apache.commons.text.StringEscapeUtils
 
 class Visitor(
@@ -82,6 +83,25 @@ class Visitor(
         }
         return result
     }
+
+    fun map(
+        lpt: ParseTree,
+        rpt: ParseTree,
+        pvb: JSong3Parser.PvbContext? = null,
+        cvb: JSong3Parser.CvbContext? = null
+    ): ArrayNode {
+        val result = context.createArrayNode()
+        val lhs = expand(Visitor(context).visit(lpt))
+        val loop = Context.Loop(lhs.size())
+        lhs.forEachIndexed { index, node ->
+            Visitor(Context(node, loop.at(index), context)).visit(rpt)?.let { rhs ->
+                if (rhs is ArrayNode) result.addAll(rhs) else result.add(rhs)
+            }
+        }
+        bindPositionalVariable(pvb, result)
+        return bindContextualValue(cvb, result, lhs)
+    }
+
 
     override fun visitArray(ctx: JSong3Parser.ArrayContext): ArrayNode {
         val result = context.createArrayNode()
@@ -209,7 +229,6 @@ class Visitor(
     override fun visitFilter(ctx: JSong3Parser.FilterContext): ArrayNode {
         val result = context.createArrayNode()
         val lhs = expand(Visitor(context).visit(ctx.lhs))
-        bindPositionalVariable(ctx.pvb(), lhs)
         val loop = Context.Loop(lhs.size())
         lhs.forEachIndexed { index, node ->
             Visitor(Context(node, loop.at(index), context)).visit(ctx.rhs)?.let { rhs ->
@@ -251,19 +270,23 @@ class Visitor(
         return reduce(exp)
     }
 
+
     override fun visitMap(ctx: JSong3Parser.MapContext): ArrayNode {
-        val result = context.createArrayNode()
-        val lhs = expand(Visitor(context).visit(ctx.lhs))
-        val loop = Context.Loop(lhs.size())
-        lhs.forEachIndexed { index, node ->
-            Visitor(Context(node, loop.at(index), context)).visit(ctx.rhs)?.let { rhs ->
-                if (rhs is ArrayNode) result.addAll(rhs) else result.add(rhs)
-            }
-        }
-        bindPositionalVariable(ctx.pvb(), result)
-        return bindContextualValue(ctx.cvb(), result, lhs)
+        return map(ctx.lhs, ctx.rhs)
+
     }
 
+    override fun visitMapCvb(ctx: JSong3Parser.MapCvbContext): ArrayNode {
+        return map(ctx.lhs, ctx.lhs, null, ctx.cvb())
+    }
+
+    override fun visitMapPvb(ctx: JSong3Parser.MapPvbContext): ArrayNode {
+        return map(ctx.lhs, ctx.rhs, ctx.pvb())
+    }
+
+    override fun visitMapPvbCvb(ctx: JSong3Parser.MapPvbCvbContext): ArrayNode {
+        return map(ctx.lhs, ctx.rhs, ctx.pvb(), ctx.cvb())
+    }
 
     override fun visitNull(ctx: JSong3Parser.NullContext?): NullNode {
         return NullNode.instance

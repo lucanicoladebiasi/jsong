@@ -51,6 +51,22 @@ class Visitor(
         }
     }
 
+    private fun bindContextualValue(
+        ctx: JSong3Parser.CvbContext?,
+        value: ArrayNode,
+        carryForward: ArrayNode
+    ): ArrayNode {
+        return if (ctx != null) {
+            val id = sanitise(ctx.`var`().ID().text)
+            context.variables[id] = BindContextNode(context.mapper).addAll(value)
+            val result = context.createArrayNode()
+            repeat(value.size() / carryForward.size()) {
+                result.addAll(carryForward)
+            }
+            result
+        } else value
+    }
+
     private fun bindPositionalVariable(ctx: JSong3Parser.PvbContext?, value: ArrayNode) {
         if (ctx != null) {
             val id = sanitise(ctx.`var`().ID().text)
@@ -245,8 +261,9 @@ class Visitor(
             }
         }
         bindPositionalVariable(ctx.pvb(), result)
-        return result
+        return bindContextualValue(ctx.cvb(), result, lhs)
     }
+
 
     override fun visitNull(ctx: JSong3Parser.NullContext?): NullNode {
         return NullNode.instance

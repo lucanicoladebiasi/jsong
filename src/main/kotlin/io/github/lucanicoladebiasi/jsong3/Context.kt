@@ -11,7 +11,7 @@ data class Context(
     val loop: Loop?,
     val mapper: ObjectMapper,
     val mathContext: MathContext,
-    val variables: MutableMap<String, JsonNode>
+    var variables: MutableMap<String, JsonNode>
 ) {
 
     constructor(node: JsonNode?, loop: Loop?, context: Context) : this(

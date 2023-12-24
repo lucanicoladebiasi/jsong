@@ -135,10 +135,8 @@ class TestBindOperators {
      */
     @Test
     fun `Context variable binding - join`() {
-//        val expression =
-//            "library.loans@\$L.books@\$B[\$L.isbn=\$B.isbn].{\"title\": \$B.title, \"customer\": \$L.customer}"
         val expression =
-            "library.loans@\$L.books@\$B[\$L.isbn=\$B.isbn].{}"
+            "library.loans@\$L.books@\$B[\$L.isbn=\$B.isbn].{\"title\": \$B.title, \"customer\": \$L.customer}"
 
 
         @Language("JSON")
@@ -162,8 +160,7 @@ class TestBindOperators {
         )
 
         val actual = JSong(expression).evaluate(node)
-        println(actual)
-//        assertEquals(expected, actual)
+        assertEquals(expected, actual)
     }
 
     @Test

@@ -84,7 +84,32 @@ class Visitor(
         return result
     }
 
-    fun map(
+    private fun filter(array: ArrayNode, predicates: BooleanArray): ArrayNode {
+        val result = when (array) {
+            is BindContextNode -> BindContextNode(context.mapper)
+            else -> context.createArrayNode()
+        }
+        for (i in 0 until minOf(array.size(), predicates.size)) {
+            if (predicates[i]) result.add(array[i])
+        }
+        return result
+    }
+
+    private fun filter(
+        variables: MutableMap<String, JsonNode>,
+        predicates: BooleanArray
+    ): MutableMap<String, JsonNode> {
+        val result = mutableMapOf<String, JsonNode>()
+        variables.forEach { (id, value) ->
+            when (value) {
+                is BindContextNode -> result[id] = filter(value, predicates)
+                else -> result[id] = value
+            }
+        }
+        return result
+    }
+
+    private fun map(
         lpt: ParseTree,
         rpt: ParseTree,
         pvb: JSong3Parser.PvbContext? = null,
@@ -100,6 +125,28 @@ class Visitor(
         }
         bindPositionalVariable(pvb, result)
         return bindContextualValue(cvb, result, lhs)
+    }
+
+    private fun stretch(value: BindContextNode, size: Int): BindContextNode {
+        val result = BindContextNode(context.mapper)
+        val ratio = size / value.size()
+        value.forEach { element ->
+            repeat(ratio) {
+                result.add(element)
+            }
+        }
+        return result
+    }
+
+    private fun stretch(variables: MutableMap<String, JsonNode>, size: Int): MutableMap<String, JsonNode> {
+        val result = mutableMapOf<String, JsonNode>()
+        variables.forEach { (id, value) ->
+            when (value) {
+                is BindContextNode -> result[id] = stretch(value, size)
+                else -> result[id] = value
+            }
+        }
+        return result
     }
 
 
@@ -156,7 +203,9 @@ class Visitor(
 
     override fun visitEvalCompare(ctx: JSong3Parser.EvalCompareContext): BooleanNode {
         val lhs = reduce(Visitor(context).visit(ctx.lhs))
+        println("${ctx.lhs.text}, $lhs")
         val rhs = reduce(Visitor(context).visit(ctx.rhs))
+        println("${ctx.rhs.text}, $rhs")
         return BooleanNode.valueOf(
             when {
                 lhs == null && rhs == null -> true
@@ -227,31 +276,33 @@ class Visitor(
     }
 
     override fun visitFilter(ctx: JSong3Parser.FilterContext): ArrayNode {
-        val result = context.createArrayNode()
         val lhs = expand(Visitor(context).visit(ctx.lhs))
         val loop = Context.Loop(lhs.size())
+        val predicates = BooleanArray(loop.size)
+        context.variables = stretch(context.variables, loop.size)
         lhs.forEachIndexed { index, node ->
             Visitor(Context(node, loop.at(index), context)).visit(ctx.rhs)?.let { rhs ->
                 when (rhs) {
                     is ArrayNode -> {
                         val indexes = RangeNode.indexes(rhs)
                         when (indexes.isNotEmpty()) {
-                            true -> if (indexes.contains(index)) result.add(node)
-                            else -> if (booleanOf(rhs)) result.add(node)
+                            true -> predicates[index] = indexes.contains(index)
+                            else -> predicates[index] = booleanOf(rhs)
                         }
                     }
 
                     is NumericNode -> {
                         val value = rhs.asInt()
                         val offset = if (value < 0) loop.size + value else value
-                        if (index == offset) result.add(node)
+                        predicates[index] = index == offset
                     }
 
-                    else -> if (booleanOf(rhs)) result.add(node)
+                    else -> predicates[index] = booleanOf(rhs)
                 }
             }
         }
-        return result
+        context.variables = filter(context.variables, predicates)
+        return filter(lhs, predicates)
     }
 
     override fun visitId(ctx: JSong3Parser.IdContext): JsonNode? {
@@ -277,7 +328,7 @@ class Visitor(
     }
 
     override fun visitMapCvb(ctx: JSong3Parser.MapCvbContext): ArrayNode {
-        return map(ctx.lhs, ctx.lhs, null, ctx.cvb())
+        return map(ctx.lhs, ctx.rhs, null, ctx.cvb())
     }
 
     override fun visitMapPvb(ctx: JSong3Parser.MapPvbContext): ArrayNode {

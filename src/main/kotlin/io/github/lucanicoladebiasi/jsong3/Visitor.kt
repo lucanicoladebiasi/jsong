@@ -72,8 +72,8 @@ class Visitor(
         if (ctx != null) {
             val id = sanitise(ctx.`var`().ID().text)
             val bpn = context.createBindPositionNode()
-            repeat(value.size()) { position ->
-                bpn.add(IntNode(position))
+            value.forEachIndexed { index, element ->
+                bpn.add(index, element)
             }
             context.vars[id] = bpn
         }
@@ -91,6 +91,7 @@ class Visitor(
     private fun filter(array: ArrayNode, predicates: BooleanArray): ArrayNode {
         val result = when (array) {
             is BindContextNode -> context.createBindContextNode()
+            is BindPositionNode -> context.createBindPositionNode()
             else -> context.createArrayNode()
         }
         for (i in 0 until minOf(array.size(), predicates.size)) {
@@ -107,6 +108,7 @@ class Visitor(
         variables.forEach { (id, value) ->
             when (value) {
                 is BindContextNode -> result[id] = filter(value, predicates)
+                is BindPositionNode -> result[id] = filter(value, predicates)
                 else -> result[id] = value
             }
         }
@@ -142,11 +144,23 @@ class Visitor(
         return result
     }
 
+    private fun stretch(value: BindPositionNode, size: Int): BindPositionNode {
+        val result = context.createBindPositionNode()
+        val ratio = size / value.size()
+        value.forEach { element ->
+            repeat(ratio) {
+                result.add(element)
+            }
+        }
+        return result
+    }
+
     private fun stretch(variables: MutableMap<String, JsonNode>, size: Int): MutableMap<String, JsonNode> {
         val result = mutableMapOf<String, JsonNode>()
         variables.forEach { (id, value) ->
             when (value) {
                 is BindContextNode -> result[id] = stretch(value, size)
+                is BindPositionNode -> result[id] = stretch(value, size)
                 else -> result[id] = value
             }
         }

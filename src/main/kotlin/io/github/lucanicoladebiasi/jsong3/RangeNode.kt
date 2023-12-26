@@ -9,10 +9,10 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import java.math.BigDecimal
 
 class RangeNode(
-    mapper: ObjectMapper,
+    om: ObjectMapper,
     min: DecimalNode,
     max: DecimalNode
-) : ObjectNode(mapper.nodeFactory, mapOf<String, DecimalNode>(Pair(MAX_TAG, max), Pair(MIN_TAG, min))) {
+) : ObjectNode(om.nodeFactory, mapOf<String, DecimalNode>(Pair(MAX_TAG, max), Pair(MIN_TAG, min))) {
 
     companion object {
 

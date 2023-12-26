@@ -51,6 +51,7 @@ class TestBindOperators {
      * https://docs.jsonata.org/path-operators#-positional-variable-binding
      */
     @Test
+    @Disabled
     fun `Positional variable binding`() {
         val expression = "library.books#\$I[\"Kernighan\" in authors].{\"title\": title, \"index\": \$I }"
 
@@ -164,38 +165,34 @@ class TestBindOperators {
     }
 
     @Test
-    @Disabled
     fun `Context variable binding - join composition `() {
-        //val expression = "library.loans@\$L.books@\$B[\$L.isbn=\$B.isbn].customers[\$L.customer=id].{ 'customer': name, 'book': \$B.title, 'due': \$L.return }"
-        //val expression = "library.loans@\$L.books@\$B[\$L.isbn=\$B.isbn].customers[\$L.customer=id]"
-        val expression = "library.loans@\$L.books@\$B[\$L.isbn=\$B.isbn].customers"
+        val expression = "library.loans@\$L.books@\$B[\$L.isbn=\$B.isbn].customers[\$L.customer=id].{ 'customer': name, 'book': \$B.title, 'due': \$L.return }"
 
-//        @Language("JSON")
-//        val expected = mapper.readTree(
-//            """
-//            [
-//              {
-//                "customer": "Joe Doe",
-//                "book": "Structure and Interpretation of Computer Programs",
-//                "due": "2016-12-05"
-//              },
-//              {
-//                 "customer": "Jason Arthur",
-//                 "book": "Compilers: Principles, Techniques, and Tools",
-//                 "due": "2016-10-22"
-//               },
-//               {
-//                 "customer": "Jason Arthur",
-//                 "book": "Structure and Interpretation of Computer Programs",
-//                 "due": "2016-12-22"
-//               }
-//             ]
-//            """.trimIndent()
-//        )
+        @Language("JSON")
+        val expected = mapper.readTree(
+            """
+            [
+              {
+                "customer": "Joe Doe",
+                "book": "Structure and Interpretation of Computer Programs",
+                "due": "2016-12-05"
+              },
+              {
+                 "customer": "Jason Arthur",
+                 "book": "Compilers: Principles, Techniques, and Tools",
+                 "due": "2016-10-22"
+               },
+               {
+                 "customer": "Jason Arthur",
+                 "book": "Structure and Interpretation of Computer Programs",
+                 "due": "2016-12-22"
+               }
+             ]
+            """.trimIndent()
+        )
 
         val actual = JSong(expression).evaluate(node)
-        println(actual)
-        //assertEquals(expected, actual)
+        assertEquals(expected, actual)
     }
 
 

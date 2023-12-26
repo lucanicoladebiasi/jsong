@@ -45,7 +45,7 @@ class Visitor(
     } //~ companion
 
     private fun compare(lhs: JsonNode, rhs: JsonNode): Int {
-        val writer = context.mapper.writer()
+        val writer = context.om.writer()
         return when {
             lhs.isNumber && rhs.isNumber -> lhs.decimalValue().compareTo(rhs.decimalValue())
             else -> stringOf(lhs, writer).compareTo(stringOf(rhs, writer))
@@ -59,7 +59,7 @@ class Visitor(
     ): ArrayNode {
         return if (ctx != null) {
             val id = sanitise(ctx.`var`().ID().text)
-            context.variables[id] = BindContextNode(context.mapper).addAll(value)
+            context.vars[id] = context.createBindContextNode().addAll(value)
             val result = context.createArrayNode()
             repeat(value.size() / carryForward.size()) {
                 result.addAll(carryForward)
@@ -71,7 +71,11 @@ class Visitor(
     private fun bindPositionalVariable(ctx: JSong3Parser.PvbContext?, value: ArrayNode) {
         if (ctx != null) {
             val id = sanitise(ctx.`var`().ID().text)
-            context.variables[id] = BindPositionNode(context.mapper).addAll(value)
+            val bpn = context.createBindPositionNode()
+            repeat(value.size()) { position ->
+                bpn.add(IntNode(position))
+            }
+            context.vars[id] = bpn
         }
     }
 
@@ -86,7 +90,7 @@ class Visitor(
 
     private fun filter(array: ArrayNode, predicates: BooleanArray): ArrayNode {
         val result = when (array) {
-            is BindContextNode -> BindContextNode(context.mapper)
+            is BindContextNode -> context.createBindContextNode()
             else -> context.createArrayNode()
         }
         for (i in 0 until minOf(array.size(), predicates.size)) {
@@ -117,9 +121,9 @@ class Visitor(
     ): ArrayNode {
         val result = context.createArrayNode()
         val lhs = expand(Visitor(context).visit(lpt))
-        val loop = Context.Loop(lhs.size())
         lhs.forEachIndexed { index, node ->
-            Visitor(Context(node, loop.at(index), context)).visit(rpt)?.let { rhs ->
+            val loop = Context.Loop(lhs.size(), index)
+            Visitor(Context(node, loop, context.om, context.mc, context.vars)).visit(rpt)?.let { rhs ->
                 if (rhs is ArrayNode) result.addAll(rhs) else result.add(rhs)
             }
         }
@@ -128,7 +132,7 @@ class Visitor(
     }
 
     private fun stretch(value: BindContextNode, size: Int): BindContextNode {
-        val result = BindContextNode(context.mapper)
+        val result = context.createBindContextNode()
         val ratio = size / value.size()
         value.forEach { element ->
             repeat(ratio) {
@@ -163,7 +167,7 @@ class Visitor(
     override fun visitBlock(ctx: JSong3Parser.BlockContext): JsonNode? {
         var exp = context.node
         ctx.exp()?.forEach { ctxExp ->
-            exp = Visitor(Context(exp, null, context)).visit(ctxExp)
+            exp = Visitor(Context(exp, null, context.om, context.mc, context.vars)).visit(ctxExp)
         }
         return reduce(exp)
     }
@@ -174,14 +178,14 @@ class Visitor(
 
     override fun visitCallVariable(ctx: JSong3Parser.CallVariableContext): JsonNode? {
         val id = sanitise(ctx.`var`().ID().text)
-        return when (val result = context.variables[id]) {
+        return when (val result = context.vars[id]) {
             is BindContextNode -> when (context.loop != null) {
                 true -> result.get(context.loop)
                 else -> result
             }
 
             is BindPositionNode -> when (context.loop != null) {
-                true -> result.get(context.node)
+                true -> result.get(context.loop)
                 else -> result
             }
 
@@ -203,9 +207,7 @@ class Visitor(
 
     override fun visitEvalCompare(ctx: JSong3Parser.EvalCompareContext): BooleanNode {
         val lhs = reduce(Visitor(context).visit(ctx.lhs))
-        println("${ctx.lhs.text}, $lhs")
         val rhs = reduce(Visitor(context).visit(ctx.rhs))
-        println("${ctx.rhs.text}, $rhs")
         return BooleanNode.valueOf(
             when {
                 lhs == null && rhs == null -> true
@@ -233,7 +235,7 @@ class Visitor(
     }
 
     override fun visitEvalConcatenate(ctx: JSong3Parser.EvalConcatenateContext): TextNode {
-        val writer = context.mapper.writer()
+        val writer = context.om.writer()
         val lhs = stringOf(reduce(Visitor(context).visit(ctx.lhs)), writer)
         val rhs = stringOf(reduce(Visitor(context).visit(ctx.rhs)), writer)
         return TextNode(lhs.plus(rhs))
@@ -245,7 +247,7 @@ class Visitor(
         val rhs = decimalOf(reduce(Visitor(context).visit(ctx.rhs)))
         return DecimalNode(
             when (ctx.op.type) {
-                JSong3Parser.DIV -> lhs.divide(rhs, context.mathContext)
+                JSong3Parser.DIV -> lhs.divide(rhs, context.mc)
                 JSong3Parser.MOD -> lhs.remainder(rhs)
                 JSong3Parser.MUL -> lhs.multiply(rhs)
                 else -> throw UnsupportedOperationException("unknown operator in ${ctx.text} expression")
@@ -277,11 +279,14 @@ class Visitor(
 
     override fun visitFilter(ctx: JSong3Parser.FilterContext): ArrayNode {
         val lhs = expand(Visitor(context).visit(ctx.lhs))
-        val loop = Context.Loop(lhs.size())
+        val loop = Context.Loop(lhs.size() * (context.loop?.size ?: 1))
         val predicates = BooleanArray(loop.size)
-        context.variables = stretch(context.variables, loop.size)
+        context.vars = stretch(context.vars, loop.size)
         lhs.forEachIndexed { index, node ->
-            Visitor(Context(node, loop.at(index), context)).visit(ctx.rhs)?.let { rhs ->
+            loop.index = if (context.loop != null) {
+                context.loop.size * context.loop.index + index
+            } else index
+            Visitor(Context(node, loop, context.om, context.mc, context.vars)).visit(ctx.rhs)?.let { rhs ->
                 when (rhs) {
                     is ArrayNode -> {
                         val indexes = RangeNode.indexes(rhs)
@@ -300,8 +305,9 @@ class Visitor(
                     else -> predicates[index] = booleanOf(rhs)
                 }
             }
+            loop.index++
         }
-        context.variables = filter(context.variables, predicates)
+        context.vars = filter(context.vars, predicates)
         return filter(lhs, predicates)
     }
 
@@ -316,7 +322,7 @@ class Visitor(
     override fun visitJsong(ctx: JSong3Parser.JsongContext): JsonNode? {
         var exp = context.node
         ctx.exp()?.forEach { ctxExp ->
-            exp = Visitor(Context(exp, null, context)).visit(ctxExp)
+            exp = Visitor(Context(exp, null, context.om, context.mc, context.vars)).visit(ctxExp)
         }
         return reduce(exp)
     }
@@ -360,7 +366,7 @@ class Visitor(
     override fun visitRange(ctx: JSong3Parser.RangeContext): RangeNode {
         val lhs = decimalOf(reduce(Visitor(context).visit(ctx.lhs)))
         val rhs = decimalOf(reduce(Visitor(context).visit(ctx.rhs)))
-        return RangeNode.between(lhs, rhs, context.mapper)
+        return RangeNode.between(lhs, rhs, context.om)
     }
 
     override fun visitRegex(ctx: JSong3Parser.RegexContext): RegexNode {

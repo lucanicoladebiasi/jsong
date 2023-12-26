@@ -9,36 +9,30 @@ import java.math.MathContext
 data class Context(
     val node: JsonNode?,
     val loop: Loop?,
-    val mapper: ObjectMapper,
-    val mathContext: MathContext,
-    var variables: MutableMap<String, JsonNode>
+    val om: ObjectMapper,
+    val mc: MathContext,
+    var vars: MutableMap<String, JsonNode>
 ) {
 
-    constructor(node: JsonNode?, loop: Loop?, context: Context) : this(
-        node,
-        loop,
-        context.mapper,
-        context.mathContext,
-        context.variables
-    )
-
     fun createArrayNode(): ArrayNode {
-        return mapper.createArrayNode()
+        return om.createArrayNode()
+    }
+
+    fun createBindContextNode(): BindContextNode {
+        return BindContextNode(om)
+    }
+
+    fun createBindPositionNode(): BindPositionNode {
+        return BindPositionNode(om)
     }
 
     fun createObjectNode(): ObjectNode {
-        return mapper.createObjectNode()
+        return om.createObjectNode()
     }
 
     data class Loop(
         val size: Int,
-        val index: Int = 0
-    ) {
-
-        fun at(index: Int): Loop {
-            return Loop(size, index)
-        }
-
-    }
+        var index: Int = 0
+    )
 
 } //~ Context

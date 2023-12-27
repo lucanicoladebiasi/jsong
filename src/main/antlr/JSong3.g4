@@ -67,7 +67,7 @@ type    :   '[' element? (',' element)* ']'     # array
         |   NULL                                # null
         ;
 
-path    :   step = '%' ('.' step = '%')*        # callParent
+path    :   step += '%' ('.' step += '%')*      # callParent
         |   '$$'                                # callRoot
         |   '$'                                 # callContext
         |   '*'                                 # callWildcard

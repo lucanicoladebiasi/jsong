@@ -9,9 +9,10 @@ import java.math.MathContext
 data class Context(
     val node: JsonNode?,
     val loop: Loop?,
+    val pmap: MutableMap<JsonNode, JsonNode?>,
+    var vars: MutableMap<String, JsonNode>,
     val om: ObjectMapper,
     val mc: MathContext,
-    var vars: MutableMap<String, JsonNode>
 ) {
 
     fun createArrayNode(): ArrayNode {

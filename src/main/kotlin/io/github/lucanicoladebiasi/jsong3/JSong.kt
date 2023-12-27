@@ -10,15 +10,15 @@ import java.math.MathContext
 
 class JSong(
     val expression: String,
-    val mapper: ObjectMapper = ObjectMapper(),
-    val mathContext: MathContext = MathContext.DECIMAL128,
-    val variables: MutableMap<String, JsonNode> = mutableMapOf()
+    private val variables: MutableMap<String, JsonNode> = mutableMapOf(),
+    private val om: ObjectMapper = ObjectMapper(),
+    private val mc: MathContext = MathContext.DECIMAL128
 ) {
 
     private val parser = JSong3Parser(CommonTokenStream(JSong3Lexer(CharStreams.fromString(expression))))
 
     fun evaluate(node: JsonNode? = null): JsonNode? {
-        return Visitor(Context(node, null, mapper, mathContext, variables)).visit(parser.jsong())
+        return Visitor(Context(node, null, mutableMapOf(), variables, om, mc)).visit(parser.jsong())
     }
 
 } //~ JSong

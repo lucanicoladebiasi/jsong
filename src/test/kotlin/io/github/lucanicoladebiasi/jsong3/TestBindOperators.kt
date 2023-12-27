@@ -193,7 +193,6 @@ class TestBindOperators {
         assertEquals(expected, actual)
     }
 
-
 }
 
 

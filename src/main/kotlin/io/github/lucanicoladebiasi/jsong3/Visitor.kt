@@ -125,7 +125,7 @@ class Visitor(
         val lhs = expand(Visitor(context).visit(lpt))
         lhs.forEachIndexed { index, node ->
             val loop = Context.Loop(lhs.size(), index)
-            Visitor(Context(node, loop, context.pmap, context.vars, context.om, context.mc)).visit(rpt)?.let { rhs ->
+            Visitor(Context(loop, node, context.pmap, context.vars, context.om, context.mc)).visit(rpt)?.let { rhs ->
                 when (rhs) {
                     is ArrayNode -> rhs.forEach { element ->
                         result.add(element)
@@ -187,7 +187,7 @@ class Visitor(
     override fun visitBlock(ctx: JSong3Parser.BlockContext): JsonNode? {
         var exp = context.node
         ctx.exp()?.forEach { ctxExp ->
-            exp = Visitor(Context(exp, null, context.pmap, context.vars, context.om, context.mc)).visit(ctxExp)
+            exp = Visitor(Context(null, exp, context.pmap, context.vars, context.om, context.mc)).visit(ctxExp)
         }
         return reduce(exp)
     }
@@ -316,7 +316,7 @@ class Visitor(
             loop.index = if (context.loop != null) {
                 context.loop.size * context.loop.index + index
             } else index
-            Visitor(Context(node, loop, context.pmap, context.vars, context.om, context.mc)).visit(ctx.rhs)
+            Visitor(Context(loop, node, context.pmap, context.vars, context.om, context.mc)).visit(ctx.rhs)
                 ?.let { rhs ->
                     when (rhs) {
                         is ArrayNode -> {
@@ -358,7 +358,7 @@ class Visitor(
     override fun visitJsong(ctx: JSong3Parser.JsongContext): JsonNode? {
         var exp = context.node
         ctx.exp()?.forEach { ctxExp ->
-            exp = Visitor(Context(exp, null, context.pmap, context.vars, context.om, context.mc)).visit(ctxExp)
+            exp = Visitor(Context(null, exp, context.pmap, context.vars, context.om, context.mc)).visit(ctxExp)
         }
         return reduce(exp)
     }

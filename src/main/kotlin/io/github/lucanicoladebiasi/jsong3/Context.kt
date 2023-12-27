@@ -7,8 +7,8 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import java.math.MathContext
 
 data class Context(
-    val node: JsonNode?,
     val loop: Loop?,
+    val node: JsonNode?,
     val pmap: MutableMap<JsonNode, JsonNode?>,
     var vars: MutableMap<String, JsonNode>,
     val om: ObjectMapper,

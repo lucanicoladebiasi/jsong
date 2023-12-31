@@ -31,9 +31,9 @@ data class Context(
         return om.createObjectNode()
     }
 
-    fun vars(map: MutableMap<String, JsonNode>) {
-        vars.clear()
-        vars.putAll(map)
+    fun pmap(parent: JsonNode, child: JsonNode): JsonNode {
+        pmap[child] = parent
+        return child
     }
 
     data class Loop(

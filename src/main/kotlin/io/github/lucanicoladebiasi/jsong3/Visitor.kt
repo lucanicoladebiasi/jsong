@@ -356,15 +356,13 @@ class Visitor(
 
     override fun visitId(ctx: JSong3Parser.IdContext): JsonNode? {
         val fieldName = sanitise(ctx.ID().text)
-        if (context.node is ObjectNode && context.node.has(fieldName)) {
+        return if (context.node is ObjectNode && context.node.has(fieldName)) {
             val result = context.node[fieldName]
-            context.pmap[result] = context.node
             if (result is ArrayNode) result.forEach { element ->
-                context.pmap[element] = context.node
+                context.pmap(context.node, element)
             }
-            return result
-        } else
-            return null
+            context.pmap(context.node, result)
+        } else null
     }
 
     override fun visitJsong(ctx: JSong3Parser.JsongContext): JsonNode? {

@@ -38,7 +38,7 @@ cvb     :   '@' var;
 
 element :   exp | range;
 
-exp     :   '(' exp (';' exp?)* ')'                                     # block
+exp     :   '(' exp (';' exp?)* ')'                                     # evalBlocks
         |   lhs = exp '[' rhs = exp ']'                                 # filter
         |   lhs = exp '.' rhs = exp pvb cvb                             # mapPvbCvb
         |   lhs = exp '.' rhs = exp pvb                                 # mapPvb
@@ -50,7 +50,7 @@ exp     :   '(' exp (';' exp?)* ')'                                     # block
         |   lhs = exp op = (LT | LE | GE | GT | NE | EQ | IN) rhs = exp # evalCompare
         |   lhs = exp op = (AND | OR) rhs = exp                         # evalAndOr
         |   '-' exp                                                     # evalNegative
-        |   var                                                         # callVariable
+        |   var                                                         # evalVariable
         |   path                                                        # select
         |   type                                                        # literal
         ;
@@ -67,12 +67,12 @@ type    :   '[' element? (',' element)* ']'     # array
         |   NULL                                # null
         ;
 
-path    :   step += '%' ('.' step += '%')*      # callParent
-        |   '$$'                                # callRoot
-        |   '$'                                 # callContext
-        |   '*'                                 # callWildcard
-        |   '**'                                # callDescendants
-        |   ID                                  # id
+path    :   step += '%' ('.' step += '%')*      # gotoParent
+        |   '$$'                                # gotoRoot
+        |   '$'                                 # gotoContext
+        |   '*'                                 # gotoWildcard
+        |   '**'                                # gotoWildDescendants
+        |   ID                                  # gotoId
         ;
 
 pvb     :   '#' var;

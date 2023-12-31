@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.TestInstance
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -54,7 +53,6 @@ class TestWildcardOperators {
     }
 
     @Test
-    @Disabled
     fun `Wildcard descendants - prefix`() {
         val expression = "**.Postcode"
 
@@ -72,7 +70,6 @@ class TestWildcardOperators {
     }
 
     @Test
-    @Disabled
     fun `Wildcard descendants - postfix`() {
         val expression = "Address.**"
 

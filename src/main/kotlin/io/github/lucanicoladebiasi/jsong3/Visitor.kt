@@ -79,6 +79,17 @@ class Visitor(
         }
     }
 
+    private fun descendants(node: JsonNode?): ArrayNode {
+        val result = context.createArrayNode()
+        result.add(node)
+        node?.fields()?.forEach { field ->
+            if (field.value != null) {
+                result.addAll(descendants(field.value))
+            }
+        }
+        return result
+    }
+
     private fun expand(node: JsonNode?): ArrayNode {
         val result = context.createArrayNode()
         if (node != null) when (node) {
@@ -184,57 +195,6 @@ class Visitor(
         return result
     }
 
-    override fun visitBlock(ctx: JSong3Parser.BlockContext): JsonNode? {
-        var exp = context.node
-        ctx.exp()?.forEach { ctxExp ->
-            exp = Visitor(Context(null, exp, context.pmap, context.vars, context.om, context.mc)).visit(ctxExp)
-        }
-        return reduce(exp)
-    }
-
-    override fun visitCallContext(ctx: JSong3Parser.CallContextContext): JsonNode? {
-        return context.node
-    }
-
-    override fun visitCallParent(ctx: JSong3Parser.CallParentContext): JsonNode? {
-        var result: JsonNode? = context.node
-        var steps = ctx.MOD().size
-        while (steps > 0 && result != null) {
-            result = context.pmap[result]
-            steps--
-        }
-        return result
-    }
-
-    override fun visitCallVariable(ctx: JSong3Parser.CallVariableContext): JsonNode? {
-        val id = sanitise(ctx.`var`().ID().text)
-        return when (val result = context.vars[id]) {
-            is BindContextNode -> when (context.loop != null) {
-                true -> result.get(context.loop)
-                else -> result
-            }
-
-            is BindPositionNode -> when (context.loop != null) {
-                true -> result.get(context.loop)
-                else -> result
-            }
-
-            else -> result
-        }
-    }
-
-    override fun visitCallWildcard(ctx: JSong3Parser.CallWildcardContext?): JsonNode? {
-        return if (context.node is ObjectNode) {
-            val result = context.createArrayNode()
-            context.node.fields().forEach { field ->
-                if (field.value != null) {
-                    result.add(field.value)
-                }
-            }
-            result
-        } else null
-    }
-
     override fun visitEvalAndOr(ctx: JSong3Parser.EvalAndOrContext): BooleanNode {
         val lhs = booleanOf(reduce(Visitor(context).visit(ctx.lhs)))
         val rhs = booleanOf(reduce(Visitor(context).visit(ctx.rhs)))
@@ -245,6 +205,14 @@ class Visitor(
                 else -> throw UnsupportedOperationException("unknown operator in ${ctx.text} expression")
             }
         )
+    }
+
+    override fun visitEvalBlocks(ctx: JSong3Parser.EvalBlocksContext): JsonNode? {
+        var exp = context.node
+        ctx.exp()?.forEach { ctxExp ->
+            exp = Visitor(Context(null, exp, context.pmap, context.vars, context.om, context.mc)).visit(ctxExp)
+        }
+        return reduce(exp)
     }
 
     override fun visitEvalCompare(ctx: JSong3Parser.EvalCompareContext): BooleanNode {
@@ -315,6 +283,23 @@ class Visitor(
         )
     }
 
+    override fun visitEvalVariable(ctx: JSong3Parser.EvalVariableContext): JsonNode? {
+        val id = sanitise(ctx.`var`().ID().text)
+        return when (val result = context.vars[id]) {
+            is BindContextNode -> when (context.loop != null) {
+                true -> result.get(context.loop)
+                else -> result
+            }
+
+            is BindPositionNode -> when (context.loop != null) {
+                true -> result.get(context.loop)
+                else -> result
+            }
+
+            else -> result
+        }
+    }
+
     override fun visitFalse(ctx: JSong3Parser.FalseContext): BooleanNode {
         return BooleanNode.FALSE
     }
@@ -354,7 +339,11 @@ class Visitor(
         return filter(lhs, predicates)
     }
 
-    override fun visitId(ctx: JSong3Parser.IdContext): JsonNode? {
+    override fun visitGotoContext(ctx: JSong3Parser.GotoContextContext): JsonNode? {
+        return context.node
+    }
+
+    override fun visitGotoId(ctx: JSong3Parser.GotoIdContext): JsonNode? {
         val fieldName = sanitise(ctx.ID().text)
         return if (context.node is ObjectNode && context.node.has(fieldName)) {
             val result = context.node[fieldName]
@@ -362,6 +351,34 @@ class Visitor(
                 context.pmap(context.node, element)
             }
             context.pmap(context.node, result)
+        } else null
+    }
+
+    override fun visitGotoParent(ctx: JSong3Parser.GotoParentContext): JsonNode? {
+        var result: JsonNode? = context.node
+        var steps = ctx.MOD().size
+        while (steps > 0 && result != null) {
+            result = context.pmap[result]
+            steps--
+        }
+        return result
+    }
+
+    override fun visitGotoWildcard(ctx: JSong3Parser.GotoWildcardContext?): JsonNode? {
+        return if (context.node is ObjectNode) {
+            val result = context.createArrayNode()
+            context.node.fields().forEach { field ->
+                if (field.value != null) {
+                    result.add(field.value)
+                }
+            }
+            context.pmap(context.node, result)
+        } else null
+    }
+
+    override fun visitGotoWildDescendants(ctx: JSong3Parser.GotoWildDescendantsContext): JsonNode? {
+        return if (context.node is ObjectNode) {
+            context.pmap(context.node, descendants(context.node))
         } else null
     }
 

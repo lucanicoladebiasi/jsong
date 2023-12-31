@@ -223,6 +223,18 @@ class Visitor(
         }
     }
 
+    override fun visitCallWildcard(ctx: JSong3Parser.CallWildcardContext?): JsonNode? {
+        return if (context.node is ObjectNode) {
+            val result = context.createArrayNode()
+            context.node.fields().forEach { field ->
+                if (field.value != null) {
+                    result.add(field.value)
+                }
+            }
+            result
+        } else null
+    }
+
     override fun visitEvalAndOr(ctx: JSong3Parser.EvalAndOrContext): BooleanNode {
         val lhs = booleanOf(reduce(Visitor(context).visit(ctx.lhs)))
         val rhs = booleanOf(reduce(Visitor(context).visit(ctx.rhs)))

@@ -31,6 +31,11 @@ data class Context(
         return om.createObjectNode()
     }
 
+    fun vars(map: MutableMap<String, JsonNode>) {
+        vars.clear()
+        vars.putAll(map)
+    }
+
     data class Loop(
         val size: Int,
         var index: Int = 0

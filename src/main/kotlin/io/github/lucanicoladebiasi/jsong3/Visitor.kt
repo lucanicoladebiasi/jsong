@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.node.*
 import io.github.lucanicoladebiasi.jsong.antlr.JSong3BaseVisitor
 import io.github.lucanicoladebiasi.jsong.antlr.JSong3Parser
 import io.github.lucanicoladebiasi.jsong3.functions.BooleanFunctions.Companion.booleanOf
-import io.github.lucanicoladebiasi.jsong3.functions.NumericFunctions.Companion.decimalOf
+import io.github.lucanicoladebiasi.jsong3.functions.NumericFunctions.decimalOf
 import io.github.lucanicoladebiasi.jsong3.functions.StringFunctions.Companion.stringOf
 import org.antlr.v4.runtime.tree.ParseTree
 import org.apache.commons.text.StringEscapeUtils

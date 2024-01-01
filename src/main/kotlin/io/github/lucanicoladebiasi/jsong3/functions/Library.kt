@@ -1,7 +1,6 @@
 package io.github.lucanicoladebiasi.jsong3.functions
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.IntNode
 import kotlin.reflect.KFunction
 import kotlin.reflect.KType
 import kotlin.reflect.full.createType
@@ -53,7 +52,7 @@ open class Library {
     fun register(instance: Any): Library {
         instance::class.memberFunctions
             .filter { f ->
-                f.hasAnnotation<Function>()
+                f.hasAnnotation<LibraryFunction>()
             }
             .sortedWith { f1, f2 ->
                 when (val c = f1.name.compareTo(f2.name)) {
@@ -71,10 +70,3 @@ open class Library {
     }
 
 } //~ Library
-
-fun main() {
-    val lib = Library().register(NumericFunctions)
-    val v = lib.call("abs", IntNode(-1))
-    println(v)
-}
-

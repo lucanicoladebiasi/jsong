@@ -45,7 +45,7 @@ object NumericFunctions {
     /**
      * https://docs.jsonata.org/numeric-functions#number
      */
-    @Function
+    @LibraryFunction
     @Throws(IllegalArgumentException::class)
     fun number(arg: JsonNode): DecimalNode {
         return DecimalNode(decimalOf(arg))
@@ -54,7 +54,7 @@ object NumericFunctions {
     /**
      * https://docs.jsonata.org/numeric-functions#abs
      */
-    @Function
+    @LibraryFunction
     fun abs(number: NumericNode): DecimalNode {
         return DecimalNode(number.decimalValue().abs())
     }
@@ -62,74 +62,74 @@ object NumericFunctions {
     /**
      * https://docs.jsonata.org/numeric-functions#floor
      */
-    @Function
+    @LibraryFunction
     fun floor(number: NumericNode) {}
 
     /**
      * https://docs.jsonata.org/numeric-functions#ceil
      */
-    @Function
+    @LibraryFunction
     fun ceil(number: NumericNode) {}
 
     /**
      * https://docs.jsonata.org/numeric-functions#round
      */
-    @Function
+    @LibraryFunction
     fun round(number: NumericNode) {}
 
     /**
      * https://docs.jsonata.org/numeric-functions#round
      */
-    @Function
+    @LibraryFunction
     fun round(number: NumericNode, precision: NumericNode) {}
 
     /**
      * https://docs.jsonata.org/numeric-functions#power
      */
-    @Function
+    @LibraryFunction
     fun power(number: NumericNode, exponent: NumericNode) {}
 
     /**
      * https://docs.jsonata.org/numeric-functions#sqrt
      */
-    @Function
+    @LibraryFunction
     fun sqrt(number: JsonNode) {}
 
     /**
      * https://docs.jsonata.org/numeric-functions#random
      */
-    @Function
+    @LibraryFunction
     fun random() {}
 
     /**
      * https://docs.jsonata.org/numeric-functions#formatnumber
      */
-    @Function
+    @LibraryFunction
     fun formatNumber(number: NumericNode, picture: TextNode) {}
 
 
     /**
      * https://docs.jsonata.org/numeric-functions#formatnumber
      */
-    @Function
+    @LibraryFunction
     fun formatNumber(number: NumericNode, picture: JsonNode, options: ObjectNode) {}
 
     /**
      * https://docs.jsonata.org/numeric-functions#formatbase
      */
-    @Function
+    @LibraryFunction
     fun formatBase(number: NumericNode, radix: NumericNode) {}
 
     /**
      * https://docs.jsonata.org/numeric-functions#formatinteger
      */
-    @Function
+    @LibraryFunction
     fun formatInteger(number: JsonNode, picture: JsonNode) {}
 
     /**
      * https://docs.jsonata.org/numeric-functions#parseinteger
      */
-    @Function
+    @LibraryFunction
     fun parseInteger(string: JsonNode, picture: JsonNode) {}
 
 } //~ NumericFunctions

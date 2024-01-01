@@ -4,15 +4,19 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
+import io.github.lucanicoladebiasi.jsong3.functions.Library
 import java.math.MathContext
+import kotlin.random.Random
 
 data class Context(
+    val lib: Library,
     val loop: Loop?,
-    val node: JsonNode?,
-    val pmap: MutableMap<JsonNode, JsonNode?>,
-    var vars: MutableMap<String, JsonNode>,
-    val om: ObjectMapper,
     val mc: MathContext,
+    val node: JsonNode?,
+    val om: ObjectMapper,
+    val pmap: MutableMap<JsonNode, JsonNode?>,
+    val rand: Random,
+    var vars: MutableMap<String, JsonNode>,
 ) {
 
     fun createArrayNode(): ArrayNode {

@@ -49,6 +49,10 @@ open class Library {
         throw NoSuchMethodException("function $name not found")
     }
 
+    fun has(name: String): Boolean {
+        return map[name] != null
+    }
+
     fun register(instance: Any): Library {
         instance::class.memberFunctions
             .filter { f ->

@@ -11,7 +11,6 @@ import java.math.BigDecimal
 @Suppress("unused")
 object NumericFunctions {
 
-
     const val BIN_TAG = "0b"
 
     const val HEX_TAG = "0x"
@@ -31,9 +30,9 @@ object NumericFunctions {
             is TextNode -> {
                 val txt = node.textValue()
                 when {
-                    txt.startsWith(BIN_TAG) -> txt.substring(BIN_TAG.length).toBigDecimal()
-                    txt.startsWith(OCT_TAG) -> txt.substring(OCT_TAG.length).toBigDecimal()
-                    txt.startsWith(HEX_TAG) -> txt.substring(HEX_TAG.length).toBigDecimal()
+                    txt.startsWith(BIN_TAG) -> txt.substring(BIN_TAG.length).toInt(2).toBigDecimal()
+                    txt.startsWith(OCT_TAG) -> txt.substring(OCT_TAG.length).toInt(8).toBigDecimal()
+                    txt.startsWith(HEX_TAG) -> txt.substring(HEX_TAG.length).toInt(16).toBigDecimal()
                     else -> txt.toBigDecimal()
                 }
             }

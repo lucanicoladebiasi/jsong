@@ -265,6 +265,19 @@ class Visitor(
         )
     }
 
+    @Throws(Exception::class)
+    override fun visitEvalFunction(ctx: JSong3Parser.EvalFunctionContext): JsonNode? {
+        val id = sanitise(ctx.`var`().ID().text)
+        if (c.lib.has(id)) {
+            val args = Array(ctx.exp().size) { i ->
+                reduce(
+                    Visitor(Context(c.lib, null, c.mc, c.node, c.om, c.pmap, c.rand, c.vars)).visit(ctx.exp()[i])
+                )
+            }
+            return c.lib.call(id, *args)
+        } else throw NoSuchMethodException("function $id not found")
+    }
+
     @Throws(IllegalArgumentException::class)
     override fun visitEvalNegative(ctx: JSong3Parser.EvalNegativeContext): DecimalNode {
         return DecimalNode(decimalOf(reduce(Visitor(c).visit(ctx.exp()))).negate())

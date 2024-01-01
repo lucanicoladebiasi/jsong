@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.node.IntNode
 import kotlin.reflect.KFunction
 import kotlin.reflect.KType
 import kotlin.reflect.full.createType
+import kotlin.reflect.full.hasAnnotation
 import kotlin.reflect.full.isSubtypeOf
 import kotlin.reflect.full.memberFunctions
 
@@ -41,7 +42,7 @@ open class Library {
         map[name]?.let { handlers ->
             handlers.forEach { (_, handler) ->
                 if (handler.isCompatible(*args)) {
-                    return handler.call(*args) as JsonNode
+                    return handler.call(*args) as JsonNode?
                 }
             }
             throw NoSuchMethodException("function $name($args) not found")
@@ -51,9 +52,9 @@ open class Library {
 
     fun register(instance: Any): Library {
         instance::class.memberFunctions
-//            .filter { f ->
-//                f.hasAnnotation<Function>()
-//            }
+            .filter { f ->
+                f.hasAnnotation<Function>()
+            }
             .sortedWith { f1, f2 ->
                 when (val c = f1.name.compareTo(f2.name)) {
                     0 -> f2.parameters.size.compareTo(f1.parameters.size)

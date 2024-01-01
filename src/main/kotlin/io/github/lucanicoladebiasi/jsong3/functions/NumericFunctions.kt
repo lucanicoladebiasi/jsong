@@ -1,26 +1,39 @@
 package io.github.lucanicoladebiasi.jsong3.functions
 
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.BooleanNode
-import com.fasterxml.jackson.databind.node.DecimalNode
-import com.fasterxml.jackson.databind.node.NumericNode
-import com.fasterxml.jackson.databind.node.ObjectNode
-import com.fasterxml.jackson.databind.node.TextNode
+import com.fasterxml.jackson.databind.node.*
 import java.math.BigDecimal
 import java.math.MathContext
+import java.text.DecimalFormat
+import java.text.DecimalFormatSymbols
+import java.util.*
 import kotlin.math.pow
 import kotlin.random.Random
 
 @Suppress("unused")
-class NumericFunctions(val mc: MathContext, val rand: Random) {
+class NumericFunctions(
+    private val mc: MathContext,
+    private val rand: Random
+) {
 
     companion object {
 
-        const val BIN_TAG = "0b"
+        private const val TAG_BIN = "0b"
+        private const val TAG_HEX = "0x"
+        private const val TAG_OCT = "0o"
 
-        const val HEX_TAG = "0x"
+        const val SYMBOL_DECIMAL_SEPARATOR: String = "decimal-separator"
+        const val SYMBOL_GROUPING_SEPARATOR: String = "grouping-separator"
+        const val SYMBOL_INFINITY: String = "infinity"
+        const val SYMBOL_MINUS_SIGN: String = "minus-sign"
+        const val SYMBOL_NAN: String = "NaN"
+        const val SYMBOL_PERCENT: String = "percent"
+        const val SYMBOL_PER_MILLE: String = "per-mille"
+        const val SYMBOL_ZERO_DIGIT: String = "zero-digit"
+        const val SYMBOL_DIGIT: String = "digit"
+        const val SYMBOL_PATTERN_SEPARATOR: String = "pattern-separator"
 
-        const val OCT_TAG = "0o"
+        private val DefaultDecimalFormatSymbols: DecimalFormatSymbols = DecimalFormatSymbols(Locale.US)
 
         @Throws(IllegalArgumentException::class)
         fun decimalOf(node: JsonNode?, mc: MathContext): BigDecimal {
@@ -35,15 +48,47 @@ class NumericFunctions(val mc: MathContext, val rand: Random) {
                 is TextNode -> {
                     val txt = node.textValue()
                     when {
-                        txt.startsWith(BIN_TAG) -> txt.substring(BIN_TAG.length).toInt(2).toBigDecimal(mc)
-                        txt.startsWith(OCT_TAG) -> txt.substring(OCT_TAG.length).toInt(8).toBigDecimal(mc)
-                        txt.startsWith(HEX_TAG) -> txt.substring(HEX_TAG.length).toInt(16).toBigDecimal(mc)
+                        txt.startsWith(TAG_BIN) -> txt.substring(TAG_BIN.length).toInt(2).toBigDecimal(mc)
+                        txt.startsWith(TAG_OCT) -> txt.substring(TAG_OCT.length).toInt(8).toBigDecimal(mc)
+                        txt.startsWith(TAG_HEX) -> txt.substring(TAG_HEX.length).toInt(16).toBigDecimal(mc)
                         else -> txt.toBigDecimal(mc)
                     }
                 }
 
                 else -> throw IllegalArgumentException("arg $node is not a number")
             }
+        }
+
+        @Throws(IllegalArgumentException::class, NullPointerException::class)
+        private fun formatOf(value: BigDecimal, picture: String, symbols: DecimalFormatSymbols): String {
+            val df = DecimalFormat()
+            df.decimalFormatSymbols = symbols
+            val pic: String = picture
+                .replace("9".toRegex(), "0")
+                .replace("e", "E")
+            df.applyLocalizedPattern(pic)
+            return df.format(value)
+        }
+
+        private fun symbolsOf(options: ObjectNode): DecimalFormatSymbols {
+            val symbols = DefaultDecimalFormatSymbols.clone() as DecimalFormatSymbols
+            options.fieldNames().forEach { fieldName ->
+                val text = options[fieldName].textValue()
+                when (fieldName) {
+                    SYMBOL_DECIMAL_SEPARATOR -> symbols.decimalSeparator = text[0]
+                    SYMBOL_GROUPING_SEPARATOR -> symbols.groupingSeparator = text[0]
+                    SYMBOL_INFINITY -> symbols.infinity = text
+                    SYMBOL_MINUS_SIGN -> symbols.minusSign = text[0]
+                    SYMBOL_NAN -> symbols.naN = text
+                    SYMBOL_PERCENT -> symbols.percent = text[0]
+                    SYMBOL_PER_MILLE -> symbols.perMill = text[0]
+                    SYMBOL_ZERO_DIGIT -> symbols.zeroDigit = text[0]
+                    SYMBOL_DIGIT -> symbols.digit = text[0]
+                    SYMBOL_PATTERN_SEPARATOR -> symbols.patternSeparator = text[0]
+                    else -> throw NoSuchElementException("symbol $fieldName unknown")
+                }
+            }
+            return symbols
         }
 
     } //~ companion
@@ -125,31 +170,38 @@ class NumericFunctions(val mc: MathContext, val rand: Random) {
      * https://docs.jsonata.org/numeric-functions#formatnumber
      */
     @LibraryFunction
-    fun formatNumber(number: NumericNode, picture: TextNode) {}
+    fun formatNumber(number: NumericNode, picture: TextNode): TextNode {
+        return TextNode(formatOf(number.decimalValue(), picture.textValue(), DefaultDecimalFormatSymbols))
+    }
 
 
     /**
      * https://docs.jsonata.org/numeric-functions#formatnumber
      */
     @LibraryFunction
-    fun formatNumber(number: NumericNode, picture: JsonNode, options: ObjectNode) {}
+    fun formatNumber(number: NumericNode, picture: JsonNode, options: ObjectNode): TextNode {
+        return TextNode(formatOf(number.decimalValue(), picture.textValue(), symbolsOf(options)))
+    }
 
     /**
      * https://docs.jsonata.org/numeric-functions#formatbase
      */
     @LibraryFunction
-    fun formatBase(number: NumericNode, radix: NumericNode) {}
+    fun formatBase(number: NumericNode, radix: NumericNode) {
+    }
 
     /**
      * https://docs.jsonata.org/numeric-functions#formatinteger
      */
     @LibraryFunction
-    fun formatInteger(number: JsonNode, picture: JsonNode) {}
+    fun formatInteger(number: JsonNode, picture: JsonNode) {
+    }
 
     /**
      * https://docs.jsonata.org/numeric-functions#parseinteger
      */
     @LibraryFunction
-    fun parseInteger(string: JsonNode, picture: JsonNode) {}
+    fun parseInteger(string: JsonNode, picture: JsonNode) {
+    }
 
 } //~ NumericFunctions

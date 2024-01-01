@@ -14,17 +14,6 @@ import java.text.DecimalFormat
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class TestNumericFunctions {
 
-    @Test
-    @Disabled
-    fun x() {
-        val n = 34.555
-        val p = "#0.00;(#0.00)"
-        val df = DecimalFormat()
-        df.applyPattern(p)
-        val s = df.format(n)
-        println(s)
-    }
-
     /**
      * https://docs.jsonata.org/numeric-functions#number
      */
@@ -345,7 +334,6 @@ class TestNumericFunctions {
      * https://docs.jsonata.org/numeric-functions#formatnumber
      */
     @Test
-    @Disabled
     fun `$formatNumber - group notation`() {
         val expression = "\$formatNumber(12345.6, '#,###.00')"
         val expected = TextNode("12,345.60")
@@ -357,7 +345,6 @@ class TestNumericFunctions {
      * https://docs.jsonata.org/numeric-functions#formatnumber
      */
     @Test
-    @Disabled
     fun `$formatNumber - e notation`() {
         val expression = "\$formatNumber(1234.5678, \"00.000E0\")"
         val expected = TextNode("12.346E2")
@@ -393,7 +380,6 @@ class TestNumericFunctions {
      * https://docs.jsonata.org/numeric-functions#formatnumber
      */
     @Test
-    @Disabled
     fun `$formatNumber - percent`() {
         val expression = "\$formatNumber(0.14, \"00%\")"
         val expected = TextNode("14%")
@@ -405,7 +391,6 @@ class TestNumericFunctions {
      * https://docs.jsonata.org/numeric-functions#formatnumber
      */
     @Test
-    @Disabled
     fun `$formatNumber - per-mille option`() {
         val expression = "\$formatNumber(0.14, \"###pm\", {\"per-mille\": \"pm\"})"
         val expected = TextNode("140pm")

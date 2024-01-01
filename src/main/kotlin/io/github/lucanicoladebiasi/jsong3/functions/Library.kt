@@ -24,14 +24,20 @@ open class Library {
 
         fun isCompatible(vararg args: JsonNode?): Boolean {
             val arguments = args.toList()
-            if (arguments.size == signature.size) repeat(arguments.size) { i ->
-                arguments[i]?.let { argument ->
-                    if (!argument::class.createType().isSubtypeOf(signature[i])) {
-                        return false
+            if (arguments.size == signature.size) {
+                when (arguments.size) {
+                    0 -> return true
+                    else -> repeat(arguments.size) { i ->
+                        arguments[i]?.let { argument ->
+                            if (!argument::class.createType().isSubtypeOf(signature[i])) {
+                                return false
+                            }
+                        }
+                        return true
                     }
                 }
             }
-            return true
+            return false
         }
 
     } //~ Handler

@@ -7,39 +7,46 @@ import com.fasterxml.jackson.databind.node.NumericNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.node.TextNode
 import java.math.BigDecimal
+import java.math.MathContext
+import kotlin.math.pow
+import kotlin.random.Random
 
 @Suppress("unused")
-object NumericFunctions {
+class NumericFunctions(val mc: MathContext, val rand: Random) {
 
-    const val BIN_TAG = "0b"
+    companion object {
 
-    const val HEX_TAG = "0x"
+        const val BIN_TAG = "0b"
 
-    const val OCT_TAG = "0o"
+        const val HEX_TAG = "0x"
 
-    @Throws(IllegalArgumentException::class)
-    fun decimalOf(node: JsonNode?): BigDecimal {
-        return when (node) {
-            null -> BigDecimal.ZERO
-            is BooleanNode -> when (node.booleanValue()) {
-                true -> BigDecimal.ONE
-                else -> BigDecimal.ZERO
-            }
+        const val OCT_TAG = "0o"
 
-            is NumericNode -> node.decimalValue()
-            is TextNode -> {
-                val txt = node.textValue()
-                when {
-                    txt.startsWith(BIN_TAG) -> txt.substring(BIN_TAG.length).toInt(2).toBigDecimal()
-                    txt.startsWith(OCT_TAG) -> txt.substring(OCT_TAG.length).toInt(8).toBigDecimal()
-                    txt.startsWith(HEX_TAG) -> txt.substring(HEX_TAG.length).toInt(16).toBigDecimal()
-                    else -> txt.toBigDecimal()
+        @Throws(IllegalArgumentException::class)
+        fun decimalOf(node: JsonNode?, mc: MathContext): BigDecimal {
+            return when (node) {
+                null -> BigDecimal.ZERO
+                is BooleanNode -> when (node.booleanValue()) {
+                    true -> BigDecimal.ONE
+                    else -> BigDecimal.ZERO
                 }
-            }
 
-            else -> throw IllegalArgumentException("arg $node is not a number")
+                is NumericNode -> node.decimalValue()
+                is TextNode -> {
+                    val txt = node.textValue()
+                    when {
+                        txt.startsWith(BIN_TAG) -> txt.substring(BIN_TAG.length).toInt(2).toBigDecimal(mc)
+                        txt.startsWith(OCT_TAG) -> txt.substring(OCT_TAG.length).toInt(8).toBigDecimal(mc)
+                        txt.startsWith(HEX_TAG) -> txt.substring(HEX_TAG.length).toInt(16).toBigDecimal(mc)
+                        else -> txt.toBigDecimal(mc)
+                    }
+                }
+
+                else -> throw IllegalArgumentException("arg $node is not a number")
+            }
         }
-    }
+
+    } //~ companion
 
     /**
      * https://docs.jsonata.org/numeric-functions#number
@@ -47,7 +54,7 @@ object NumericFunctions {
     @LibraryFunction
     @Throws(IllegalArgumentException::class)
     fun number(arg: JsonNode): DecimalNode {
-        return DecimalNode(decimalOf(arg))
+        return DecimalNode(decimalOf(arg, mc))
     }
 
     /**
@@ -62,43 +69,57 @@ object NumericFunctions {
      * https://docs.jsonata.org/numeric-functions#floor
      */
     @LibraryFunction
-    fun floor(number: NumericNode) {}
+    fun floor(number: NumericNode): DecimalNode {
+        return DecimalNode(kotlin.math.floor(number.doubleValue()).toBigDecimal(mc))
+    }
 
     /**
      * https://docs.jsonata.org/numeric-functions#ceil
      */
     @LibraryFunction
-    fun ceil(number: NumericNode) {}
+    fun ceil(number: NumericNode): DecimalNode {
+        return DecimalNode(kotlin.math.ceil(number.doubleValue()).toBigDecimal(mc))
+    }
 
     /**
      * https://docs.jsonata.org/numeric-functions#round
      */
     @LibraryFunction
-    fun round(number: NumericNode) {}
+    fun round(number: NumericNode): DecimalNode {
+        return DecimalNode(number.decimalValue().setScale(0, mc.roundingMode))
+    }
 
     /**
      * https://docs.jsonata.org/numeric-functions#round
      */
     @LibraryFunction
-    fun round(number: NumericNode, precision: NumericNode) {}
+    fun round(number: NumericNode, precision: NumericNode): DecimalNode {
+        return DecimalNode(number.decimalValue().setScale(precision.intValue(), mc.roundingMode))
+    }
 
     /**
      * https://docs.jsonata.org/numeric-functions#power
      */
     @LibraryFunction
-    fun power(number: NumericNode, exponent: NumericNode) {}
+    fun power(number: NumericNode, exponent: NumericNode): DecimalNode {
+        return DecimalNode(number.doubleValue().pow(exponent.doubleValue()).toBigDecimal(mc))
+    }
 
     /**
      * https://docs.jsonata.org/numeric-functions#sqrt
      */
     @LibraryFunction
-    fun sqrt(number: JsonNode) {}
+    fun sqrt(number: JsonNode): DecimalNode {
+        return DecimalNode(number.decimalValue().sqrt(mc))
+    }
 
     /**
      * https://docs.jsonata.org/numeric-functions#random
      */
     @LibraryFunction
-    fun random() {}
+    fun random(): DecimalNode {
+        return DecimalNode(rand.nextDouble().toBigDecimal(mc))
+    }
 
     /**
      * https://docs.jsonata.org/numeric-functions#formatnumber

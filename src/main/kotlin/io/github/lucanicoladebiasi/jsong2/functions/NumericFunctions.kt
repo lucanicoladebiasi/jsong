@@ -9,6 +9,7 @@ import java.text.DecimalFormat
 import java.util.*
 import kotlin.math.ceil
 import kotlin.math.floor
+import kotlin.math.pow
 import kotlin.random.Random
 
 /**
@@ -111,7 +112,7 @@ class NumericFunctions(
      * https://docs.jsonata.org/numeric-functions#power
      */
     fun `$power`(base: NumericNode, exponent: NumericNode): NumericNode {
-        return DecimalNode(Math.pow(decimal(base).toDouble(), decimal(exponent).toDouble()).toBigDecimal())
+        return DecimalNode(decimal(base).toDouble().pow(decimal(exponent).toDouble()).toBigDecimal())
     }
 
     /**

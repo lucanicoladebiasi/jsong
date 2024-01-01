@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.node.*
 import io.github.lucanicoladebiasi.jsong.antlr.JSong3BaseVisitor
 import io.github.lucanicoladebiasi.jsong.antlr.JSong3Parser
 import io.github.lucanicoladebiasi.jsong3.functions.BooleanFunctions.Companion.booleanOf
-import io.github.lucanicoladebiasi.jsong3.functions.NumericFunctions.decimalOf
+import io.github.lucanicoladebiasi.jsong3.functions.NumericFunctions.Companion.decimalOf
 import io.github.lucanicoladebiasi.jsong3.functions.StringFunctions.Companion.stringOf
 import org.antlr.v4.runtime.tree.ParseTree
 import org.apache.commons.text.StringEscapeUtils
@@ -253,8 +253,8 @@ class Visitor(
 
     @Throws(UnsupportedOperationException::class)
     override fun visitEvalDivModMul(ctx: JSong3Parser.EvalDivModMulContext): DecimalNode {
-        val lhs = decimalOf(reduce(Visitor(c).visit(ctx.lhs)))
-        val rhs = decimalOf(reduce(Visitor(c).visit(ctx.rhs)))
+        val lhs = decimalOf(reduce(Visitor(c).visit(ctx.lhs)), c.mc)
+        val rhs = decimalOf(reduce(Visitor(c).visit(ctx.rhs)), c.mc)
         return DecimalNode(
             when (ctx.op.type) {
                 JSong3Parser.DIV -> lhs.divide(rhs, c.mc)
@@ -280,13 +280,13 @@ class Visitor(
 
     @Throws(IllegalArgumentException::class)
     override fun visitEvalNegative(ctx: JSong3Parser.EvalNegativeContext): DecimalNode {
-        return DecimalNode(decimalOf(reduce(Visitor(c).visit(ctx.exp()))).negate())
+        return DecimalNode(decimalOf(reduce(Visitor(c).visit(ctx.exp())), c.mc).negate())
     }
 
     @Throws(UnsupportedOperationException::class)
     override fun visitEvalSumSub(ctx: JSong3Parser.EvalSumSubContext): DecimalNode {
-        val lhs = decimalOf(reduce(Visitor(c).visit(ctx.lhs)))
-        val rhs = decimalOf(reduce(Visitor(c).visit(ctx.rhs)))
+        val lhs = decimalOf(reduce(Visitor(c).visit(ctx.lhs)), c.mc)
+        val rhs = decimalOf(reduce(Visitor(c).visit(ctx.rhs)), c.mc)
         return DecimalNode(
             when (ctx.op.type) {
                 JSong3Parser.SUB -> lhs.subtract(rhs)
@@ -440,8 +440,8 @@ class Visitor(
     }
 
     override fun visitRange(ctx: JSong3Parser.RangeContext): RangeNode {
-        val lhs = decimalOf(reduce(Visitor(c).visit(ctx.lhs)))
-        val rhs = decimalOf(reduce(Visitor(c).visit(ctx.rhs)))
+        val lhs = decimalOf(reduce(Visitor(c).visit(ctx.lhs)), c.mc)
+        val rhs = decimalOf(reduce(Visitor(c).visit(ctx.rhs)), c.mc)
         return RangeNode.between(lhs, rhs, c.om)
     }
 

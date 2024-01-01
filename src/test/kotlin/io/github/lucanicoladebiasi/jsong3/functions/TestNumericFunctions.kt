@@ -113,7 +113,6 @@ class TestNumericFunctions {
      * https://docs.jsonata.org/numeric-functions#floor
      */
     @Test
-    @Disabled
     fun `$floor - positive integer`() {
         val expression = "\$floor(5)"
         val expected = DecimalNode(5.toBigDecimal())
@@ -125,7 +124,6 @@ class TestNumericFunctions {
      * https://docs.jsonata.org/numeric-functions#floor
      */
     @Test
-    @Disabled
     fun `$floor - positive lower half decimal`() {
         val expression = "\$floor(5.3)"
         val expected = DecimalNode(5.toBigDecimal())
@@ -137,7 +135,6 @@ class TestNumericFunctions {
      * https://docs.jsonata.org/numeric-functions#floor
      */
     @Test
-    @Disabled
     fun `$floor - positive higher half decimal`() {
         val expression = "\$floor(5.8)"
         val expected = DecimalNode(5.toBigDecimal())
@@ -149,7 +146,6 @@ class TestNumericFunctions {
      * https://docs.jsonata.org/numeric-functions#floor
      */
     @Test
-    @Disabled
     fun `$floor - negative lower half decimal`() {
         val expression = "\$floor(-5.3)"
         val expected = DecimalNode(-6.toBigDecimal())
@@ -161,7 +157,6 @@ class TestNumericFunctions {
      * https://docs.jsonata.org/numeric-functions#ceil
      */
     @Test
-    @Disabled
     fun `$ceil - positive integer`() {
         val expression = "\$ceil(5)"
         val expected = DecimalNode(5.toBigDecimal())
@@ -173,7 +168,6 @@ class TestNumericFunctions {
      * https://docs.jsonata.org/numeric-functions#ceil
      */
     @Test
-    @Disabled
     fun `$ceil - positive lower half decimal`() {
         val expression = "\$ceil(5.3)"
         val expected = DecimalNode(6.toBigDecimal())
@@ -185,7 +179,6 @@ class TestNumericFunctions {
      * https://docs.jsonata.org/numeric-functions#ceil
      */
     @Test
-    @Disabled
     fun `$ceil - positive higher half decimal`() {
         val expression = "\$ceil(5.8)"
         val expected = DecimalNode(6.toBigDecimal())
@@ -197,7 +190,6 @@ class TestNumericFunctions {
      * https://docs.jsonata.org/numeric-functions#ceil
      */
     @Test
-    @Disabled
     fun `$ceil - negative lower half decimal `() {
         val expression = "\$ceil(-5.3)"
         val expected = DecimalNode(-5.toBigDecimal())
@@ -209,7 +201,6 @@ class TestNumericFunctions {
      * https://docs.jsonata.org/numeric-functions#round
      */
     @Test
-    @Disabled
     fun `$round - no precision`() {
         val expression = "\$round(123.456)"
         val expected = DecimalNode(123.toBigDecimal())
@@ -221,7 +212,6 @@ class TestNumericFunctions {
      * https://docs.jsonata.org/numeric-functions#round
      */
     @Test
-    @Disabled
     fun `$round - positive two digit precision`() {
         val expression = "\$round(123.456, 2)"
         val expected = DecimalNode(123.46.toBigDecimal())
@@ -233,7 +223,6 @@ class TestNumericFunctions {
      * https://docs.jsonata.org/numeric-functions#round
      */
     @Test
-    @Disabled
     fun `$round - negative one digit precision`() {
         val expression = "\$round(123.456, -1)"
         val expected = DecimalNode(120.toBigDecimal())
@@ -245,7 +234,6 @@ class TestNumericFunctions {
      * https://docs.jsonata.org/numeric-functions#round
      */
     @Test
-    @Disabled
     fun `$round - negative two digit precision`() {
         val expression = "\$round(123.456, -2)"
         val expected = DecimalNode(100.toBigDecimal())
@@ -257,7 +245,6 @@ class TestNumericFunctions {
      * https://docs.jsonata.org/numeric-functions#round
      */
     @Test
-    @Disabled
     fun `$round - odd half`() {
         val expression = "\$round(11.5)"
         val expected = DecimalNode(12.toBigDecimal())
@@ -269,7 +256,6 @@ class TestNumericFunctions {
      * https://docs.jsonata.org/numeric-functions#round
      */
     @Test
-    @Disabled
     fun `$round - even half`() {
         val expression = "\$round(12.5)"
         val expected = DecimalNode(12.toBigDecimal())
@@ -281,7 +267,6 @@ class TestNumericFunctions {
      * https://docs.jsonata.org/numeric-functions#round
      */
     @Test
-    @Disabled
     fun `$round - integer - negative one digit precision`() {
         val expression = "\$round(125, -1)"
         val expected = DecimalNode(120.toBigDecimal())
@@ -293,7 +278,6 @@ class TestNumericFunctions {
      * https://docs.jsonata.org/numeric-functions#power
      */
     @Test
-    @Disabled
     fun `$power - positive integer`() {
         val expression = "\$power(2, 8)"
         val expected = DecimalNode(256.toBigDecimal())
@@ -305,7 +289,6 @@ class TestNumericFunctions {
      * https://docs.jsonata.org/numeric-functions#power
      */
     @Test
-    @Disabled
     fun `$power- positive decimal`() {
         val expression = "\$power(2, 0.5)"
         val expected = DecimalNode("1.4142135623730951".toBigDecimal())
@@ -317,10 +300,31 @@ class TestNumericFunctions {
      * https://docs.jsonata.org/numeric-functions#power
      */
     @Test
-    @Disabled
     fun `$power - negative integer`() {
         val expression = "\$power(2, -2)"
         val expected = DecimalNode(0.25.toBigDecimal())
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
+    }
+
+    /**
+     * https://docs.jsonata.org/numeric-functions#sqrt
+     */
+    @Test
+    fun `$sqrt - integer`() {
+        val expression = "\$sqrt(4)"
+        val expected = DecimalNode(2.toBigDecimal())
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
+    }
+
+    /**
+     * https://docs.jsonata.org/numeric-functions#sqrt
+     */
+    @Test
+    fun `$sqrt - not integer`() {
+        val expression = "\$sqrt(2)"
+        val expected = DecimalNode(BigDecimal("1.414213562373095048801688724209698"))
         val actual = JSong(expression).evaluate()
         assertEquals(expected, actual)
     }
@@ -330,7 +334,6 @@ class TestNumericFunctions {
      * https://docs.jsonata.org/numeric-functions#sqrt
      */
     @Test
-    @Disabled
     fun `$random`() {
         val expression = "\$random()"
         val actual = JSong(expression).evaluate()

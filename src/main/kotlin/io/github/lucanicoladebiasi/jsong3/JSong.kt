@@ -21,7 +21,7 @@ class JSong(
 ) {
 
     init {
-        lib.register(NumericFunctions)
+        lib.register(NumericFunctions(mc, rand))
     }
 
     private val parser = JSong3Parser(CommonTokenStream(JSong3Lexer(CharStreams.fromString(expression))))

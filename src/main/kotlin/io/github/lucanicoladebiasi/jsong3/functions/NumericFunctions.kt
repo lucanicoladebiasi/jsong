@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.node.TextNode
 import java.math.BigDecimal
 
+@Suppress("unused")
 object NumericFunctions {
 
 
@@ -44,74 +45,91 @@ object NumericFunctions {
     /**
      * https://docs.jsonata.org/numeric-functions#number
      */
-    fun `$number`(arg: JsonNode): DecimalNode {
+    @Function
+    @Throws(IllegalArgumentException::class)
+    fun number(arg: JsonNode): DecimalNode {
         return DecimalNode(decimalOf(arg))
     }
 
     /**
      * https://docs.jsonata.org/numeric-functions#abs
      */
-    fun `$abs()`(number: NumericNode) {}
+    @Function
+    fun abs(number: NumericNode): DecimalNode {
+        return DecimalNode(number.decimalValue().abs())
+    }
 
     /**
      * https://docs.jsonata.org/numeric-functions#floor
      */
-    fun `$floor`(number: NumericNode) {}
+    @Function
+    fun floor(number: NumericNode) {}
 
     /**
      * https://docs.jsonata.org/numeric-functions#ceil
      */
-    fun `$ceil`(number: NumericNode) {}
+    @Function
+    fun ceil(number: NumericNode) {}
 
     /**
      * https://docs.jsonata.org/numeric-functions#round
      */
-    fun `$round`(number: NumericNode) {}
+    @Function
+    fun round(number: NumericNode) {}
 
     /**
      * https://docs.jsonata.org/numeric-functions#round
      */
-    fun `$round`(number: NumericNode, precision: NumericNode) {}
+    @Function
+    fun round(number: NumericNode, precision: NumericNode) {}
 
     /**
      * https://docs.jsonata.org/numeric-functions#power
      */
-    fun `$power`(number: NumericNode, exponent: NumericNode) {}
+    @Function
+    fun power(number: NumericNode, exponent: NumericNode) {}
 
     /**
      * https://docs.jsonata.org/numeric-functions#sqrt
      */
-    fun `$sqrt`(number: JsonNode) {}
+    @Function
+    fun sqrt(number: JsonNode) {}
 
     /**
      * https://docs.jsonata.org/numeric-functions#random
      */
-    fun `$random`() {}
+    @Function
+    fun random() {}
 
     /**
      * https://docs.jsonata.org/numeric-functions#formatnumber
      */
-    fun `$formatNumber`(number: NumericNode, picture: TextNode) {}
+    @Function
+    fun formatNumber(number: NumericNode, picture: TextNode) {}
 
 
     /**
      * https://docs.jsonata.org/numeric-functions#formatnumber
      */
-    fun `$formatNumber`(number: NumericNode, picture: JsonNode, options: ObjectNode) {}
+    @Function
+    fun formatNumber(number: NumericNode, picture: JsonNode, options: ObjectNode) {}
 
     /**
      * https://docs.jsonata.org/numeric-functions#formatbase
      */
-    fun `$formatBase`(number: NumericNode, radix: NumericNode) {}
+    @Function
+    fun formatBase(number: NumericNode, radix: NumericNode) {}
 
     /**
      * https://docs.jsonata.org/numeric-functions#formatinteger
      */
-    fun `$formatInteger`(number: JsonNode, picture: JsonNode) {}
+    @Function
+    fun formatInteger(number: JsonNode, picture: JsonNode) {}
 
     /**
      * https://docs.jsonata.org/numeric-functions#parseinteger
      */
-    fun `$parseInteger`(string: JsonNode, picture: JsonNode) {}
+    @Function
+    fun parseInteger(string: JsonNode, picture: JsonNode) {}
 
 } //~ NumericFunctions

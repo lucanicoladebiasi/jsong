@@ -4,10 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.lucanicoladebiasi.jsong.antlr.JSong3Lexer
 import io.github.lucanicoladebiasi.jsong.antlr.JSong3Parser
-import io.github.lucanicoladebiasi.jsong3.functions.BooleanFunctions
-import io.github.lucanicoladebiasi.jsong3.functions.Library
-import io.github.lucanicoladebiasi.jsong3.functions.NumericAggregationFunctions
-import io.github.lucanicoladebiasi.jsong3.functions.NumericFunctions
+import io.github.lucanicoladebiasi.jsong3.functions.*
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import java.math.MathContext
@@ -23,7 +20,8 @@ class JSong(
 ) {
 
     init {
-        lib.register(BooleanFunctions)
+        lib.register(ArrayFunctions(om, rand))
+            .register(BooleanFunctions)
             .register(NumericFunctions(mc, rand))
             .register(NumericAggregationFunctions(mc))
     }

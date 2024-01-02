@@ -1,6 +1,8 @@
 package io.github.lucanicoladebiasi.jsong3
 
 import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.ObjectWriter
 import com.fasterxml.jackson.databind.node.*
 import io.github.lucanicoladebiasi.jsong.antlr.JSong3BaseVisitor
 import io.github.lucanicoladebiasi.jsong.antlr.JSong3Parser
@@ -15,6 +17,22 @@ class Visitor(
 ) : JSong3BaseVisitor<JsonNode?>() {
 
     companion object {
+
+        internal fun compare(lhs: JsonNode, rhs: JsonNode, writer: ObjectWriter): Int {
+            return when {
+                lhs.isNumber && rhs.isNumber -> lhs.decimalValue().compareTo(rhs.decimalValue())
+                else -> stringOf(lhs, writer).compareTo(stringOf(rhs, writer))
+            }
+        }
+
+        internal fun expand(node: JsonNode?, om: ObjectMapper): ArrayNode {
+            val result = om.createArrayNode()
+            if (node != null) when (node) {
+                is ArrayNode -> result.addAll(node)
+                else -> result.add(node)
+            }
+            return result
+        }
 
         internal fun reduce(node: JsonNode?): JsonNode? {
             return when (node) {
@@ -43,14 +61,6 @@ class Visitor(
         }
 
     } //~ companion
-
-    private fun compare(lhs: JsonNode, rhs: JsonNode): Int {
-        val writer = c.om.writer()
-        return when {
-            lhs.isNumber && rhs.isNumber -> lhs.decimalValue().compareTo(rhs.decimalValue())
-            else -> stringOf(lhs, writer).compareTo(stringOf(rhs, writer))
-        }
-    }
 
     private fun bindContextualValue(
         ctx: JSong3Parser.CvbContext?,
@@ -90,15 +100,6 @@ class Visitor(
         return result
     }
 
-    private fun expand(node: JsonNode?): ArrayNode {
-        val result = c.createArrayNode()
-        if (node != null) when (node) {
-            is ArrayNode -> result.addAll(node)
-            else -> result.add(node)
-        }
-        return result
-    }
-
     private fun filter(array: ArrayNode, predicates: BooleanArray): ArrayNode {
         val result = when (array) {
             is BindContextNode -> c.createBindContextNode()
@@ -133,7 +134,7 @@ class Visitor(
         cvb: JSong3Parser.CvbContext? = null
     ): ArrayNode {
         val result = c.createArrayNode()
-        val lhs = expand(Visitor(c).visit(lpt))
+        val lhs = expand(Visitor(c).visit(lpt), c.om)
         lhs.forEachIndexed { index, node ->
             val loop = Context.Loop(lhs.size(), index)
             Visitor(Context(c.lib, loop, c.mc, node, c.om, c.pmap, c.rand, c.vars)).visit(rpt)?.let { rhs ->
@@ -223,9 +224,9 @@ class Visitor(
                 lhs == null && rhs == null -> true
                 lhs != null && rhs != null -> {
                     when (val op = ctx.op.type) {
-                        JSong3Parser.IN -> expand(rhs).contains(lhs)
+                        JSong3Parser.IN -> expand(rhs, c.om).contains(lhs)
                         else -> {
-                            val value = compare(lhs, rhs)
+                            val value = compare(lhs, rhs, c.om.writer())
                             when (op) {
                                 JSong3Parser.GE -> value >= 0
                                 JSong3Parser.GT -> value > 0
@@ -318,7 +319,7 @@ class Visitor(
     }
 
     override fun visitFilter(ctx: JSong3Parser.FilterContext): ArrayNode {
-        val lhs = expand(Visitor(c).visit(ctx.lhs))
+        val lhs = expand(Visitor(c).visit(ctx.lhs), c.om)
         val loop = Context.Loop(lhs.size() * (c.loop?.size ?: 1))
         val predicates = BooleanArray(loop.size)
         c.vars = stretch(c.vars, loop.size)

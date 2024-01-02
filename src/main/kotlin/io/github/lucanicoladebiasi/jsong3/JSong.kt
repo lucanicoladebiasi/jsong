@@ -6,6 +6,7 @@ import io.github.lucanicoladebiasi.jsong.antlr.JSong3Lexer
 import io.github.lucanicoladebiasi.jsong.antlr.JSong3Parser
 import io.github.lucanicoladebiasi.jsong3.functions.BooleanFunctions
 import io.github.lucanicoladebiasi.jsong3.functions.Library
+import io.github.lucanicoladebiasi.jsong3.functions.NumericAggregationFunctions
 import io.github.lucanicoladebiasi.jsong3.functions.NumericFunctions
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
@@ -22,9 +23,9 @@ class JSong(
 ) {
 
     init {
-        lib
-            .register(BooleanFunctions)
+        lib.register(BooleanFunctions)
             .register(NumericFunctions(mc, rand))
+            .register(NumericAggregationFunctions(mc))
     }
 
     private val parser = JSong3Parser(CommonTokenStream(JSong3Lexer(CharStreams.fromString(expression))))

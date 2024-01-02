@@ -63,5 +63,4 @@ object BooleanFunctions {
         return BooleanNode.valueOf(Visitor.reduce(arg) != null)
     }
 
-
 } //~ BooleanFunctions

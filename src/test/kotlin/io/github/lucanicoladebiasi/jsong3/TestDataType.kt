@@ -36,7 +36,7 @@ import org.junit.jupiter.api.TestInstance
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class TestDataType {
 
-    private val mapper = ObjectMapper()
+    private val om = ObjectMapper()
 
     /**
      * https://docs.jsonata.org/construction#json-literals
@@ -80,7 +80,7 @@ class TestDataType {
         val expression = """
             "God's in his heaven — All's right with the world!"
         """.trimIndent()
-        val expected = mapper.readTree(expression)
+        val expected = om.readTree(expression)
         val actual = JSong(expression).evaluate()
         assertEquals(expected, actual)
     }

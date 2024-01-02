@@ -37,13 +37,13 @@ import kotlin.test.assertEquals
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class TestBindOperators {
 
-    private val mapper = ObjectMapper()
+    private val om = ObjectMapper()
 
     private lateinit var node: JsonNode
 
     @BeforeAll
     fun setUp() {
-        node = mapper.readTree(Thread.currentThread().contextClassLoader.getResource("library.json"))
+        node = om.readTree(Thread.currentThread().contextClassLoader.getResource("library.json"))
     }
 
     /**
@@ -54,7 +54,7 @@ class TestBindOperators {
         val expression = "library.books#\$I[\"Kernighan\" in authors].{\"title\": title, \"index\": \$I }"
 
         @Language("JSON")
-        val expected = mapper.readTree(
+        val expected = om.readTree(
             """
             [
               {
@@ -78,7 +78,7 @@ class TestBindOperators {
         val expression = "library.loans@\$L"
         val LIBRARY = "library"
         val LOANS = "loans"
-        val expected = mapper.createArrayNode()
+        val expected = om.createArrayNode()
         repeat(node[LIBRARY][LOANS].size()) {
             expected.add(node[LIBRARY])
         }
@@ -102,7 +102,7 @@ class TestBindOperators {
         val LIBRARY = "library"
         val LOANS = "loans"
         val BOOKS = "books"
-        val expected = mapper.createArrayNode()
+        val expected = om.createArrayNode()
         repeat(node[LIBRARY][LOANS].size()) {
             repeat(node[LIBRARY][BOOKS].size()) {
                 expected.add(node[LIBRARY])
@@ -119,7 +119,7 @@ class TestBindOperators {
         val LOANS = "loans"
         val BOOKS = "books"
         val TITLE = "title"
-        val expected = mapper.createArrayNode()
+        val expected = om.createArrayNode()
         repeat(node[LIBRARY][LOANS].size()) {
             node[LIBRARY][BOOKS].forEach { book ->
                 expected.addObject().set<JsonNode>("title", book[TITLE])
@@ -139,7 +139,7 @@ class TestBindOperators {
 
 
         @Language("JSON")
-        val expected = mapper.readTree(
+        val expected = om.readTree(
             """
             [
               {
@@ -167,7 +167,7 @@ class TestBindOperators {
         val expression = "library.loans@\$L.books@\$B[\$L.isbn=\$B.isbn].customers[\$L.customer=id].{ 'customer': name, 'book': \$B.title, 'due': \$L.return }"
 
         @Language("JSON")
-        val expected = mapper.readTree(
+        val expected = om.readTree(
             """
             [
               {

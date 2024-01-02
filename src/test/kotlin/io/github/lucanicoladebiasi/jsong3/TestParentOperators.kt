@@ -11,13 +11,13 @@ import kotlin.test.assertEquals
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class TestParentOperators {
 
-    private val mapr = ObjectMapper()
+    private val om = ObjectMapper()
 
     private var node: JsonNode? = null
 
     @BeforeAll
     fun setUp() {
-        node = mapr.readTree(Thread.currentThread().contextClassLoader.getResource("invoice.json"))
+        node = om.readTree(Thread.currentThread().contextClassLoader.getResource("invoice.json"))
     }
 
     /**
@@ -28,7 +28,7 @@ class TestParentOperators {
         val expression = "Account.Order.Product.%.OrderID"
 
         @Language("JSON")
-        val expected = mapr.readTree(
+        val expected = om.readTree(
             """
             ["order103","order103","order104","order104"]  
             """.trimIndent()
@@ -45,7 +45,7 @@ class TestParentOperators {
         val expression = "Account.Order.Product.%.%.`Account Name`"
 
         @Language("JSON")
-        val expected = mapr.readTree(
+        val expected = om.readTree(
             """
             ["Firefly", "Firefly", "Firefly", "Firefly"]
             """.trimIndent()
@@ -69,7 +69,7 @@ class TestParentOperators {
             """.trimIndent()
 
         @Language("JSON")
-        val expected = mapr.readTree(
+        val expected = om.readTree(
             """
             [
               {

@@ -39,7 +39,7 @@ import java.math.BigDecimal
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class TestNumericOperators {
 
-    private val mapper = ObjectMapper()
+    private val om = ObjectMapper()
 
     /**
      * https://docs.jsonata.org/numeric-operators#-addition
@@ -139,7 +139,7 @@ class TestNumericOperators {
         val expression = "[1..\$count(Items)].(\"Item \" & \$)"
 
         @Language("JSON")
-        val expected = mapper.readTree(
+        val expected = om.readTree(
             """
             [
               "Item 1", 

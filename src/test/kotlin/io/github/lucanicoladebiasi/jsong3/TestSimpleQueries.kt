@@ -42,12 +42,12 @@ import org.junit.jupiter.api.TestInstance
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class TestSimpleQueries {
 
-    private val mapper = ObjectMapper()
+    private val om = ObjectMapper()
 
     private var node: JsonNode? = null
 
     @Language("JSON")
-    private val array = mapper.readTree(
+    private val array = om.readTree(
         """
         [
             { "ref": [ 1,2 ] },
@@ -58,7 +58,7 @@ class TestSimpleQueries {
 
     @BeforeAll
     fun setUp() {
-        node = mapper.readTree(Thread.currentThread().contextClassLoader.getResource("address.json"))
+        node = om.readTree(Thread.currentThread().contextClassLoader.getResource("address.json"))
     }
 
     /**
@@ -134,7 +134,7 @@ class TestSimpleQueries {
         val expression = "Phone[0]"
 
         @Language("JSON")
-        val expected = mapper.readTree(
+        val expected = om.readTree(
             """
             { 
               "type": "home", 
@@ -154,7 +154,7 @@ class TestSimpleQueries {
         val expression = "Phone[1]"
 
         @Language("JSON")
-        val expected = mapper.readTree(
+        val expected = om.readTree(
             """
             { 
               "type": "office", 
@@ -173,7 +173,7 @@ class TestSimpleQueries {
         val expression = "Phone[-1]"
 
         @Language("JSON")
-        val expected = mapper.readTree(
+        val expected = om.readTree(
             """
             { 
               "type": "mobile", 
@@ -193,7 +193,7 @@ class TestSimpleQueries {
         val expression = "Phone[-2]"
 
         @Language("JSON")
-        val expected = mapper.readTree(
+        val expected = om.readTree(
             """
             {
               "type": "office",
@@ -223,7 +223,7 @@ class TestSimpleQueries {
         val expression = "Phone[0].number"
 
         @Language("JSON")
-        val expected = mapper.readTree(
+        val expected = om.readTree(
             """
             "0203 544 1234"
             """.trimIndent()
@@ -240,7 +240,7 @@ class TestSimpleQueries {
         val expression = "Phone.number"
 
         @Language("JSON")
-        val expected = mapper.readTree(
+        val expected = om.readTree(
             """
             [
               "0203 544 1234",
@@ -262,7 +262,7 @@ class TestSimpleQueries {
         val expression = "Phone.number[0]"
 
         @Language("JSON")
-        val expected = mapper.readTree(
+        val expected = om.readTree(
             """
             [
               "0203 544 1234",
@@ -284,7 +284,7 @@ class TestSimpleQueries {
         val expression = "(Phone.number)[0]"
 
         @Language("JSON")
-        val expected = mapper.readTree(
+        val expected = om.readTree(
             """
             "0203 544 1234"
             """.trimIndent()
@@ -301,7 +301,7 @@ class TestSimpleQueries {
         val expression = "Phone[[0..1]]"
 
         @Language("JSON")
-        val expected = mapper.readTree(
+        val expected = om.readTree(
             """
             [
               { "type": "home", "number": "0203 544 1234" },
@@ -321,7 +321,7 @@ class TestSimpleQueries {
         val expression = "$[0]"
 
         @Language("JSON")
-        val expected = mapper.readTree(
+        val expected = om.readTree(
             """
             { "ref": [ 1,2 ] }
             """.trimIndent()
@@ -338,7 +338,7 @@ class TestSimpleQueries {
         val expression = "$[0].ref"
 
         @Language("JSON")
-        val expected = mapper.readTree(
+        val expected = om.readTree(
             """
             [1, 2]                    
             """.trimIndent()
@@ -353,7 +353,7 @@ class TestSimpleQueries {
     @Test
     fun `Returns element on first position of the internal array`() {
         val expression = "$[0].ref[0]"
-        val expected = mapper.readTree("1")
+        val expected = om.readTree("1")
         val actual = JSong(expression).evaluate(array)
         assertEquals(expected, actual)
     }
@@ -366,7 +366,7 @@ class TestSimpleQueries {
         val expression = "$.ref"
 
         @Language("JSON")
-        val expected = mapper.readTree(
+        val expected = om.readTree(
             """
             [1, 2, 3, 4]                
             """.trimIndent()

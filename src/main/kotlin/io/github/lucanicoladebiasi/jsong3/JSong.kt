@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import io.github.lucanicoladebiasi.jsong.antlr.JSong3Lexer
 import io.github.lucanicoladebiasi.jsong.antlr.JSong3Parser
+import io.github.lucanicoladebiasi.jsong3.functions.BooleanFunctions
 import io.github.lucanicoladebiasi.jsong3.functions.Library
 import io.github.lucanicoladebiasi.jsong3.functions.NumericFunctions
 import org.antlr.v4.runtime.CharStreams
@@ -21,7 +22,9 @@ class JSong(
 ) {
 
     init {
-        lib.register(NumericFunctions(mc, rand))
+        lib
+            .register(BooleanFunctions)
+            .register(NumericFunctions(mc, rand))
     }
 
     private val parser = JSong3Parser(CommonTokenStream(JSong3Lexer(CharStreams.fromString(expression))))

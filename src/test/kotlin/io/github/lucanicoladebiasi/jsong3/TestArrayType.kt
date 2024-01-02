@@ -9,7 +9,7 @@ import org.junit.jupiter.api.TestInstance
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class TestArrayType {
 
-    private val mapper = ObjectMapper()
+    private val om = ObjectMapper()
 
     /**
      * https://docs.jsonata.org/construction#json-literals
@@ -24,7 +24,7 @@ class TestArrayType {
               "value2"
             ]
             """
-        val expected = mapper.readTree(expression)
+        val expected = om.readTree(expression)
         val actual = JSong(expression).evaluate()
         assertEquals(expected, actual)
     }

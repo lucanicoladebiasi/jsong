@@ -9,7 +9,7 @@ import org.junit.jupiter.api.TestInstance
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class TestObjectType {
 
-    private val mapper = ObjectMapper()
+    private val om = ObjectMapper()
 
     /**
      * https://docs.jsonata.org/construction#json-literals
@@ -23,7 +23,7 @@ class TestObjectType {
             "key2": "value2"
         }
         """.trimIndent()
-        val expected = mapper.readTree(expression)
+        val expected = om.readTree(expression)
         val actual = JSong(expression).evaluate()
         assertEquals(expected, actual)
     }

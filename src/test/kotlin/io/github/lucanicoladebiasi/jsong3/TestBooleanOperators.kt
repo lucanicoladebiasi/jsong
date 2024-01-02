@@ -38,13 +38,13 @@ import kotlin.test.assertNull
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class TestBooleanOperators {
 
-    private val mapper = ObjectMapper()
+    private val om = ObjectMapper()
 
     private var node: JsonNode? = null
 
     @BeforeAll
     fun setUp() {
-        node = mapper.readTree(Thread.currentThread().contextClassLoader.getResource("library.json"))
+        node = om.readTree(Thread.currentThread().contextClassLoader.getResource("library.json"))
     }
 
     /**

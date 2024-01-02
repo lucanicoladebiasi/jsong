@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.*
 import io.github.lucanicoladebiasi.jsong.antlr.JSong3BaseVisitor
 import io.github.lucanicoladebiasi.jsong.antlr.JSong3Parser
-import io.github.lucanicoladebiasi.jsong3.functions.BooleanFunctions.Companion.booleanOf
+import io.github.lucanicoladebiasi.jsong3.functions.BooleanFunctions.booleanOf
 import io.github.lucanicoladebiasi.jsong3.functions.NumericFunctions.Companion.decimalOf
 import io.github.lucanicoladebiasi.jsong3.functions.StringFunctions.Companion.stringOf
 import org.antlr.v4.runtime.tree.ParseTree
@@ -16,7 +16,7 @@ class Visitor(
 
     companion object {
 
-        private fun reduce(node: JsonNode?): JsonNode? {
+        internal fun reduce(node: JsonNode?): JsonNode? {
             return when (node) {
                 is ArrayNode -> when (node.size()) {
                     0 -> null

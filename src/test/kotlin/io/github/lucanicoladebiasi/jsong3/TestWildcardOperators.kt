@@ -11,13 +11,13 @@ import kotlin.test.assertEquals
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class TestWildcardOperators {
 
-    private val mapr = ObjectMapper()
+    private val om = ObjectMapper()
 
     private var node: JsonNode? = null
 
     @BeforeAll
     fun setUp() {
-        node = mapr.readTree(Thread.currentThread().contextClassLoader.getResource("address.json"))
+        node = om.readTree(Thread.currentThread().contextClassLoader.getResource("address.json"))
     }
 
     @Test
@@ -25,7 +25,7 @@ class TestWildcardOperators {
         val expression = "*.Postcode"
 
         @Language("JSON")
-        val expected = mapr.readTree(
+        val expected = om.readTree(
             """
                 "SO21 2JN"
             """.trimIndent()
@@ -39,7 +39,7 @@ class TestWildcardOperators {
         val expression = "Address.*"
 
         @Language("JSON")
-        val expected = mapr.readTree(
+        val expected = om.readTree(
             """
                 [
                   "Hursley Park",
@@ -57,7 +57,7 @@ class TestWildcardOperators {
         val expression = "**.Postcode"
 
         @Language("JSON")
-        val expected = mapr.readTree(
+        val expected = om.readTree(
             """
                 [
                   "SO21 2JN",
@@ -74,7 +74,7 @@ class TestWildcardOperators {
         val expression = "Address.**"
 
         @Language("JSON")
-        val expected = mapr.readTree(
+        val expected = om.readTree(
             """
                 [
                   {

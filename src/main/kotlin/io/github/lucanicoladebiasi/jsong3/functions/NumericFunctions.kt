@@ -187,7 +187,16 @@ class NumericFunctions(
      * https://docs.jsonata.org/numeric-functions#formatbase
      */
     @LibraryFunction
-    fun formatBase(number: NumericNode, radix: NumericNode) {
+    fun formatBase(number: NumericNode): TextNode {
+        return TextNode(number.intValue().toString())
+    }
+
+    /**
+     * https://docs.jsonata.org/numeric-functions#formatbase
+     */
+    @LibraryFunction
+    fun formatBase(number: NumericNode, radix: NumericNode): TextNode {
+        return TextNode(Integer.toString(number.intValue(), radix.intValue()))
     }
 
     /**

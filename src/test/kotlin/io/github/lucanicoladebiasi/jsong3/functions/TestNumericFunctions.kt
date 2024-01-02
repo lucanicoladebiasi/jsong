@@ -4,12 +4,12 @@ import com.fasterxml.jackson.databind.node.DecimalNode
 import com.fasterxml.jackson.databind.node.NumericNode
 import com.fasterxml.jackson.databind.node.TextNode
 import io.github.lucanicoladebiasi.jsong3.JSong
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
-import java.text.DecimalFormat
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class TestNumericFunctions {
@@ -356,10 +356,9 @@ class TestNumericFunctions {
      * https://docs.jsonata.org/numeric-functions#formatnumber
      */
     @Test
-    @Disabled
     fun `$formatNumber - positive cents`() {
         val expression = "\$formatNumber(34.555, \"#0.00;(#0.00)\")"
-        val expected = TextNode("34.55")
+        val expected = TextNode("34.56")
         val actual = JSong(expression).evaluate()
         assertEquals(expected, actual)
     }
@@ -368,10 +367,9 @@ class TestNumericFunctions {
      * https://docs.jsonata.org/numeric-functions#formatnumber
      */
     @Test
-    @Disabled
     fun `$formatNumber - negative cents`() {
         val expression = "\$formatNumber(-34.555, \"#0.00;(#0.00)\")"
-        val expected = TextNode("(34.55)")
+        val expected = TextNode("(34.56)")
         val actual = JSong(expression).evaluate()
         assertEquals(expected, actual)
     }
@@ -402,22 +400,35 @@ class TestNumericFunctions {
      * https://docs.jsonata.org/numeric-functions#formatnumber
      */
     @Test
-    @Disabled
     fun `$formatNumber - zero-digit option`() {
-        val expression = "\$formatNumber(1234.5678, \"①①.①①①e①\", {\"zero-digit\": \"\\u245f\"})"
-        val expected = TextNode("\"①②.③④⑥e②\"")
+        val expression = "\$formatNumber(100,\"##\",{\"zero-digit\": \"\\u245f\"})"
+        val expected = TextNode("①\u245f\u245f")
         val actual = JSong(expression).evaluate()
         assertEquals(expected, actual)
     }
 
     @Test
-    @Disabled
-    fun `$formatBase`() {
+    fun `$formatBase - binary`() {
+        val expression = "\$formatBase(100, 2)"
+        val expected = TextNode("1100100")
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
     }
 
     @Test
-    @Disabled
-    fun `test$formatBase`() {
+    fun `$formatBase - decimal`() {
+        val expression = "\$formatBase(12.0)"
+        val expected = TextNode("12")
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun `$formatBase - hexadecimal`() {
+        val expression = "\$formatBase(2555, 16)"
+        val expected = TextNode("9fb")
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
     }
 
     @Test

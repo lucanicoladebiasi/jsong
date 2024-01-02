@@ -203,14 +203,34 @@ class NumericFunctions(
      * https://docs.jsonata.org/numeric-functions#formatinteger
      */
     @LibraryFunction
-    fun formatInteger(number: JsonNode, picture: JsonNode) {
+    fun formatInteger(number: NumericNode): TextNode {
+        return TextNode(number.intValue().toString())
+    }
+
+    /**
+     * https://docs.jsonata.org/numeric-functions#formatinteger
+     */
+    @LibraryFunction
+    @Suppress("UNUSED_PARAMETER")
+    fun formatInteger(number: NumericNode, picture: TextNode): TextNode {
+        return TextNode(number.intValue().toString())
     }
 
     /**
      * https://docs.jsonata.org/numeric-functions#parseinteger
      */
     @LibraryFunction
-    fun parseInteger(string: JsonNode, picture: JsonNode) {
+    fun parseInteger(string: TextNode): DecimalNode {
+        return DecimalNode(string.asInt().toBigDecimal())
+    }
+
+    /**
+     * https://docs.jsonata.org/numeric-functions#parseinteger
+     */
+    @LibraryFunction
+    @Suppress("UNUSED_PARAMETER")
+    fun parseInteger(string: TextNode, picture: TextNode): DecimalNode {
+        return DecimalNode(string.asInt().toBigDecimal())
     }
 
 } //~ NumericFunctions

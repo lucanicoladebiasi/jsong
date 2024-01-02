@@ -4,8 +4,7 @@ import com.fasterxml.jackson.databind.node.DecimalNode
 import com.fasterxml.jackson.databind.node.NumericNode
 import com.fasterxml.jackson.databind.node.TextNode
 import io.github.lucanicoladebiasi.jsong3.JSong
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
@@ -417,7 +416,7 @@ class TestNumericFunctions {
 
     @Test
     fun `$formatBase - decimal`() {
-        val expression = "\$formatBase(12.0)"
+        val expression = "\$formatBase(12.3)"
         val expected = TextNode("12")
         val actual = JSong(expression).evaluate()
         assertEquals(expected, actual)
@@ -432,12 +431,42 @@ class TestNumericFunctions {
     }
 
     @Test
-    @Disabled
     fun `$formatInteger`() {
+        val expression = "\$formatInteger(12.3)"
+        val expected = TextNode("12")
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
     }
 
     @Test
-    @Disabled
+    fun `$formatInteger - picture ignored`() {
+        val expression = "\$formatInteger(12.3)"
+        val expected = TextNode("12")
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
+    }
+
+    @Test
     fun `$parseInteger`() {
+        val expression = "\$parseInteger('12')"
+        val expected = DecimalNode(12.toBigDecimal())
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
+    }
+
+    @Test
+    fun `$parseInteger - picture ignored`() {
+        val expression = "\$parseInteger('12,345,678', '#,##0')"
+        val unexpected = DecimalNode(12345678.toBigDecimal())
+        val actual = JSong(expression).evaluate()
+        assertNotEquals(unexpected, actual)
+    }
+
+    @Test
+    fun `$parseInteger - picture words ignored`() {
+        val expression = "\$parseInteger(\"twelve thousand, four hundred and seventy-six\", 'w')"
+        val unexpected = DecimalNode(12345678.toBigDecimal())
+        val actual = JSong(expression).evaluate()
+        assertNotEquals(unexpected, actual)
     }
 }

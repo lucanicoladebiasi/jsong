@@ -135,7 +135,9 @@ class Visitor(
         cvb: JSong3Parser.CvbContext? = null
     ): ArrayNode {
         val result = c.createArrayNode()
-        val lhs = expand(Visitor(c).visit(lpt), c.om)
+        var lhs = expand(Visitor(c).visit(lpt), c.om)
+        val indexes = RangeNode.indexes(lhs)
+        lhs = if (indexes.isNotEmpty()) c.createArrayNode().addAll(indexes.map { index -> IntNode(index) }) else lhs
         lhs.forEachIndexed { index, node ->
             val loop = Context.Loop(lhs.size(), index)
             Visitor(Context(c.lib, loop, c.mc, node, c.om, c.pmap, c.rand, c.vars)).visit(rpt)?.let { rhs ->

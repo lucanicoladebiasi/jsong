@@ -28,12 +28,20 @@ class RangeNode(
             return RangeNode(mapper, DecimalNode(x.min(y)), DecimalNode(x.max(y)))
         }
 
+        private fun isIndexer(array: ArrayNode): Boolean {
+            array.forEach { element ->
+                if (element !is NumericNode && element !is RangeNode) return false
+            }
+            return true
+        }
+
         fun indexes(node: JsonNode?): Set<Int> {
             val indexes = mutableSetOf<Int>()
             when (node) {
-                is ArrayNode -> node.forEach { element ->
+                is ArrayNode -> if (isIndexer(node)) node.forEach { element ->
                     indexes.addAll(indexes(element))
                 }
+
                 is NumericNode -> indexes.add(node.intValue())
                 is RangeNode -> indexes.addAll(node.indexes)
             }

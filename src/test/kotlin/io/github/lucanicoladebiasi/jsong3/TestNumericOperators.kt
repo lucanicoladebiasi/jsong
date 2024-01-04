@@ -27,7 +27,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.DecimalNode
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
@@ -134,7 +133,6 @@ class TestNumericOperators {
      * https://docs.jsonata.org/numeric-operators#-range
      */
     @Test
-    @Disabled
     fun `Expression - range from function call `() {
         val expression = "[1..\$count(Items)].(\"Item \" & \$)"
 
@@ -148,7 +146,20 @@ class TestNumericOperators {
             ]         
             """.trimIndent()
         )
-        val actual = JSong(expression).evaluate()
+
+        @Language("JSON")
+        val node = om.readTree(
+            """
+            {
+              "Items": [
+                { "Number":  1},
+                { "Number":  2},
+                { "Number":  3}
+              ]   
+            }
+        """.trimIndent()
+        )
+        val actual = JSong(expression).evaluate(node)
         assertEquals(expected, actual)
     }
 
@@ -156,7 +167,6 @@ class TestNumericOperators {
      * https://docs.jsonata.org/numeric-operators#-range
      */
     @Test
-    @Disabled
     fun `Range context`() {
         val expression = "[1..5].(\$ * \$)"
 

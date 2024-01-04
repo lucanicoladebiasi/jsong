@@ -11,6 +11,7 @@ import io.github.lucanicoladebiasi.jsong3.functions.NumericFunctions.Companion.d
 import io.github.lucanicoladebiasi.jsong3.functions.StringFunctions.Companion.stringOf
 import org.antlr.v4.runtime.tree.ParseTree
 import org.apache.commons.text.StringEscapeUtils
+import java.lang.reflect.InvocationTargetException
 
 class Visitor(
     private val c: Context
@@ -275,7 +276,11 @@ class Visitor(
                     Visitor(Context(c.lib, null, c.mc, c.node, c.om, c.pmap, c.rand, c.vars)).visit(ctx.exp()[i])
                 )
             }
-            return c.lib.call(id, *args)
+            try {
+                return c.lib.call(id, *args)
+            } catch (e: InvocationTargetException) {
+                throw e.targetException
+            }
         } else throw NoSuchMethodException("function $id not found")
     }
 

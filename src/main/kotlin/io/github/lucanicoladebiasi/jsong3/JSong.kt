@@ -24,6 +24,7 @@ class JSong(
             .register(BooleanFunctions)
             .register(NumericFunctions(mc, rand))
             .register(NumericAggregationFunctions(mc))
+            .register(ObjectFunctions(om))
     }
 
     private val parser = JSong3Parser(CommonTokenStream(JSong3Lexer(CharStreams.fromString(expression))))

@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.node.NumericNode
 import com.fasterxml.jackson.databind.node.TextNode
 import io.github.lucanicoladebiasi.jsong3.JSong
 import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
@@ -39,7 +38,6 @@ class TestNumericFunctions {
      * https://docs.jsonata.org/numeric-functions#number
      */
     @Test
-    @Disabled
     fun `$number - context`() {
         val expression = "[\"1\", \"2\", \"3\", \"4\", \"5\"].\$number()"
         val expected = JSong("[1, 2, 3, 4, 5]").evaluate()

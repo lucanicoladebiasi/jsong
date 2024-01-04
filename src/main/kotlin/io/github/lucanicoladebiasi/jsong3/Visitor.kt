@@ -277,7 +277,11 @@ class Visitor(
                 )
             }
             try {
-                return c.lib.call(id, *args)
+                try {
+                    return c.lib.call(id, *args)
+                } catch (e: NoSuchMethodException) {
+                    return c.lib.call(id, c.node, *args)
+                }
             } catch (e: InvocationTargetException) {
                 throw e.targetException
             }

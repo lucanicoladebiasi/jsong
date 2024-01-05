@@ -16,7 +16,7 @@ class JSong(
     private val mc: MathContext = MathContext.DECIMAL128,
     private val om: ObjectMapper = ObjectMapper(),
     private val rand: Random = Random.Default,
-    private val vars: MutableMap<String, JsonNode> = mutableMapOf()
+    private val vars: MutableMap<String, JsonNode?> = mutableMapOf()
 ) {
 
     init {

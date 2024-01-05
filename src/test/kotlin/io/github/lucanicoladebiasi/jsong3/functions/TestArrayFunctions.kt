@@ -265,7 +265,6 @@ class TestArrayFunctions {
      * https://docs.jsonata.org/array-functions#shuffle
      */
     @Test
-    @Disabled
     fun `$shuffle()`() {
         val expression = "\$shuffle([1..9])"
         val actual = JSong(expression).evaluate()

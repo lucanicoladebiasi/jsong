@@ -16,7 +16,7 @@ data class Context(
     val om: ObjectMapper,
     val pmap: MutableMap<JsonNode, JsonNode?>,
     val rand: Random,
-    var vars: MutableMap<String, JsonNode>,
+    var vars: MutableMap<String, JsonNode?>,
 ) {
 
     fun createArrayNode(): ArrayNode {

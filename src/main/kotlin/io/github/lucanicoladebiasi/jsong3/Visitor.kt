@@ -30,6 +30,9 @@ class Visitor(
             val result = om.createArrayNode()
             if (node != null) when (node) {
                 is ArrayNode -> result.addAll(node)
+                is RangeNode -> for(index in node.min.intValue() ..  node.max.intValue()) {
+                    result.add(IntNode(index))
+                }
                 else -> result.add(node)
             }
             return result
@@ -114,10 +117,10 @@ class Visitor(
     }
 
     private fun filter(
-        variables: MutableMap<String, JsonNode>,
+        variables: MutableMap<String, JsonNode?>,
         predicates: BooleanArray
-    ): MutableMap<String, JsonNode> {
-        val result = mutableMapOf<String, JsonNode>()
+    ): MutableMap<String, JsonNode?> {
+        val result = mutableMapOf<String, JsonNode?>()
         variables.forEach { (id, value) ->
             when (value) {
                 is BindContextNode -> result[id] = filter(value, predicates)
@@ -176,8 +179,8 @@ class Visitor(
         return result
     }
 
-    private fun stretch(variables: MutableMap<String, JsonNode>, size: Int): MutableMap<String, JsonNode> {
-        val result = mutableMapOf<String, JsonNode>()
+    private fun stretch(variables: MutableMap<String, JsonNode?>, size: Int): MutableMap<String, JsonNode?> {
+        val result = mutableMapOf<String, JsonNode?>()
         variables.forEach { (id, value) ->
             when (value) {
                 is BindContextNode -> result[id] = stretch(value, size)
@@ -196,6 +199,13 @@ class Visitor(
                 result.add(element)
             }
         }
+        return result
+    }
+
+    override fun visitBind(ctx: JSong3Parser.BindContext): JsonNode? {
+        val id = sanitise(ctx.`var`().ID().text)
+        val result = Visitor(Context(c.lib, c.loop, c.mc, c.node, c.om, c.pmap, c.rand, c.vars)).visit(ctx.exp())
+        c.vars[id] = result
         return result
     }
 

@@ -202,13 +202,6 @@ class Visitor(
         return result
     }
 
-    override fun visitBind(ctx: JSong3Parser.BindContext): JsonNode? {
-        val id = sanitise(ctx.`var`().ID().text)
-        val result = Visitor(Context(c.lib, c.loop, c.mc, c.node, c.om, c.pmap, c.rand, c.vars)).visit(ctx.exp())
-        c.vars[id] = result
-        return result
-    }
-
     override fun visitEvalAndOr(ctx: JSong3Parser.EvalAndOrContext): BooleanNode {
         val lhs = booleanOf(reduce(Visitor(c).visit(ctx.lhs)))
         val rhs = booleanOf(reduce(Visitor(c).visit(ctx.rhs)))
@@ -221,10 +214,17 @@ class Visitor(
         )
     }
 
+    override fun visitEvalBind(ctx: JSong3Parser.EvalBindContext): JsonNode? {
+        val id = sanitise(ctx.`var`().ID().text)
+        val result = Visitor(Context(c.lib, c.loop, c.mc, c.node, c.om, c.pmap, c.rand, c.vars)).visit(ctx.exp())
+        c.vars[id] = result
+        return result
+    }
+
     override fun visitEvalBlocks(ctx: JSong3Parser.EvalBlocksContext): JsonNode? {
         var exp = c.node
         ctx.exp()?.forEach { ctxExp ->
-            exp = Visitor(Context(c.lib, null, c.mc, exp, c.om, c.pmap, c.rand, c.vars)).visit(ctxExp)
+            exp = Visitor(Context(c.lib, null, c.mc, c.node, c.om, c.pmap, c.rand, c.vars)).visit(ctxExp)
         }
         return reduce(exp)
     }
@@ -280,7 +280,7 @@ class Visitor(
     }
 
     @Throws(Exception::class)
-    override fun visitEvalFunction(ctx: JSong3Parser.EvalFunctionContext): JsonNode? {
+    override fun visitEvalFunctionCall(ctx: JSong3Parser.EvalFunctionCallContext): JsonNode? {
         val id = sanitise(ctx.`var`().ID().text)
         if (c.lib.has(id)) {
             val args = Array(ctx.exp().size) { i ->
@@ -298,6 +298,14 @@ class Visitor(
                 throw e.targetException
             }
         } else throw NoSuchMethodException("function $id not found")
+    }
+
+    override fun visitEvalFunctionDefinition(ctx: JSong3Parser.EvalFunctionDefinitionContext): FunctionNode {
+        val args = ctx.args().`var`().map { varCtx ->
+            sanitise(varCtx.ID().text)
+        }.toSet()
+        val body = ctx.exp().joinToString { expCtx -> expCtx.text }
+        return FunctionNode(args, body, c.om)
     }
 
     @Throws(IllegalArgumentException::class)

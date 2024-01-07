@@ -49,8 +49,9 @@ exp     :   '(' exp (';' exp?)* ')'                                     # evalBl
         |   lhs = exp '&' rhs = exp                                     # evalConcatenate
         |   lhs = exp op = (LT | LE | GE | GT | NE | EQ | IN) rhs = exp # evalCompare
         |   lhs = exp op = (AND | OR) rhs = exp                         # evalAndOr
-        |   var '(' (exp (',' exp)*)* ')'                               # evalFunction
-        |   var ':=' exp                                                # bind
+        |   var ':=' exp                                                # evalBind
+        |   var '(' (exp (',' exp)*)* ')'                               # evalFunctionCall
+        |   FUNC args '{' exp* '}'                                      # evalFunctionDefinition
         |   '-' exp                                                     # evalNegative
         |   var                                                         # evalVariable
         |   path                                                        # select

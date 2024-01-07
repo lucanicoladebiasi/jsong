@@ -23,17 +23,31 @@
  */
 package io.github.lucanicoladebiasi.jsong3
 
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.DecimalNode
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
 
+/**
+ * https://docs.jsonata.org/programming
+ */
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class TestFunctionalProgramming {
 
     private val om = ObjectMapper()
+
+    private lateinit var node: JsonNode
+
+    @BeforeAll
+    fun setUp() {
+        node = om.readTree(Thread.currentThread().contextClassLoader.getResource("invoice.json"))
+    }
 
     /**
      * https://docs.jsonata.org/programming#variable-binding
@@ -43,12 +57,16 @@ class TestFunctionalProgramming {
         val expression = "Account.Order.Product.(\$p := Price; \$q := Quantity; \$p * \$q)"
 
         @Language("JSON")
-        val expected = om.readTree(
-            """
+        val expected = om.createArrayNode().addAll(
+            om.readTree(
+                """
             [68.9, 21.67, 137.8, 107.99]
             """.trimIndent()
+            ).map {
+                DecimalNode(it.decimalValue())
+            }
         )
-        val actual = JSong(expression).evaluate()
+        val actual = JSong(expression).evaluate(node)
         assertEquals(expected, actual)
     }
 
@@ -57,10 +75,10 @@ class TestFunctionalProgramming {
      */
     @Test
     fun `defining a function`() {
-//        val expression = "function(\$l, \$w, \$h){ \$k * \$w * \$h }"
-//        val expected = FunctionNode(listOf("l", "w", "h"), "\$k*\$w*\$h")
-//        val actual = Processor().evaluate(expression)
-//        assertEquals(expected, actual)
+        val expression = "function(\$l, \$w, \$h){ \$k * \$w * \$h }"
+        val expected = FunctionNode(setOf("l", "w", "h"), "\$k*\$w*\$h", om)
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
     }
 
     /**

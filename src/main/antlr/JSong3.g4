@@ -51,7 +51,8 @@ exp     :   '(' exp (';' exp?)* ')'                                     # evalBl
         |   lhs = exp op = (AND | OR) rhs = exp                         # evalAndOr
         |   var ':=' exp                                                # evalBind
         |   var '(' (exp (',' exp)*)* ')'                               # evalFunctionCall
-        |   FUNC args '{' exp* '}'                                      # evalFunctionDefinition
+        |   func '(' (exp (',' exp)*)* ')'                              # evalFunctionLambda
+        |   func                                                        # evalFunctionDefinition
         |   '-' exp                                                     # evalNegative
         |   var                                                         # evalVariable
         |   path                                                        # select
@@ -59,6 +60,8 @@ exp     :   '(' exp (';' exp?)* ')'                                     # evalBl
         ;
 
 field   :   key = exp ':' val = exp;
+
+func    :   FUNC args '{' exp* '}';
 
 type    :   '[' element? (',' element)* ']'     # array
         |   '{' field? (',' field)* '}'         # object

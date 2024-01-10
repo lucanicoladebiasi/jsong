@@ -5,10 +5,13 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.ObjectWriter
 import com.fasterxml.jackson.databind.node.*
 import io.github.lucanicoladebiasi.jsong.antlr.JSong3BaseVisitor
+import io.github.lucanicoladebiasi.jsong.antlr.JSong3Lexer
 import io.github.lucanicoladebiasi.jsong.antlr.JSong3Parser
 import io.github.lucanicoladebiasi.jsong3.functions.BooleanFunctions.booleanOf
 import io.github.lucanicoladebiasi.jsong3.functions.NumericFunctions.Companion.decimalOf
 import io.github.lucanicoladebiasi.jsong3.functions.StringFunctions.Companion.stringOf
+import org.antlr.v4.runtime.CharStreams
+import org.antlr.v4.runtime.CommonTokenStream
 import org.antlr.v4.runtime.tree.ParseTree
 import org.apache.commons.text.StringEscapeUtils
 import java.lang.reflect.InvocationTargetException
@@ -300,12 +303,17 @@ class Visitor(
         } else throw NoSuchMethodException("function $id not found")
     }
 
-    override fun visitEvalFunctionDefinition(ctx: JSong3Parser.EvalFunctionDefinitionContext): FunctionNode {
-        val args = ctx.args().`var`().map { varCtx ->
-            sanitise(varCtx.ID().text)
-        }.toSet()
-        val body = ctx.exp().joinToString { expCtx -> expCtx.text }
-        return FunctionNode(args, body, c.om)
+    override fun visitEvalFunctionLambda(ctx: JSong3Parser.EvalFunctionLambdaContext): JsonNode? {
+        val func = visitFunc(ctx.func())
+        val parser = JSong3Parser(CommonTokenStream(JSong3Lexer(CharStreams.fromString(func.body))))
+        val vars = mutableMapOf<String, JsonNode?>()
+        vars.putAll(c.vars)
+        func.args.forEachIndexed { i, id ->
+            vars[id] = reduce(
+                Visitor(Context(c.lib, null, c.mc, c.node, c.om, c.pmap, c.rand, c.vars)).visit(ctx.exp()[i])
+            )
+        }
+        return Visitor(Context(c.lib, null, c.mc, c.node, c.om, c.pmap, c.rand, vars)).visit(parser.jsong())
     }
 
     @Throws(IllegalArgumentException::class)
@@ -380,6 +388,14 @@ class Visitor(
         }
         c.vars = filter(c.vars, predicates)
         return filter(lhs, predicates)
+    }
+
+    override fun visitFunc(ctx: JSong3Parser.FuncContext): FunctionNode {
+        val args = ctx.args().`var`().map { varCtx ->
+            sanitise(varCtx.ID().text)
+        }.toSet()
+        val body = ctx.exp().joinToString { expCtx -> expCtx.text }
+        return FunctionNode(args, body, c.om)
     }
 
     override fun visitGotoContext(ctx: JSong3Parser.GotoContextContext): JsonNode? {

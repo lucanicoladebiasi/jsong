@@ -85,7 +85,6 @@ class TestFunctionalProgramming {
      * https://docs.jsonata.org/programming#defining-a-function
      */
     @Test
-    @Disabled
     fun `lambda function call`() {
         val expression = "function(\$l, \$w, \$h){ \$l * \$w * \$h }(10, 10, 5)"
         val expected = DecimalNode(BigDecimal("500"))

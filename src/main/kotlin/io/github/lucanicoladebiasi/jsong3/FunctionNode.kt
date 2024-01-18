@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.node.TextNode
 
 class FunctionNode(
-    args: Set<String>,
+    args: List<String>,
     body: String,
     om: ObjectMapper
 ) : ObjectNode(
@@ -27,7 +27,7 @@ class FunctionNode(
     /**
      * @property args arguments' set of this function.
      */
-    val args get() = this[ARGS_TAG].map { arg -> arg.textValue() }.toSet()
+    val args get() = this[ARGS_TAG].map { arg -> arg.textValue() }
 
     /**
      * @property body code of the function.

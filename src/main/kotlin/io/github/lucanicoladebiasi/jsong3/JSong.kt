@@ -20,7 +20,7 @@ class JSong(
 ) {
 
     init {
-        lib.register(ArrayFunctions(om, rand))
+        lib.register(ArrayFunctions(lib, mc, om, rand, vars))
             .register(BooleanFunctions)
             .register(NumericFunctions(mc, rand))
             .register(NumericAggregationFunctions(mc))

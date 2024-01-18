@@ -28,7 +28,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.BooleanNode
 import io.github.lucanicoladebiasi.jsong3.JSong
 import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import kotlin.test.assertEquals
@@ -186,7 +185,6 @@ class TestBooleanFunctions {
      * https://docs.jsonata.org/boolean-functions#boolean
      */
     @Test
-    @Disabled
     fun `$boolean() - function`() {
         val expression = "(\$volume := function(\$l, \$w, \$h){ \$l * \$w * \$h }; \$boolean(\$volume))"
         val expected = BooleanNode.FALSE

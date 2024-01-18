@@ -284,23 +284,39 @@ class Visitor(
 
     @Throws(Exception::class)
     override fun visitEvalFunctionCall(ctx: JSong3Parser.EvalFunctionCallContext): JsonNode? {
-        val id = sanitise(ctx.`var`().ID().text)
-        if (c.lib.has(id)) {
-            val args = Array(ctx.exp().size) { i ->
-                reduce(
-                    Visitor(Context(c.lib, null, c.mc, c.node, c.om, c.pmap, c.rand, c.vars)).visit(ctx.exp()[i])
-                )
-            }
-            try {
-                try {
-                    return c.lib.call(id, *args)
-                } catch (e: NoSuchMethodException) {
-                    return c.lib.call(id, c.node, *args)
+        val funcId = sanitise(ctx.`var`().ID().text)
+        when {
+            c.vars[funcId] is FunctionNode -> {
+                val func = c.vars[funcId] as FunctionNode
+                val parser = JSong3Parser(CommonTokenStream(JSong3Lexer(CharStreams.fromString(func.body))))
+                val vars = mutableMapOf<String, JsonNode?>()
+                vars.putAll(c.vars)
+                func.args.forEachIndexed { i, argId ->
+                    vars[argId] = reduce(
+                        Visitor(Context(c.lib, null, c.mc, c.node, c.om, c.pmap, c.rand, c.vars)).visit(ctx.exp()[i])
+                    )
                 }
-            } catch (e: InvocationTargetException) {
-                throw e.targetException
+                return Visitor(Context(c.lib, null, c.mc, c.node, c.om, c.pmap, c.rand, vars)).visit(parser.jsong())
+
             }
-        } else throw NoSuchMethodException("function $id not found")
+            c.lib.has(funcId) -> {
+                val args = Array(ctx.exp().size) { i ->
+                    reduce(
+                        Visitor(Context(c.lib, null, c.mc, c.node, c.om, c.pmap, c.rand, c.vars)).visit(ctx.exp()[i])
+                    )
+                }
+                return try {
+                    try {
+                        c.lib.call(funcId, *args)
+                    } catch (e: NoSuchMethodException) {
+                        c.lib.call(funcId, c.node, *args)
+                    }
+                } catch (e: InvocationTargetException) {
+                    throw e.targetException
+                }
+            }
+            else -> throw NoSuchMethodException("function $funcId not found")
+        }
     }
 
     override fun visitEvalFunctionLambda(ctx: JSong3Parser.EvalFunctionLambdaContext): JsonNode? {
@@ -393,7 +409,7 @@ class Visitor(
     override fun visitFunc(ctx: JSong3Parser.FuncContext): FunctionNode {
         val args = ctx.args().`var`().map { varCtx ->
             sanitise(varCtx.ID().text)
-        }.toSet()
+        }.toList()
         val body = ctx.exp().joinToString { expCtx -> expCtx.text }
         return FunctionNode(args, body, c.om)
     }

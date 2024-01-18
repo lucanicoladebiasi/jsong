@@ -2,6 +2,7 @@ package io.github.lucanicoladebiasi.jsong3.functions
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.*
+import io.github.lucanicoladebiasi.jsong3.FunctionNode
 import io.github.lucanicoladebiasi.jsong3.RangeNode
 import io.github.lucanicoladebiasi.jsong3.Visitor
 import java.math.BigDecimal
@@ -19,8 +20,8 @@ object BooleanFunctions {
                 }
                 false
             }
-
             is BooleanNode -> node.booleanValue()
+            is FunctionNode -> false
             is NumericNode -> node.decimalValue() != BigDecimal.ZERO
             is ObjectNode -> when (node) {
                 is RangeNode -> {

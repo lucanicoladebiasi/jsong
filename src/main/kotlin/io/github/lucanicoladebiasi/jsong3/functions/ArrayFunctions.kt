@@ -4,15 +4,49 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.DecimalNode
+import io.github.lucanicoladebiasi.jsong.antlr.JSong3Lexer
+import io.github.lucanicoladebiasi.jsong.antlr.JSong3Parser
+import io.github.lucanicoladebiasi.jsong3.Context
+import io.github.lucanicoladebiasi.jsong3.FunctionNode
 import io.github.lucanicoladebiasi.jsong3.Visitor
 import io.github.lucanicoladebiasi.jsong3.Visitor.Companion.expand
+import org.antlr.v4.runtime.CharStreams
+import org.antlr.v4.runtime.CommonTokenStream
+import java.math.MathContext
 import kotlin.random.Random
 
 @Suppress("unused")
 class ArrayFunctions(
+    private val lib: Library,
+    private val mc: MathContext,
     private val om: ObjectMapper,
-    private val rand: Random
+    private val rand: Random,
+    private val vars: MutableMap<String, JsonNode?>
 ) {
+
+//    companion object {
+//
+//        interface Sorter {
+//
+//            fun isMinor(min: JsonNode, max: JsonNode): Boolean
+//
+//        } //~ Sorter
+//
+//        fun quickSort(arr: ArrayNode, left: Int = 0, right: Int = arr.size() - 1) {
+//            var start = left
+//            var end = right
+//            val pivot = arr[(left + right) / 2]
+//            while (start <= end) {
+//                while (arr[start] < pivot) {
+//                    start++
+//                }
+//                while (arr[end] > pivot) {
+//                    end--
+//                }
+//            }
+//        }
+//
+//    } //~ companion
 
     /**
      * https://docs.jsonata.org/array-functions#count
@@ -51,8 +85,23 @@ class ArrayFunctions(
      * https://docs.jsonata.org/array-functions#sort
      */
     @LibraryFunction
-    fun sort(node: JsonNode, function: JsonNode) {
-        TODO()
+    fun sort(node: JsonNode, func: FunctionNode): JsonNode? {
+        val result = om.createArrayNode()
+        result.addAll(
+            expand(node, om).sortedWith { lhs, rhs ->
+                val vars = mutableMapOf<String, JsonNode?>()
+                vars[func.args[0]] = lhs
+                vars[func.args[1]] = rhs
+                val parser = JSong3Parser(CommonTokenStream(JSong3Lexer(CharStreams.fromString(func.body))))
+                Visitor(Context(lib, null, mc, null, om, mutableMapOf(), rand, vars))
+                    .visit(parser.jsong())?.let {predicate ->
+                        when(predicate.booleanValue()) {
+                            true -> 1
+                            else -> -1
+                        }
+                }?: 0
+            })
+        return result
     }
 
     /**

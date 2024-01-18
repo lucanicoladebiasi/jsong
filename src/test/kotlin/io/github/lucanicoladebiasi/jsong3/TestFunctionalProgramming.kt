@@ -29,7 +29,6 @@ import com.fasterxml.jackson.databind.node.DecimalNode
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.BeforeAll
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import java.math.BigDecimal
@@ -76,7 +75,7 @@ class TestFunctionalProgramming {
     @Test
     fun `defining a function`() {
         val expression = "function(\$l, \$w, \$h){ \$k * \$w * \$h }"
-        val expected = FunctionNode(setOf("l", "w", "h"), "\$k*\$w*\$h", om)
+        val expected = FunctionNode(listOf("l", "w", "h"), "\$k*\$w*\$h", om)
         val actual = JSong(expression).evaluate()
         assertEquals(expected, actual)
     }
@@ -97,7 +96,6 @@ class TestFunctionalProgramming {
      * https://docs.jsonata.org/programming#defining-a-function
      */
     @Test
-    @Disabled
     fun `binding a function`() {
         val expression = "(\$volume := function(\$l, \$w, \$h){ \$l * \$w * \$h }; \$volume(10, 10, 5))"
         val expected = DecimalNode(BigDecimal("500"))

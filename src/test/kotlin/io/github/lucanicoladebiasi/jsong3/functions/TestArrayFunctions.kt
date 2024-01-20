@@ -246,9 +246,9 @@ class TestArrayFunctions {
      * https://docs.jsonata.org/array-functions#reverse
      */
     @Test
-    @Disabled
     fun `$reverse() - context`() {
-        val expression = "[1..5] ~> \$reverse()"
+        //val expression = "[1..5] ~> \$reverse()"
+        val expression = "[1, 2, 3, 4, 5] ~> \$reverse()"
 
         @Language("JSON")
         val expected = om.readTree(

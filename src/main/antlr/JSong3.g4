@@ -39,6 +39,7 @@ cvb     :   '@' var;
 element :   exp | range;
 
 exp     :   '(' exp (';' exp?)* ')'                                     # evalBlocks
+        |   lhs = exp '~>' rhs = exp                                    # chain
         |   lhs = exp '[' rhs = exp ']'                                 # filter
         |   lhs = exp '.' rhs = exp pvb cvb                             # mapPvbCvb
         |   lhs = exp '.' rhs = exp pvb                                 # mapPvb
@@ -63,6 +64,14 @@ field   :   key = exp ':' val = exp;
 
 func    :   FUNC args '{' exp* '}';
 
+path    :   step += '%' ('.' step += '%')*      # gotoParent
+        |   '$$'                                # gotoRoot
+        |   '$'                                 # gotoContext
+        |   '*'                                 # gotoWildcard
+        |   '**'                                # gotoWildDescendants
+        |   ID                                  # gotoId
+        ;
+
 type    :   '[' element? (',' element)* ']'     # array
         |   '{' field? (',' field)* '}'         # object
         |   '/' pattern ('/' | REG_CI | REG_ML) # regex
@@ -72,15 +81,6 @@ type    :   '[' element? (',' element)* ']'     # array
         |   TRUE                                # true
         |   NULL                                # null
         ;
-
-path    :   step += '%' ('.' step += '%')*      # gotoParent
-        |   '$$'                                # gotoRoot
-        |   '$'                                 # gotoContext
-        |   '*'                                 # gotoWildcard
-        |   '**'                                # gotoWildDescendants
-        |   ID                                  # gotoId
-        ;
-
 pvb     :   '#' var;
 
 range   :   lhs = exp '..' rhs = exp;

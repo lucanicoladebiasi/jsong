@@ -205,6 +205,11 @@ class Visitor(
         return result
     }
 
+    override fun visitChain(ctx: JSong3Parser.ChainContext): JsonNode? {
+        val lhs = Visitor(c).visit(ctx.lhs)
+        return Visitor(Context(c.lib, c.loop, c.mc, lhs, c.om, c.pmap, c.rand, c.vars)).visit(ctx.rhs)
+    }
+
     override fun visitEvalAndOr(ctx: JSong3Parser.EvalAndOrContext): BooleanNode {
         val lhs = booleanOf(reduce(Visitor(c).visit(ctx.lhs)))
         val rhs = booleanOf(reduce(Visitor(c).visit(ctx.rhs)))

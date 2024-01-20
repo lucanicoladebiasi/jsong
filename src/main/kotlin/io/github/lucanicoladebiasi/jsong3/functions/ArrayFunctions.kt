@@ -24,30 +24,6 @@ class ArrayFunctions(
     private val vars: MutableMap<String, JsonNode?>
 ) {
 
-//    companion object {
-//
-//        interface Sorter {
-//
-//            fun isMinor(min: JsonNode, max: JsonNode): Boolean
-//
-//        } //~ Sorter
-//
-//        fun quickSort(arr: ArrayNode, left: Int = 0, right: Int = arr.size() - 1) {
-//            var start = left
-//            var end = right
-//            val pivot = arr[(left + right) / 2]
-//            while (start <= end) {
-//                while (arr[start] < pivot) {
-//                    start++
-//                }
-//                while (arr[end] > pivot) {
-//                    end--
-//                }
-//            }
-//        }
-//
-//    } //~ companion
-
     /**
      * https://docs.jsonata.org/array-functions#count
      */

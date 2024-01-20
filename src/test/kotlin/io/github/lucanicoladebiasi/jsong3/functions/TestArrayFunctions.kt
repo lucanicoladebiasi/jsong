@@ -251,11 +251,13 @@ class TestArrayFunctions {
         val expression = "[1, 2, 3, 4, 5] ~> \$reverse()"
 
         @Language("JSON")
-        val expected = om.readTree(
+        val expected = om.createArrayNode().addAll(om.readTree(
             """
             [5, 4, 3, 2, 1]
             """.trimIndent()
-        )
+        ).map {
+            DecimalNode(it.decimalValue())
+        })
         val actual = JSong(expression).evaluate()
         assertEquals(expected, actual)
     }
@@ -285,7 +287,7 @@ class TestArrayFunctions {
         @Language("JSON")
         val expected = om.createArrayNode().addAll(
             om.readTree(
-            """
+                """
             [1, 2, 3, 4, 5]
             """.trimIndent()
             ).map {

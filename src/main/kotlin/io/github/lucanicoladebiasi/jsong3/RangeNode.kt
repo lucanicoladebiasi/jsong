@@ -35,7 +35,7 @@ class RangeNode(
             return true
         }
 
-        fun indexes(node: JsonNode?): Set<Int> {
+        fun indexes(node: JsonNode?): List<Int> {
             val indexes = mutableSetOf<Int>()
             when (node) {
                 is ArrayNode -> if (isIndexer(node)) node.forEach { element ->
@@ -45,12 +45,12 @@ class RangeNode(
                 is NumericNode -> indexes.add(node.intValue())
                 is RangeNode -> indexes.addAll(node.indexes)
             }
-            return indexes.sorted().toSet()
+            return indexes.sorted()
         }
 
     } //~ companion
 
-    val indexes: Set<Int> get() = (min.asInt()..max.asInt()).toSet()
+    val indexes: List<Int> get() = (min.asInt()..max.asInt()).toList()
 
     val max get() = (this[MAX_TAG] as DecimalNode)
 

@@ -33,9 +33,6 @@ class Visitor(
             val result = om.createArrayNode()
             if (node != null) when (node) {
                 is ArrayNode -> result.addAll(node)
-                is RangeNode -> for(index in node.min.intValue() ..  node.max.intValue()) {
-                    result.add(IntNode(index))
-                }
                 else -> result.add(node)
             }
             return result
@@ -141,9 +138,7 @@ class Visitor(
         cvb: JSong3Parser.CvbContext? = null
     ): ArrayNode {
         val result = c.createArrayNode()
-        var lhs = expand(Visitor(c).visit(lpt), c.om)
-        val indexes = RangeNode.indexes(lhs)
-        lhs = if (indexes.isNotEmpty()) c.createArrayNode().addAll(indexes.map { index -> IntNode(index) }) else lhs
+        val lhs = expand(Visitor(c).visit(lpt), c.om)
         lhs.forEachIndexed { index, node ->
             val loop = Context.Loop(lhs.size(), index)
             Visitor(Context(c.lib, loop, c.mc, node, c.om, c.pmap, c.rand, c.vars)).visit(rpt)?.let { rhs ->
@@ -194,12 +189,14 @@ class Visitor(
         return result
     }
 
-
     override fun visitArray(ctx: JSong3Parser.ArrayContext): ArrayNode {
         val result = c.createArrayNode()
         ctx.element().forEach { ctxElement ->
             Visitor(c).visit(ctxElement)?.let { element ->
-                result.add(element)
+                when(element) {
+                    is RangeNode -> result.addAll(element.indexes.map { index -> IntNode(index) })
+                    else -> result.add(element)
+                }
             }
         }
         return result

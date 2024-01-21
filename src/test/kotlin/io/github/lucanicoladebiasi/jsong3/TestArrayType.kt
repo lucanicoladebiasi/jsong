@@ -1,6 +1,7 @@
 package io.github.lucanicoladebiasi.jsong3
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.node.IntNode
 import org.intellij.lang.annotations.Language
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
@@ -37,8 +38,8 @@ class TestArrayType {
         val min = 1
         val max = 3
         val expression = "[$min..$max]"
-        val expected = (min..max).toSet()
-        val actual = (JSong(expression).evaluate() as RangeNode).indexes
+        val expected = om.createArrayNode().addAll((min..max).map { IntNode(it) })
+        val actual = JSong(expression).evaluate()
         assertEquals(expected, actual)
     }
 
@@ -47,9 +48,9 @@ class TestArrayType {
         val max = 3.14159265359
         val min = 2.718281828459
         val expression = "[$max..$min]"
-        val expected = (min.toInt() ..max.toInt()).toSet()
-        val actual = (JSong(expression).evaluate() as RangeNode).indexes
-        assertEquals(expected, actual.sorted().toSet())
+        val expected = om.createArrayNode().addAll((min.toInt() ..max.toInt()).map { IntNode(it) })
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
     }
 
 
@@ -63,12 +64,11 @@ class TestArrayType {
         val rmin = 5
         val rmax = 7
         val expression = "[$lmin..$lmax, $rmin..$rmax]"
-        val expected = mutableSetOf<Int>()
-        expected.addAll((lmin .. lmax).toSet())
-        expected.addAll((rmin .. rmax).toSet())
-        val actual = mutableSetOf<Int>()
-        JSong(expression).evaluate()?.filterIsInstance<RangeNode>()?.map { actual.addAll(it.indexes) }
-        assertEquals(expected, actual.sorted().toSet())
+        val expected = om.createArrayNode()
+        expected.addAll((lmin .. lmax).map { IntNode(it) })
+        expected.addAll((rmin .. rmax).map { IntNode(it) })
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
     }
 
     /**
@@ -83,13 +83,12 @@ class TestArrayType {
         val omin = 2
         val omax = 4
         val expression = "[$lmin..$lmax, $rmin..$rmax, $omin..$omax]"
-        val expected = mutableSetOf<Int>()
-        expected.addAll((lmin .. lmax).toSet())
-        expected.addAll((rmin .. rmax).toSet())
-        expected.addAll((omin .. omax).toSet())
-        val actual = mutableSetOf<Int>()
-        JSong(expression).evaluate()?.filterIsInstance<RangeNode>()?.map { actual.addAll(it.indexes) }
-        assertEquals(expected, actual.sorted().toSet())
+        val expected =om.createArrayNode()
+        expected.addAll((lmin .. lmax).map { IntNode(it) })
+        expected.addAll((rmin .. rmax).map { IntNode(it) })
+        expected.addAll((omin .. omax).map { IntNode(it) })
+        val actual = JSong(expression).evaluate()
+        assertEquals(expected, actual)
     }
 
 }

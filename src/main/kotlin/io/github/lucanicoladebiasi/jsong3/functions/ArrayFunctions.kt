@@ -70,12 +70,12 @@ class ArrayFunctions(
                 vars[func.args[1]] = rhs
                 val parser = JSong3Parser(CommonTokenStream(JSong3Lexer(CharStreams.fromString(func.body))))
                 Visitor(Context(lib, null, mc, null, om, mutableMapOf(), rand, vars))
-                    .visit(parser.jsong())?.let {predicate ->
-                        when(predicate.booleanValue()) {
+                    .visit(parser.jsong())?.let { predicate ->
+                        when (predicate.booleanValue()) {
                             true -> 1
                             else -> -1
                         }
-                }?: 0
+                    } ?: 0
             })
         return result
     }
@@ -114,14 +114,16 @@ class ArrayFunctions(
      * https://docs.jsonata.org/array-functions#zip
      */
     @LibraryFunction
-    fun zip(vararg arrays: ArrayNode): ArrayNode {
+    fun zip(arrays: ArrayNode): ArrayNode {
         val result = om.createArrayNode()
-        val size = arrays.minOf { array -> array.size() }
+        val size = arrays.filterIsInstance<ArrayNode>().minOf { array -> array.size() }
         repeat(size) { i ->
             result.add(om.createArrayNode())
         }
         repeat(size) { i ->
-            (result[i] as ArrayNode).add(arrays[i][i])
+            repeat(arrays.size()) { j ->
+                (result[i] as ArrayNode).add(arrays[j][i])
+            }
         }
         return result
     }

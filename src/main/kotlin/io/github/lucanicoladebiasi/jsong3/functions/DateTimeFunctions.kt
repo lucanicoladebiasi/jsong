@@ -66,6 +66,14 @@ class DateTimeFunctions {
      * https://docs.jsonata.org/date-time-functions#tomillis
      */
     @LibraryFunction
+    fun toMillis(timestamp: TextNode): DecimalNode {
+        TODO()
+    }
+
+    /**
+     * https://docs.jsonata.org/date-time-functions#tomillis
+     */
+    @LibraryFunction
     fun toMillis(timestamp: TextNode, picture: TextNode): DecimalNode {
         TODO()
     }

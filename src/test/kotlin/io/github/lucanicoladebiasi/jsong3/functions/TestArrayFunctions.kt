@@ -316,37 +316,49 @@ class TestArrayFunctions {
     }
 
     /**
+     * Vararg not supported yet.
+     *
      * https://docs.jsonata.org/array-functions#zip
      */
     @Test
-    @Disabled
     fun `$zip() - pair`() {
-        val expression = "\$zip([1,2,3], [4,5,6])"
+        //val expression = "\$zip([1,2,3], [4,5,6])"
+        val expression = "\$zip([[1,2,3], [4,5,6]])"
 
         @Language("JSON")
-        val expected = om.readTree(
+        val expected = om.createArrayNode().addAll(om.readTree(
             """
             [[1,4] ,[2,5], [3,6]]
             """.trimIndent()
-        )
+        ).map { array ->
+            om.createArrayNode().addAll(array.map {
+                DecimalNode(it.decimalValue())
+            })
+        })
         val actual = JSong(expression).evaluate()
         assertEquals(expected, actual)
     }
 
     /**
+     * Vararg not supported yet.
+     *
      * https://docs.jsonata.org/array-functions#zip
      */
     @Test
-    @Disabled
     fun `$zip() - triplet`() {
-        val expression = "\$zip([1,2,3],[4,5],[7,8,9])"
+        //val expression = "\$zip([1,2,3],[4,5],[7,8,9])"
+        val expression = "\$zip([[1,2,3],[4,5],[7,8,9]])"
 
         @Language("JSON")
-        val expected = om.readTree(
+        val expected = om.createArrayNode().addAll(om.readTree(
             """
             [[1,4,7], [2,5,8]]
             """.trimIndent()
-        )
+        ).map { array ->
+            om.createArrayNode().addAll(array.map {
+                DecimalNode(it.decimalValue())
+            })
+        })
         val actual = JSong(expression).evaluate()
         assertEquals(expected, actual)
     }

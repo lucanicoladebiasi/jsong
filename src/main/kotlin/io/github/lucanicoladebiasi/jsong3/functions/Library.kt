@@ -24,11 +24,15 @@ open class Library {
 
         fun isCompatible(vararg args: JsonNode?): Boolean {
             val arguments = args.toList()
-            if (arguments.size == signature.size) {
+            if (arguments.size == signature.size
+                //|| (arguments.size >= signature.size && function.parameters.last().isVararg)
+            ) {
                 when (arguments.size) {
                     0 -> return true
                     else -> repeat(arguments.size) { i ->
                         arguments[i]?.let { argument ->
+                            val parameter = function.parameters[i + 1]
+                            // if (!argument::class.createType().isSubtypeOf(signature[i]) && !parameter.isVararg) {
                             if (!argument::class.createType().isSubtypeOf(signature[i])) {
                                 return false
                             }

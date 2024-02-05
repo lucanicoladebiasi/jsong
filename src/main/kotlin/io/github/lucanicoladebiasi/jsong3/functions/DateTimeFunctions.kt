@@ -3,8 +3,11 @@ package io.github.lucanicoladebiasi.jsong3.functions
 import com.fasterxml.jackson.databind.node.DecimalNode
 import com.fasterxml.jackson.databind.node.NumericNode
 import com.fasterxml.jackson.databind.node.TextNode
+import java.time.Instant
 
-class DateTimeFunctions {
+class DateTimeFunctions(
+    private val now: Instant
+) {
 
     /**
      * https://docs.jsonata.org/date-time-functions#now

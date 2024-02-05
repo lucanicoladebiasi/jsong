@@ -13,12 +13,14 @@ import io.github.lucanicoladebiasi.jsong3.Visitor.Companion.expand
 import org.antlr.v4.runtime.CharStreams
 import org.antlr.v4.runtime.CommonTokenStream
 import java.math.MathContext
+import java.time.Instant
 import kotlin.random.Random
 
 @Suppress("unused")
 class ArrayFunctions(
     private val lib: Library,
     private val mc: MathContext,
+    private val now: Instant,
     private val om: ObjectMapper,
     private val rand: Random,
     private val vars: MutableMap<String, JsonNode?>
@@ -69,7 +71,7 @@ class ArrayFunctions(
                 vars[func.args[0]] = lhs
                 vars[func.args[1]] = rhs
                 val parser = JSong3Parser(CommonTokenStream(JSong3Lexer(CharStreams.fromString(func.body))))
-                Visitor(Context(lib, null, mc, null, om, mutableMapOf(), rand, vars))
+                Visitor(Context(lib, null, mc, null, now, om, mutableMapOf(), rand, vars))
                     .visit(parser.jsong())?.let { predicate ->
                         when (predicate.booleanValue()) {
                             true -> 1

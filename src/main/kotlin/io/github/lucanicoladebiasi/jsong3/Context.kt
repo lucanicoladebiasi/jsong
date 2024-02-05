@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.ObjectNode
 import io.github.lucanicoladebiasi.jsong3.functions.Library
 import java.math.MathContext
+import java.time.Instant
 import kotlin.random.Random
 
 data class Context(
@@ -13,6 +14,7 @@ data class Context(
     val loop: Loop?,
     val mc: MathContext,
     val node: JsonNode?,
+    val now: Instant,
     val om: ObjectMapper,
     val pmap: MutableMap<JsonNode, JsonNode?>,
     val rand: Random,

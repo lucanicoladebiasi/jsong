@@ -141,7 +141,7 @@ class Visitor(
         val lhs = expand(Visitor(c).visit(lpt), c.om)
         lhs.forEachIndexed { index, node ->
             val loop = Context.Loop(lhs.size(), index)
-            Visitor(Context(c.lib, loop, c.mc, node, c.om, c.pmap, c.rand, c.vars)).visit(rpt)?.let { rhs ->
+            Visitor(Context(c.lib, loop, c.mc, node, c.now, c.om, c.pmap, c.rand, c.vars)).visit(rpt)?.let { rhs ->
                 when (rhs) {
                     is ArrayNode -> rhs.forEach { element ->
                         result.add(element)
@@ -204,7 +204,7 @@ class Visitor(
 
     override fun visitChain(ctx: JSong3Parser.ChainContext): JsonNode? {
         val lhs = Visitor(c).visit(ctx.lhs)
-        return Visitor(Context(c.lib, c.loop, c.mc, lhs, c.om, c.pmap, c.rand, c.vars)).visit(ctx.rhs)
+        return Visitor(Context(c.lib, c.loop, c.mc, lhs, c.now, c.om, c.pmap, c.rand, c.vars)).visit(ctx.rhs)
     }
 
     override fun visitEvalAndOr(ctx: JSong3Parser.EvalAndOrContext): BooleanNode {
@@ -221,7 +221,7 @@ class Visitor(
 
     override fun visitEvalBind(ctx: JSong3Parser.EvalBindContext): JsonNode? {
         val id = sanitise(ctx.`var`().ID().text)
-        val result = Visitor(Context(c.lib, c.loop, c.mc, c.node, c.om, c.pmap, c.rand, c.vars)).visit(ctx.exp())
+        val result = Visitor(Context(c.lib, c.loop, c.mc, c.node, c.now, c.om, c.pmap, c.rand, c.vars)).visit(ctx.exp())
         c.vars[id] = result
         return result
     }
@@ -229,7 +229,7 @@ class Visitor(
     override fun visitEvalBlocks(ctx: JSong3Parser.EvalBlocksContext): JsonNode? {
         var exp = c.node
         ctx.exp()?.forEach { ctxExp ->
-            exp = Visitor(Context(c.lib, null, c.mc, c.node, c.om, c.pmap, c.rand, c.vars)).visit(ctxExp)
+            exp = Visitor(Context(c.lib, null, c.mc, c.node, c.now, c.om, c.pmap, c.rand, c.vars)).visit(ctxExp)
         }
         return reduce(exp)
     }
@@ -295,16 +295,16 @@ class Visitor(
                 vars.putAll(c.vars)
                 func.args.forEachIndexed { i, argId ->
                     vars[argId] = reduce(
-                        Visitor(Context(c.lib, null, c.mc, c.node, c.om, c.pmap, c.rand, c.vars)).visit(ctx.exp()[i])
+                        Visitor(Context(c.lib, null, c.mc, c.node, c.now, c.om, c.pmap, c.rand, c.vars)).visit(ctx.exp()[i])
                     )
                 }
-                return Visitor(Context(c.lib, null, c.mc, c.node, c.om, c.pmap, c.rand, vars)).visit(parser.jsong())
+                return Visitor(Context(c.lib, null, c.mc, c.node, c.now, c.om, c.pmap, c.rand, vars)).visit(parser.jsong())
 
             }
             c.lib.has(funcId) -> {
                 val args = Array(ctx.exp().size) { i ->
                     reduce(
-                        Visitor(Context(c.lib, null, c.mc, c.node, c.om, c.pmap, c.rand, c.vars)).visit(ctx.exp()[i])
+                        Visitor(Context(c.lib, null, c.mc, c.node, c.now, c.om, c.pmap, c.rand, c.vars)).visit(ctx.exp()[i])
                     )
                 }
                 return try {
@@ -328,10 +328,10 @@ class Visitor(
         vars.putAll(c.vars)
         func.args.forEachIndexed { i, id ->
             vars[id] = reduce(
-                Visitor(Context(c.lib, null, c.mc, c.node, c.om, c.pmap, c.rand, c.vars)).visit(ctx.exp()[i])
+                Visitor(Context(c.lib, null, c.mc, c.node, c.now, c.om, c.pmap, c.rand, c.vars)).visit(ctx.exp()[i])
             )
         }
-        return Visitor(Context(c.lib, null, c.mc, c.node, c.om, c.pmap, c.rand, vars)).visit(parser.jsong())
+        return Visitor(Context(c.lib, null, c.mc, c.node, c.now, c.om, c.pmap, c.rand, vars)).visit(parser.jsong())
     }
 
     @Throws(IllegalArgumentException::class)
@@ -382,7 +382,7 @@ class Visitor(
             loop.index = if (c.loop != null) {
                 c.loop.size * c.loop.index + index
             } else index
-            Visitor(Context(c.lib, loop, c.mc, node, c.om, c.pmap, c.rand, c.vars)).visit(ctx.rhs)
+            Visitor(Context(c.lib, loop, c.mc, node, c.now, c.om, c.pmap, c.rand, c.vars)).visit(ctx.rhs)
                 ?.let { rhs ->
                     when (rhs) {
                         is ArrayNode -> {
@@ -462,7 +462,7 @@ class Visitor(
     override fun visitJsong(ctx: JSong3Parser.JsongContext): JsonNode? {
         var exp = c.node
         ctx.exp()?.forEach { ctxExp ->
-            exp = Visitor(Context(c.lib, null, c.mc, exp, c.om, c.pmap, c.rand, c.vars)).visit(ctxExp)
+            exp = Visitor(Context(c.lib, null, c.mc, exp, c.now, c.om, c.pmap, c.rand, c.vars)).visit(ctxExp)
         }
         return reduce(exp)
     }
